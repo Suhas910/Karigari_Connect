@@ -61,6 +61,12 @@ class MediaUploadResponse(BaseModel):
     status: str
     media_id: str
     url: Optional[str] = None
+    # Set by the multipart upload endpoint; absent on the legacy JSON endpoint.
+    kind: Optional[str] = None
+    content_type: Optional[str] = None
+    size_bytes: Optional[int] = None
+    checksum: Optional[str] = None  # "sha256:<hex>" of the bytes the client sent
+    deduplicated: bool = False  # true when this exact file was already on the listing
 
 # --- AI Studio & Job Schemas ---
 class ImageQualityMetrics(BaseModel):

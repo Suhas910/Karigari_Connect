@@ -21,9 +21,13 @@ Set before any app import so the flags are in force when the routers are constru
 from __future__ import annotations
 
 import os
+import tempfile
 
 os.environ.setdefault("CRAFTLINK_WAGE_TABLE", "demo")
 # Local sqlite unless the developer points DATABASE_URL somewhere explicitly. An
 # integration suite must never be the thing that writes test rows into a shared
 # database that other people are demoing from.
 os.environ.setdefault("DATABASE_URL", "sqlite:///./test_karigari.db")
+# Same reasoning for uploaded files: a throwaway local directory, never a shared bucket.
+os.environ.setdefault("CRAFTLINK_MEDIA_STORAGE", "local")
+os.environ.setdefault("CRAFTLINK_MEDIA_DIR", tempfile.mkdtemp(prefix="craftlink-media-test-"))

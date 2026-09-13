@@ -15,6 +15,9 @@ __pycache__/
 
 .pytest_cache/
 
+# Uploaded artisan photos and voice notes (local media store). Personal data; never commit.
+backend/media_store/
+
 # macOS
 .DS_Store
 ._*

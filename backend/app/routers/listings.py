@@ -1,14 +1,23 @@
 # backend/app/routers/listings.py
 import json
+import logging
 import uuid
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from .. import models, schemas, auth
+from .. import models, schemas, auth, media_inspect
+from ..storage import StorageUnavailable, get_media_store
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
+
+# States in which the artisan is still assembling the listing. Once it is submitted, the
+# media a coordinator reviewed must not change underneath them.
+UPLOADABLE_STATES = {"draft", "processing", "awaiting_confirmation"}
+_READ_CHUNK_BYTES = 1024 * 1024
 
 def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
     media_list = [
@@ -103,10 +112,11 @@ def create_listing(
         preferred_language=listing.preferred_language,
         upload_instructions={
             "bucket": "media",
-            "max_image_bytes": 10485760,
-            "max_audio_bytes": 20971520,
-            "allowed_image_types": ["image/jpeg", "image/png", "image/webp"],
-            "allowed_audio_types": ["audio/wav", "audio/m4a", "audio/mp4", "audio/aac"]
+            "upload_path": f"/api/v1/listings/{listing.id}/media/upload",
+            "max_image_bytes": media_inspect.MAX_IMAGE_BYTES,
+            "max_audio_bytes": media_inspect.MAX_AUDIO_BYTES,
+            "allowed_image_types": media_inspect.ALLOWED_IMAGE_TYPES,
+            "allowed_audio_types": media_inspect.ALLOWED_AUDIO_TYPES,
         }
     )
 
@@ -140,7 +150,10 @@ def get_listing(
 
     return format_listing_response(listing)
 
-@router.post("/{listing_id}/media", response_model=schemas.MediaUploadResponse)
+# Deprecated: records a URL, never receives a file, and substitutes a stock photo or
+# sample sound when no URL is given. Kept because the existing flow test and app build
+# call it. New clients use POST /{listing_id}/media/upload below.
+@router.post("/{listing_id}/media", response_model=schemas.MediaUploadResponse, deprecated=True)
 def complete_media_upload(
     listing_id: str,
     payload: schemas.MediaUploadRequest,
@@ -180,6 +193,152 @@ def complete_media_upload(
         media_id=media.id,
         url=media.url
     )
+
+
+def _upload_error(status_code: int, code: str, message: str, action: str) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={"code": code, "message": message, "recoverable": True, "action": action},
+    )
+
+
+def _read_limited(upload: UploadFile, limit: int, retake: str) -> bytes:
+    buffer = bytearray()
+    while chunk := upload.file.read(_READ_CHUNK_BYTES):
+        buffer.extend(chunk)
+        if len(buffer) > limit:
+            raise _upload_error(
+                413,
+                "MEDIA_QUALITY_INSUFFICIENT",
+                f"The file is larger than the {limit // (1024 * 1024)} MB limit.",
+                retake,
+            )
+    return bytes(buffer)
+
+
+def _upload_response(media: models.MediaAssetModel, deduplicated: bool) -> schemas.MediaUploadResponse:
+    metadata = json.loads(media.metadata_json or "{}")
+    return schemas.MediaUploadResponse(
+        status=media.status,
+        media_id=media.id,
+        url=media.url,
+        kind=media.kind,
+        content_type=metadata.get("content_type"),
+        size_bytes=metadata.get("size_bytes"),
+        checksum=media.checksum,
+        deduplicated=deduplicated,
+    )
+
+
+@router.post("/{listing_id}/media/upload", response_model=schemas.MediaUploadResponse)
+def upload_media(
+    listing_id: str,
+    kind: str = Form(...),
+    file: UploadFile = File(...),
+    client_checksum: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Receive a photo or voice note as multipart/form-data and store the actual bytes.
+
+    Every check that can refuse runs before anything is written, and the database row is
+    committed only after the file is stored, so a row never points at a missing file.
+    """
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+
+    # Uploading is the artisan's act. Coordinators review media; they do not supply it.
+    if listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Only the artisan who owns this listing can upload media to it")
+
+    if kind not in ("image", "audio"):
+        raise _upload_error(
+            422, "CATALOGUE_SCHEMA_INVALID", "kind must be 'image' or 'audio'.",
+            "Send kind=image for photos or kind=audio for voice notes.",
+        )
+
+    if listing.state not in UPLOADABLE_STATES:
+        raise _upload_error(
+            409, "LISTING_STATE_INVALID",
+            f"Media cannot be added to a listing in state '{listing.state}'.",
+            "Refresh the listing; it has already been submitted.",
+        )
+
+    is_image = kind == "image"
+    retake = "Take the photo again." if is_image else "Record the voice note again."
+    limit = media_inspect.MAX_IMAGE_BYTES if is_image else media_inspect.MAX_AUDIO_BYTES
+    data = _read_limited(file, limit, retake)
+
+    received_sha = media_inspect.sha256_hex(data)
+    expected_sha = media_inspect.normalise_checksum(client_checksum)
+    if expected_sha is not None and expected_sha != received_sha:
+        raise _upload_error(
+            400, "PROVIDER_UNAVAILABLE", "The file arrived different from what was sent.",
+            "Retry the upload.",
+        )
+
+    try:
+        inspected = media_inspect.inspect_image(data) if is_image else media_inspect.inspect_audio(data)
+    except media_inspect.MediaRejected as exc:
+        raise _upload_error(415, "MEDIA_QUALITY_INSUFFICIENT", str(exc), retake)
+
+    # A retry of the same file returns the record already made. Keyed on content, because
+    # the app's Idempotency-Key header is a fresh UUID per attempt and cannot spot a retry.
+    checksum = f"sha256:{received_sha}"
+    existing = db.query(models.MediaAssetModel).filter(
+        models.MediaAssetModel.listing_id == listing_id,
+        models.MediaAssetModel.kind == kind,
+        models.MediaAssetModel.variant == "original",
+        models.MediaAssetModel.checksum == checksum,
+        models.MediaAssetModel.storage_path.isnot(None),
+    ).first()
+    if existing:
+        return _upload_response(existing, deduplicated=True)
+
+    media_id = str(uuid.uuid4())
+    storage_key = f"listings/{listing_id}/{kind}/{media_id}{inspected.extension}"
+    try:
+        store = get_media_store()
+        store.put(storage_key, inspected.data, inspected.content_type)
+    except StorageUnavailable as exc:
+        logger.error("Media upload for listing %s could not be stored: %s", listing_id, exc)
+        raise _upload_error(
+            503, "PROVIDER_UNAVAILABLE", "Media storage is temporarily unavailable.",
+            "Your file is still on the phone. Retry shortly.",
+        )
+
+    media = models.MediaAssetModel(
+        id=media_id,
+        listing_id=listing_id,
+        kind=kind,
+        variant="original",
+        status="complete",
+        url=f"/api/v1/media/{media_id}/content",
+        storage_path=storage_key,
+        checksum=checksum,
+        metadata_json=json.dumps({
+            "content_type": inspected.content_type,
+            "size_bytes": len(inspected.data),
+            "received_bytes": len(data),
+            "stored_sha256": media_inspect.sha256_hex(inspected.data),
+            "storage_backend": store.name,
+            **inspected.metadata,
+        }),
+    )
+    db.add(media)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        # Never leave a file that no row will ever point at.
+        try:
+            store.delete(storage_key)
+        except Exception as cleanup_exc:
+            logger.error("Orphaned media object %s: %s", storage_key, cleanup_exc)
+        raise
+    db.refresh(media)
+    return _upload_response(media, deduplicated=False)
 
 @router.post("/{listing_id}/confirm")
 def confirm_listing(

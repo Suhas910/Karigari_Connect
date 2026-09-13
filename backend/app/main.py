@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 
 from .database import engine, Base
-from .routers import auth as auth_router, listings, ai, coordinator, products, images
+from .routers import auth as auth_router, listings, ai, coordinator, media, products, images
 
 # Initialize Database Schema
 Base.metadata.create_all(bind=engine)
@@ -109,11 +109,13 @@ app.include_router(auth_router.router, prefix="/api/v1")
 app.include_router(listings.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(coordinator.router, prefix="/api/v1")
+app.include_router(media.router, prefix="/api/v1")
 
 # --- ROOT & BACKWARDS COMPATIBILITY ROUTERS ---
 app.include_router(auth_router.router)
 app.include_router(listings.router)
 app.include_router(ai.router)
 app.include_router(coordinator.router)
+app.include_router(media.router)
 app.include_router(products.router)
 app.include_router(images.router)
