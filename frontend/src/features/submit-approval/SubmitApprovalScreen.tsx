@@ -1,102 +1,38 @@
 // src/features/submit-approval/SubmitApprovalScreen.tsx
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, Checkbox, Card } from 'react-native-paper';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { View, StyleSheet, ScrollView } from 'react-native';
+import { Text, Button, Card } from 'react-native-paper';
+import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
-import { getDraft, saveDraft } from '../../services/database';
+import { apiErrorOf } from '../../services/api';
 import { colors, spacing } from '../../theme';
-import { StepHeader, BottomDock } from '../../components';
+import { StepHeader, BottomDock, ProcessingIndicator, ErrorRetryCard } from '../../components';
 
-// Checklist items mirror the contract's actual gate conditions before awaiting_approval:
-// catalogue valid, confirmations done, image accepted, price resolved, claims evidenced.
-const CHECKLIST = [
-  { key: 'catalogue', label: 'Product details confirmed' },
-  { key: 'image', label: 'Photo quality accepted' },
-  { key: 'price', label: 'Fair price reviewed' },
-  { key: 'claims', label: 'No unverified sensitive claims pending' },
-];
-
-interface DraftPayload {
-  catalogueConfirmed?: boolean;
-  imageAccepted?: boolean;
-  priceReviewed?: boolean;
-}
-
+// The checklist comes from GET /listings/{id}/readiness, the same checks the server runs on
+// submit and on approval. It used to be four boxes the artisan ticked by hand, including
+// "No unverified sensitive claims pending", and the server checked nothing.
 export default function SubmitApprovalScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'SubmitApproval'>>();
   const { draftId } = route.params;
 
-  const [draftPayload, setDraftPayload] = useState<DraftPayload>({});
-  const [checkedState, setCheckedState] = useState<Record<string, boolean>>({
-    catalogue: false,
-    image: false,
-    price: false,
-    claims: false,
-  });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!draftId) return;
-    (async () => {
-      try {
-        const draft = await getDraft(draftId);
-        const payload = (draft?.payload ?? {}) as DraftPayload & { claimsConfirmed?: boolean };
-        setDraftPayload(payload);
+  const { data: readiness, isLoading, isError, refetch } = useQuery({
+    queryKey: ['readiness', draftId],
+    queryFn: () => service.getReadiness(draftId),
+  });
 
-        let claimsOk = true;
-        try {
-          const listing = await service.getListing(draftId);
-          const claims = listing.claims ?? [];
-          claimsOk = claims.every(
-            (c) => !(c.asserted_by_artisan && !c.coordinator_verified)
-          );
-        } catch (err) {
-          console.error('Failed to load listing claims', err);
-        }
-
-        setCheckedState({
-          catalogue: Boolean(payload.catalogueConfirmed),
-          image: Boolean(payload.imageAccepted),
-          price: Boolean(payload.priceReviewed),
-          claims: payload.claimsConfirmed !== undefined ? Boolean(payload.claimsConfirmed) : claimsOk,
-        });
-      } catch (err) {
-        console.error('Failed to load draft payload in SubmitApprovalScreen', err);
-      }
-    })();
-  }, [draftId]);
-
-  const handleToggle = async (key: string) => {
-    const newVal = !checkedState[key];
-    const updated = { ...checkedState, [key]: newVal };
-    setCheckedState(updated);
-
-    try {
-      const existing = await getDraft(draftId);
-      const payload = { ...(existing?.payload ?? {}) };
-      if (key === 'catalogue') payload.catalogueConfirmed = newVal;
-      if (key === 'image') payload.imageAccepted = newVal;
-      if (key === 'price') payload.priceReviewed = newVal;
-      if (key === 'claims') payload.claimsConfirmed = newVal;
-
-      await saveDraft({
-        id: draftId,
-        listing_id: existing?.listing_id ?? draftId,
-        state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
-        payload,
-      });
-      setDraftPayload(payload);
-    } catch (err) {
-      console.error('Failed to persist checklist toggle', err);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -105,17 +41,18 @@ export default function SubmitApprovalScreen() {
       await service.submitForApproval(draftId);
       setSubmitted(true);
     } catch (err) {
-      setSubmitError('Could not submit for review. Some details may still need attention — check your listing and try again.');
+      setSubmitError(
+        apiErrorOf(err)?.message ??
+          'Could not submit for review. Check your connection and try again.'
+      );
+      refetch();
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDone = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MyListings' }],
-    });
+    navigation.reset({ index: 0, routes: [{ name: 'MyListings' }] });
   };
 
   if (submitted) {
@@ -125,14 +62,9 @@ export default function SubmitApprovalScreen() {
           <Card.Content>
             <Text variant="titleLarge" style={styles.submittedTitle}>Listing Submitted</Text>
             <Text style={styles.submittedSubtitle}>
-              Your cluster coordinator will review this listing shortly. You can track its status anytime on your listings page.
+              Your cluster coordinator will review this listing. You can track its status on your listings page.
             </Text>
-            <Button
-              mode="contained"
-              onPress={handleDone}
-              buttonColor={colors.primary}
-              style={styles.doneBtn}
-            >
+            <Button mode="contained" onPress={handleDone} buttonColor={colors.primary} style={styles.doneBtn}>
               Back to My Listings
             </Button>
           </Card.Content>
@@ -141,7 +73,16 @@ export default function SubmitApprovalScreen() {
     );
   }
 
-  const allItemsChecked = CHECKLIST.every((item) => Boolean(checkedState[item.key]));
+  if (isLoading) {
+    return <ProcessingIndicator hint="Checking your listing..." />;
+  }
+  if (isError || !readiness) {
+    return <ErrorRetryCard errorText="Could not check your listing. Check connection and try again." onRetry={() => refetch()} />;
+  }
+
+  const submitProblems = readiness.submit;
+  const coordinatorChecks = readiness.approve.filter((problem) => !submitProblems.includes(problem));
+  const ready = submitProblems.length === 0;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -154,61 +95,50 @@ export default function SubmitApprovalScreen() {
           currentStep={5}
           totalSteps={5}
           title="Submit for Approval"
-          subtitle="Final verification before coordinator review"
+          subtitle="Final check before coordinator review"
         />
 
         <View style={styles.content}>
-          <Card style={styles.checklistCard}>
+          <Card style={styles.card}>
             <Card.Content>
-              <Text style={styles.checklistHeader}>READINESS CHECKLIST</Text>
-              {CHECKLIST.map((item) => {
-                const checked = Boolean(checkedState[item.key]);
-                return (
-                  <TouchableOpacity
-                    key={item.key}
-                    style={styles.checklistRow}
-                    onPress={() => handleToggle(item.key)}
-                    activeOpacity={0.7}
-                    accessibilityRole="checkbox"
-                    accessibilityState={{ checked }}
-                  >
-                    <Checkbox
-                      status={checked ? 'checked' : 'unchecked'}
-                      onPress={() => handleToggle(item.key)}
-                      color={colors.secondary}
-                    />
-                    <Text style={[styles.checklistLabel, checked && styles.checklistLabelDone]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+              <Text style={styles.cardHeader}>BEFORE YOU SUBMIT</Text>
+              {ready ? (
+                <Text style={styles.readyText}>Everything needed to submit is done.</Text>
+              ) : (
+                submitProblems.map((problem) => (
+                  <Text key={problem} style={styles.problem}>• {problem}</Text>
+                ))
+              )}
             </Card.Content>
           </Card>
 
-          <View style={styles.noticeBox}>
-            <Text style={styles.noticeText}>
-              {allItemsChecked
-                ? 'Submitting locks this draft and forwards it to your coordinator review queue.'
-                : 'Complete all readiness checklist steps above before submitting for coordinator review.'}
-            </Text>
-          </View>
+          <Card style={styles.card}>
+            <Card.Content>
+              <Text style={styles.cardHeader}>YOUR COORDINATOR WILL CHECK</Text>
+              {coordinatorChecks.length === 0 ? (
+                <Text style={styles.muted}>Nothing else is outstanding.</Text>
+              ) : (
+                coordinatorChecks.map((problem) => (
+                  <Text key={problem} style={styles.muted}>• {problem}</Text>
+                ))
+              )}
+            </Card.Content>
+          </Card>
         </View>
       </ScrollView>
 
-      {/* Docked Action Button */}
       <BottomDock>
         {submitError && <Text style={styles.errorText}>{submitError}</Text>}
         <Button
           mode="contained"
           onPress={handleSubmit}
           loading={submitting}
-          disabled={!allItemsChecked || submitting}
+          disabled={!ready || submitting}
           buttonColor={colors.primary}
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {allItemsChecked ? 'Submit for Coordinator Review' : 'Complete All Steps to Submit'}
+          {ready ? 'Submit for Coordinator Review' : 'Finish the Steps Above to Submit'}
         </Button>
       </BottomDock>
     </View>
@@ -231,7 +161,7 @@ const styles = StyleSheet.create({
   submittedTitle: { color: colors.text, fontWeight: '700', marginBottom: spacing.xs, textAlign: 'center' },
   submittedSubtitle: { color: colors.textMuted, fontSize: 13, lineHeight: 18, marginBottom: spacing.xl, textAlign: 'center' },
   doneBtn: { minHeight: spacing.tapTarget, justifyContent: 'center', borderRadius: 8 },
-  checklistCard: {
+  card: {
     backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1,
@@ -239,29 +169,10 @@ const styles = StyleSheet.create({
     elevation: 0,
     marginBottom: spacing.md,
   },
-  checklistHeader: {
-    fontSize: 11,
-    letterSpacing: 0.5,
-    fontWeight: '700',
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-  },
-  checklistRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  checklistLabel: { color: colors.textMuted, flex: 1, fontSize: 14 },
-  checklistLabelDone: { color: colors.text, fontWeight: '500' },
-  noticeBox: {
-    backgroundColor: colors.badgeNeutral,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  noticeText: {
-    color: colors.textMuted,
-    fontSize: 12,
-    lineHeight: 17,
-  },
+  cardHeader: { fontSize: 11, letterSpacing: 0.5, fontWeight: '700', color: colors.textMuted, marginBottom: spacing.sm },
+  readyText: { color: colors.secondary, fontSize: 14, fontWeight: '600' },
+  problem: { color: colors.text, fontSize: 14, lineHeight: 21 },
+  muted: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
   submitBtn: { minHeight: spacing.tapTarget, justifyContent: 'center', borderRadius: 8 },
   errorText: { color: colors.error, textAlign: 'center', marginBottom: spacing.md, fontSize: 13 },
 });

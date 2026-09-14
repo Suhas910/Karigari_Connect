@@ -101,6 +101,7 @@ import type {
   MediaUploadResult,
   PriceRequest,
   PriceResult,
+  Readiness,
   ExportResult,
   TranscriptJobResult,
   UserRole,
@@ -119,6 +120,11 @@ export const liveApi: ListingService = {
 
   getListing: async (listingId: string): Promise<Listing> => {
     const res = await api.get(`/listings/${listingId}`);
+    return res.data;
+  },
+
+  getReadiness: async (listingId: string): Promise<Readiness> => {
+    const res = await api.get(`/listings/${listingId}/readiness`);
     return res.data;
   },
 

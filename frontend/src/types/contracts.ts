@@ -211,6 +211,14 @@ export interface PriceRequest {
   comparables_paise?: number[];
 }
 
+// GET /listings/{id}/readiness: what still blocks each step, from the checks the server enforces.
+export interface Readiness {
+  listing_id: string;
+  state: ListingState;
+  submit: string[];
+  approve: string[];
+}
+
 // --- 6. EXPORT RESULT ---
 export interface ExportResult {
   export_id: string;
@@ -221,7 +229,10 @@ export interface ExportResult {
     passed: boolean;
     schema_source: string;
   };
-  network_submission: 'not_attempted' | 'pending' | 'success' | 'failed';
+  // Nothing is sent to a network yet: 'simulated' is a labelled demo, not a publication.
+  network_submission: 'not_attempted' | 'simulated';
+  warnings?: string[];
+  payload?: Record<string, any>;
 }
 
 // --- 7. SERVICE INTERFACE ---
@@ -235,6 +246,7 @@ export interface ListingService {
   }>;
   listListings(): Promise<Listing[]>;
   getListing(listingId: string): Promise<Listing>;
+  getReadiness(listingId: string): Promise<Readiness>;
   uploadMedia(listingId: string, kind: 'image' | 'audio', file: LocalFile): Promise<MediaUploadResult>;
   getJobResult(jobId: string): Promise<TranscriptJobResult>;
   requestImageAnalysis(listingId: string, payload: { media_id: string; photos?: string[] }): Promise<{ job_id: string }>;

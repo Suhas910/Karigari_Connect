@@ -1,16 +1,49 @@
 # backend/app/routers/coordinator.py
+"""
+Coordinator review, approval and export.
+
+The rules, and what each replaced:
+
+- A claim review can only decide on a claim that exists. It used to create a missing
+  claim with `asserted_by_artisan: true`, putting words in the artisan's mouth.
+- Verifying needs the artisan's own assertion and an evidence note. Rejecting needs a
+  reason and removes the claim, so it cannot reach a buyer.
+- Approval checks the listing (`ai/linkage/export.approval_problems`). It used to set
+  `approved` on any listing in any state.
+- Export is for coordinators, on approved listings, and is validated against the
+  committed ONDC schema (`ai/linkage/export.build_export`). Nothing is sent to a network:
+  `network_submission` is `not_attempted`, or `simulated` when a demo asks, and the
+  listing stays `approved`.
+"""
+import hashlib
 import json
 import uuid
-import hashlib
 from datetime import datetime, timezone
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from .. import auth, models, schemas
+from ..ai.linkage.export import ExportRefused, approval_problems, build_export
 from ..database import get_db
-from .. import models, schemas, auth
 
 router = APIRouter(tags=["Coordinator & Marketplace Export"])
+
+ONDC_TARGETS = ("ondc", "ondc_retail")
+
+
+def _error(status_code: int, code: str, message: str, action: str | None = None) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={"code": code, "message": message, "recoverable": True, "action": action},
+    )
+
+
+def _listing(db: Session, listing_id: str) -> models.ListingModel:
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    return listing
 
 
 @router.post("/listings/{listing_id}/claims/{claim}/review")
@@ -21,39 +54,43 @@ def review_claim(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_role(["coordinator", "admin"])),
 ):
-    claim_model = (
-        db.query(models.ClaimModel)
-        .filter(
-            models.ClaimModel.listing_id == listing_id, models.ClaimModel.claim == claim
-        )
-        .first()
-    )
+    listing = _listing(db, listing_id)
+    if listing.state != "awaiting_approval":
+        raise _error(409, "LISTING_STATE_INVALID", f"The listing is {listing.state}, not awaiting approval.")
 
-    is_verified = payload.decision.lower() in ["verified", "approve", "approved"]
-    note = payload.evidence_note or (
-        f"Verified by coordinator {current_user.username}"
-        if is_verified
-        else payload.reason
-    )
-
+    claim_model = db.query(models.ClaimModel).filter(
+        models.ClaimModel.listing_id == listing_id, models.ClaimModel.claim == claim
+    ).first()
     if not claim_model:
-        claim_model = models.ClaimModel(
-            listing_id=listing_id,
-            claim=claim,
-            asserted_by_artisan=True,
-            coordinator_verified=is_verified,
-            evidence_note=note,
-            verified_at=datetime.now(timezone.utc) if is_verified else None,
-        )
-        db.add(claim_model)
-    else:
-        claim_model.coordinator_verified = is_verified
+        raise _error(404, "LISTING_STATE_INVALID", f"This listing has no claim {claim!r} to review.")
+
+    decision = payload.decision.lower()
+    if decision in ("verified", "verify", "approve", "approved"):
+        if not claim_model.asserted_by_artisan:
+            raise _error(
+                409,
+                "PROVENANCE_VERIFICATION_REQUIRED",
+                "The artisan has not said this claim is true, so there is nothing to verify.",
+                "Ask the artisan to confirm the claim first.",
+            )
+        note = (payload.evidence_note or "").strip()
+        if not note:
+            raise _error(422, "PROVENANCE_VERIFICATION_REQUIRED", "Verifying a claim needs an evidence note.")
+        claim_model.coordinator_verified = True
         claim_model.evidence_note = note
-        claim_model.verified_at = datetime.now(timezone.utc) if is_verified else None
+        claim_model.verified_at = datetime.now(timezone.utc)
+        db.commit()
+        return {"claim": claim, "coordinator_verified": True, "evidence_note": note, "removed": False}
 
-    db.commit()
+    if decision in ("rejected", "reject"):
+        reason = (payload.reason or payload.evidence_note or "").strip()
+        if not reason:
+            raise _error(422, "PROVENANCE_VERIFICATION_REQUIRED", "Rejecting a claim needs a reason.")
+        db.delete(claim_model)
+        db.commit()
+        return {"claim": claim, "coordinator_verified": False, "evidence_note": reason, "removed": True}
 
-    return {"claim": claim, "coordinator_verified": is_verified, "evidence_note": note}
+    raise _error(422, "PROVENANCE_VERIFICATION_REQUIRED", f"Unknown decision {payload.decision!r}; use verified or rejected.")
 
 
 @router.post("/listings/{listing_id}/approval")
@@ -63,31 +100,37 @@ def decide_approval(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.require_role(["coordinator", "admin"])),
 ):
-    listing = (
-        db.query(models.ListingModel)
-        .filter(models.ListingModel.id == listing_id)
-        .first()
-    )
-    if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
-
+    listing = _listing(db, listing_id)
     decision = payload.decision.lower()
-    if decision in ["approve", "approved"]:
-        listing.state = "approved"
-    elif decision in ["reject", "rejected"]:
-        listing.state = "rejected"
-    else:
+    if decision not in ("approve", "approved", "reject", "rejected"):
         raise HTTPException(
             status_code=400,
             detail=f"Invalid decision: {payload.decision}. Must be 'approve' or 'reject'.",
         )
+    if listing.state != "awaiting_approval":
+        raise _error(409, "LISTING_STATE_INVALID", f"The listing is {listing.state}, not awaiting approval.")
 
+    reason = (payload.reason or "").strip()
+    if decision in ("reject", "rejected"):
+        if not reason:
+            raise _error(422, "LISTING_STATE_INVALID", "Rejecting a listing needs a reason the artisan can act on.")
+        listing.state = "rejected"
+        db.commit()
+        return {"status": listing.state, "reason": reason}
+
+    problems = approval_problems(listing)
+    if problems:
+        raise _error(
+            409,
+            "LISTING_STATE_INVALID",
+            "Not ready to approve: " + " ".join(problems),
+            "Review the pending claims, or send the listing back to the artisan.",
+        )
+    listing.state = "approved"
     db.commit()
-
     return {
         "status": listing.state,
-        "reason": payload.reason
-        or f"Decision {listing.state} recorded by {current_user.username}",
+        "reason": reason or f"Approved by {current_user.username}",
     }
 
 
@@ -97,114 +140,53 @@ def export_listing(
     listing_id: str,
     payload: schemas.ExportRequest,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user),
+    current_user: models.User = Depends(auth.require_role(["coordinator", "admin"])),
 ):
-    listing = (
-        db.query(models.ListingModel)
-        .filter(models.ListingModel.id == listing_id)
-        .first()
-    )
-    if not listing:
-        raise HTTPException(status_code=404, detail="Listing not found")
+    listing = _listing(db, listing_id)
+    if payload.target not in ONDC_TARGETS:
+        raise _error(422, "EXPORT_CONTRACT_INVALID", f"Export target {payload.target!r} is not built; only ONDC on_search is.")
 
-    # Construct verifiable ONDC/GeM contract payload
-    cat_data = json.loads(listing.catalogue.catalogue_data) if listing.catalogue else {}
-    price_data = {
-        "floor_amount_paise": listing.price.floor_amount_paise if listing.price else 0,
-        "recommended_low_paise": listing.price.recommended_low_paise
-        if listing.price
-        else 0,
-        "recommended_high_paise": listing.price.recommended_high_paise
-        if listing.price
-        else 0,
-        "currency": "INR",
-    }
-    claims_data = [
-        {"claim": c.claim, "verified": c.coordinator_verified, "note": c.evidence_note}
-        for c in listing.claims
-    ]
+    try:
+        built = build_export(listing)
+    except ExportRefused as exc:
+        raise _error(409, exc.code.value, "Export refused: " + " ".join(exc.problems))
 
-    ondc_item_payload = {
-        "context": {
-            "domain": "nic2004:52110",
-            "action": "on_search",
-            "version": payload.schema_version,
-            "bpp_id": "karigari.mosje.gov.in",
-        },
-        "message": {
-            "catalog": {
-                "bpp/descriptor": {
-                    "name": "Karigari Connect - MoSJE Artisan Marketplace"
-                },
-                "bpp/providers": [
-                    {
-                        "id": f"artisan_{listing.artisan_id}",
-                        "items": [
-                            {
-                                "id": listing.id,
-                                "descriptor": {
-                                    "name": cat_data.get("title", {}).get(
-                                        "en", "Handicraft Item"
-                                    ),
-                                    "symbol": cat_data.get("title", {}).get(
-                                        "local", ""
-                                    ),
-                                    "short_desc": cat_data.get("description", {}).get(
-                                        "en", ""
-                                    ),
-                                    "long_desc": cat_data.get("description", {}).get(
-                                        "local", ""
-                                    ),
-                                    "images": [m.url for m in listing.media if m.url],
-                                },
-                                "price": price_data,
-                                "category_id": cat_data.get("category", "Handicrafts"),
-                                "tags": {
-                                    "heritage_claims": claims_data,
-                                    "statutory_wage_protected": True,
-                                },
-                            }
-                        ],
-                    }
-                ],
-            }
-        },
-    }
-
-    payload_json = json.dumps(ondc_item_payload, sort_keys=True)
+    payload_json = json.dumps(built.payload, sort_keys=True, separators=(",", ":"))
     payload_hash = f"sha256:{hashlib.sha256(payload_json.encode('utf-8')).hexdigest()}"
+    passed = not built.violations
+    network_submission = "simulated" if passed and payload.simulate_network_submission else "not_attempted"
 
-    export_id = str(uuid.uuid4())
-    validation_info = {
-        "passed": True,
-        "schema_source": f"https://ondc.org/protocol/v{payload.schema_version}/retail/catalog.json",
-    }
-
-    network_submission = (
-        "success" if payload.simulate_network_submission else "not_attempted"
-    )
-    status = "exported" if network_submission == "success" else "validated"
-
-    export_record = models.ExportRecordModel(
-        export_id=export_id,
+    db.add(models.ExportRecordModel(
+        export_id=str(uuid.uuid4()),
         listing_id=listing_id,
         target=payload.target,
-        status=status,
+        status="validated" if passed else "failed",
         payload_hash=payload_hash,
-        contract_validation=json.dumps(validation_info),
+        contract_validation=json.dumps({
+            "passed": passed,
+            "schema_source": built.schema_source,
+            "violations": built.violations[:25],
+        }),
         network_submission=network_submission,
-    )
-    db.add(export_record)
-    listing.state = "exported" if network_submission == "success" else "approved"
+    ))
     db.commit()
+    record = listing.exports[-1]
+
+    if not passed:
+        raise _error(
+            422,
+            "EXPORT_CONTRACT_INVALID",
+            f"The payload broke the ONDC schema in {len(built.violations)} place(s): "
+            + "; ".join(built.violations[:5]),
+        )
 
     return schemas.ExportResult(
-        export_id=export_id,
+        export_id=record.export_id,
         target=payload.target,
-        status=status,
+        status="validated",
         payload_hash=payload_hash,
-        contract_validation=schemas.ContractValidation(
-            passed=True, schema_source=validation_info["schema_source"]
-        ),
+        contract_validation=schemas.ContractValidation(passed=True, schema_source=built.schema_source),
         network_submission=network_submission,
+        warnings=built.warnings,
+        payload=built.payload,
     )

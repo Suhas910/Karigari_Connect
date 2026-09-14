@@ -1,64 +1,67 @@
 // src/features/coordinator-review/CoordinatorReviewScreen.tsx
-import React, { useState, useLayoutEffect, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard, type LayoutChangeEvent } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard, type LayoutChangeEvent } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as SecureStore from 'expo-secure-store';
-import { useAuthStore } from '../../store/authStore';
+import { useQuery } from '@tanstack/react-query';
 import type { CoordinatorStackParamList } from '../../types/navigation';
 import { colors, spacing } from '../../theme';
-import type { Claim } from '../../types/contracts';
 import { service } from '../../services';
-import { ProcessingIndicator, BottomDock } from '../../components';
+import { apiErrorOf } from '../../services/api';
+import { BottomDock, ErrorRetryCard, ProcessingIndicator } from '../../components';
+import MediaImage from '../../components/MediaImage';
+
+const toWords = (id?: string | null) => (id ?? '').replace(/_/g, ' ');
+const rupees = (paise?: number | null) =>
+  paise == null ? '—' : `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
+
+const STATE_LABEL: Record<string, string> = {
+  awaiting_approval: 'Awaiting your review',
+  approved: 'Approved',
+  rejected: 'Sent back to the artisan',
+};
 
 export default function CoordinatorReviewScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<CoordinatorStackParamList>>();
-  const route = useRoute<RouteProp<CoordinatorStackParamList, 'CoordinatorDashboard'>>();
+  const route = useRoute<RouteProp<CoordinatorStackParamList, 'ListingReview'>>();
+  const { listingId } = route.params;
   const headerHeight = useHeaderHeight();
-  const listingId = 'mock_listing_123';
 
   const scrollViewRef = useRef<ScrollView>(null);
   const inputOffsets = useRef<Record<string, number>>({});
   const activeInputRef = useRef<string | null>(null);
   const [keyboardSpace, setKeyboardSpace] = useState(0);
 
-  const [loading, setLoading] = useState(false);
-  const [evidenceNotes, setEvidenceNotes] = useState<Record<string, string>>({});
-  const [claimDecisions, setClaimDecisions] = useState<Record<string, 'verified' | 'rejected'>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [listingReason, setListingReason] = useState('');
-  const [listingDecisionStatus, setListingDecisionStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [busyClaim, setBusyClaim] = useState<string | null>(null);
+  const [deciding, setDeciding] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const listingQuery = useQuery({ queryKey: ['listing', listingId], queryFn: () => service.getListing(listingId) });
+  const readinessQuery = useQuery({ queryKey: ['readiness', listingId], queryFn: () => service.getReadiness(listingId) });
 
   const scrollToInput = (key: string | null) => {
     if (!key) return;
     const y = inputOffsets.current[key];
     if (typeof y === 'number') {
-      scrollViewRef.current?.scrollTo({
-        y: Math.max(0, y - 16),
-        animated: true,
-      });
+      scrollViewRef.current?.scrollTo({ y: Math.max(0, y - 16), animated: true });
     }
   };
 
   useEffect(() => {
-    const showSub = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        const h = e.endCoordinates?.height || 300;
-        setKeyboardSpace(h);
-        if (activeInputRef.current) {
-          const key = activeInputRef.current;
-          setTimeout(() => scrollToInput(key), 50);
-          setTimeout(() => scrollToInput(key), 180);
-        }
+    const showSub = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
+      setKeyboardSpace(e.endCoordinates?.height || 300);
+      if (activeInputRef.current) {
+        const key = activeInputRef.current;
+        setTimeout(() => scrollToInput(key), 50);
+        setTimeout(() => scrollToInput(key), 180);
       }
-    );
-    const hideSub = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardSpace(0);
-      }
+    });
+    const hideSub = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () =>
+      setKeyboardSpace(0)
     );
     return () => {
       showSub.remove();
@@ -72,99 +75,87 @@ export default function CoordinatorReviewScreen() {
 
   const handleInputFocus = (key: string) => {
     activeInputRef.current = key;
-    scrollToInput(key);
     setTimeout(() => scrollToInput(key), 100);
-    setTimeout(() => scrollToInput(key), 250);
-    setTimeout(() => scrollToInput(key), 450);
+    setTimeout(() => scrollToInput(key), 300);
   };
 
-  const handleSwitchRole = async () => {
-    try {
-      await SecureStore.deleteItemAsync('userToken');
-    } catch {}
-    useAuthStore.getState().logout();
+  const refresh = async () => {
+    await Promise.all([listingQuery.refetch(), readinessQuery.refetch()]);
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={handleSwitchRole}
-          style={styles.switchRoleBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Switch Role"
-        >
-          <Text style={styles.switchRoleText}>Switch Role</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
-  // Hard rule (build guide): sensitive claims cannot publish without evidence + verification.
-  const mockClaims: Claim[] = [
-    { claim: 'handloom_weave', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
-    { claim: 'natural_dye', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
-  ];
-
-  const [claimError, setClaimError] = useState<string | null>(null);
-  const [reasonError, setReasonError] = useState<string | null>(null);
-
-  const allClaimsDecided = mockClaims.every((c) => claimDecisions[c.claim]);
-
-  const formatClaimLabel = (raw: string) => {
-    return raw
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  const handleClaimDecision = async (claimId: string, decision: 'verified' | 'rejected') => {
-    setClaimError(null);
-    const prevDecision = claimDecisions[claimId];
-    setClaimDecisions((prev) => ({ ...prev, [claimId]: decision }));
-    try {
-      await service.reviewClaim(listingId, claimId, {
-        decision,
-        evidence_note: evidenceNotes[claimId] ?? '',
-        reason: decision === 'rejected' ? 'Insufficient evidence' : null,
-      });
-    } catch (err) {
-      // Revert optimistic update on failure
-      setClaimDecisions((prev) => {
-        const next = { ...prev };
-        if (prevDecision) next[claimId] = prevDecision;
-        else delete next[claimId];
-        return next;
-      });
-      setClaimError('Could not save claim decision. Check connection and try again.');
-    }
-  };
-
-  const handleListingDecision = async (decision: 'approved' | 'rejected') => {
-    if (decision === 'approved' && !allClaimsDecided) {
-      setClaimError('Resolve every claim (Verify or Reject) before approving the listing.');
-      return;
-    }
-    if (decision === 'rejected' && !listingReason.trim()) {
-      setReasonError('Reason is required to reject a listing.');
-      return;
-    }
-    setReasonError(null);
-    setClaimError(null);
-    setLoading(true);
-    try {
-      await service.decideApproval(listingId, { decision, reason: listingReason });
-      setListingDecisionStatus(decision);
-    } catch (err) {
-      setClaimError('Could not submit decision. Check connection and try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <ProcessingIndicator hint="Submitting coordinator decision..." />;
+  if (listingQuery.isLoading) {
+    return <ProcessingIndicator hint="Loading the listing..." />;
   }
+  if (listingQuery.isError || !listingQuery.data) {
+    return <ErrorRetryCard errorText="Could not load this listing." onRetry={() => listingQuery.refetch()} />;
+  }
+
+  const listing = listingQuery.data;
+  const cat = listing.catalogue?.catalogue ?? null;
+  const price = listing.price;
+  const approveProblems = readinessQuery.data?.approve ?? [];
+  const awaiting = listing.state === 'awaiting_approval';
+  const assertedClaims = listing.claims.filter((c) => c.asserted_by_artisan);
+  const unassertedClaims = listing.claims.filter((c) => !c.asserted_by_artisan);
+  const photos = listing.media.filter((m) => m.kind === 'image');
+  const isDemoCatalogue = cat?.source?.catalogue_provider === 'fixture';
+  const isDemoTranscript = cat?.source?.asr_provider === 'fixture';
+  const isDemoRate = !!price?.wage_source?.source_url?.startsWith('unsourced://');
+  const canApprove = awaiting && !readinessQuery.isLoading && approveProblems.length === 0 && !deciding;
+
+  const decideClaim = async (claim: string, decision: 'verified' | 'rejected') => {
+    const note = (notes[claim] ?? '').trim();
+    if (!note) {
+      setActionError(
+        decision === 'verified'
+          ? 'Write down the evidence you checked before verifying the claim.'
+          : 'Write down why you are rejecting the claim.'
+      );
+      return;
+    }
+    setActionError(null);
+    setBusyClaim(claim);
+    try {
+      await service.reviewClaim(listingId, claim, {
+        decision,
+        evidence_note: note,
+        reason: decision === 'rejected' ? note : null,
+      });
+      await refresh();
+    } catch (err) {
+      setActionError(apiErrorOf(err)?.message ?? 'Could not save the claim decision. Check connection and try again.');
+    } finally {
+      setBusyClaim(null);
+    }
+  };
+
+  const decideListing = async (decision: 'approved' | 'rejected') => {
+    if (decision === 'rejected' && !listingReason.trim()) {
+      setActionError('Write a reason the artisan can act on before sending the listing back.');
+      return;
+    }
+    setActionError(null);
+    setDeciding(true);
+    try {
+      await service.decideApproval(listingId, { decision, reason: listingReason.trim() });
+      await refresh();
+    } catch (err) {
+      setActionError(apiErrorOf(err)?.message ?? 'Could not submit the decision. Check connection and try again.');
+    } finally {
+      setDeciding(false);
+    }
+  };
+
+  const detailRows: [string, string][] = [
+    ['Category', toWords(cat?.category) || '—'],
+    ['Materials', (cat?.materials ?? []).map(toWords).join(', ') || '—'],
+    ['Techniques', (cat?.techniques ?? []).map(toWords).join(', ') || '—'],
+    ['Finish', toWords(cat?.finish) || '—'],
+    ['Hours to make', cat?.labour?.hours != null ? String(cat.labour.hours) : '—'],
+    ['Skill level', toWords(cat?.labour?.skill_level) || '—'],
+    ['State', cat?.labour?.state_code || '—'],
+    ['Material cost', rupees(cat?.material_cost_paise)],
+  ];
 
   return (
     <KeyboardAvoidingView
@@ -174,445 +165,285 @@ export default function CoordinatorReviewScreen() {
     >
       <ScrollView
         ref={scrollViewRef}
-        contentContainerStyle={[
-          styles.container,
-          { paddingBottom: keyboardSpace > 0 ? keyboardSpace + 160 : 360 },
-        ]}
+        contentContainerStyle={[styles.container, { paddingBottom: keyboardSpace > 0 ? keyboardSpace + 160 : 200 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-      {/* Workstation Header */}
-      <View style={styles.header}>
-        <Text style={styles.kicker}>COMPLIANCE WORKSTATION</Text>
-        <Text style={styles.title}>Review Queue</Text>
-        <Text style={styles.subtitle}>ID: {listingId} · Artisan submission awaiting coordinator sign-off</Text>
-      </View>
+        <View style={styles.header}>
+          <Text style={styles.kicker}>{STATE_LABEL[listing.state] ?? toWords(listing.state)}</Text>
+          <Text style={styles.title}>{cat?.title?.en || 'Untitled listing'}</Text>
+          {cat?.title?.local ? <Text style={styles.subtitle}>{cat.title.local}</Text> : null}
+        </View>
 
-      {/* Listing Summary Card */}
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>ITEM</Text>
-          <Text style={styles.summaryValue}>Handcrafted Silk Saree</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>CRAFT CLUSTER</Text>
-          <Text style={styles.summaryValue}>Varanasi Handloom Guild</Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>STATUS</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusBadgeText}>
-              {listingDecisionStatus === 'approved'
-                ? 'Approved'
-                : listingDecisionStatus === 'rejected'
-                ? 'Rejected'
-                : 'Pending Verification'}
+        {(isDemoCatalogue || isDemoTranscript) && (
+          <View style={styles.warningBanner}>
+            <Text style={styles.warningBannerText}>
+              {isDemoCatalogue
+                ? 'Demo details: this catalogue was not made from the artisan’s description.'
+                : 'Demo transcript: the artisan’s recording was not listened to.'}
             </Text>
           </View>
-        </View>
-      </View>
+        )}
 
-      {/* Approved State Banner */}
-      {listingDecisionStatus === 'approved' && (
-        <View style={styles.approvedCard}>
-          <Text style={styles.approvedTitle}>Listing Approved</Text>
-          <Text style={styles.approvedText}>
-            All sensitive claims have been verified. The catalog entry is signed and ready for marketplace publication.
-          </Text>
-        </View>
-      )}
-
-      {/* Sensitive Claims Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Sensitive Claims</Text>
-        <Text style={styles.sectionCaption}>
-          Statutory certification requires documented verification before marketplace export.
-        </Text>
-      </View>
-
-      {claimError && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>{claimError}</Text>
-        </View>
-      )}
-
-      {mockClaims.map((c) => {
-        const decision = claimDecisions[c.claim];
-        return (
-          <View
-            key={c.claim}
-            style={styles.claimCard}
-            onLayout={(e) => handleInputLayout(c.claim, e)}
-          >
-            <View style={styles.claimHeader}>
-              <View style={styles.claimTag}>
-                <Text style={styles.claimTagText}>CLAIM</Text>
+        {photos.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoStrip}>
+            {photos.map((photo) => (
+              <View key={photo.id} style={styles.photoCard}>
+                <MediaImage url={photo.url} style={styles.photo} />
+                <Text style={styles.photoLabel}>{photo.variant === 'enhanced' ? 'Cleaned copy' : 'Original'}</Text>
               </View>
-              <Text style={styles.claimTitle}>{formatClaimLabel(c.claim)}</Text>
-              <View
-                style={[
-                  styles.claimStatusBadge,
-                  decision === 'verified' && styles.claimStatusVerified,
-                  decision === 'rejected' && styles.claimStatusRejected,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.claimStatusText,
-                    decision === 'verified' && styles.claimStatusTextVerified,
-                    decision === 'rejected' && styles.claimStatusTextRejected,
-                  ]}
-                >
-                  {decision === 'verified' ? 'Verified' : decision === 'rejected' ? 'Rejected' : 'Unreviewed'}
+            ))}
+          </ScrollView>
+        ) : (
+          <Text style={styles.muted}>No photo was uploaded.</Text>
+        )}
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Details</Text>
+          {cat ? (
+            <>
+              {detailRows.map(([label, value]) => (
+                <View key={label} style={styles.row}>
+                  <Text style={styles.rowLabel}>{label}</Text>
+                  <Text style={styles.rowValue}>{value}</Text>
+                </View>
+              ))}
+              {cat.description?.en ? <Text style={styles.description}>{cat.description.en}</Text> : null}
+            </>
+          ) : (
+            <Text style={styles.muted}>The artisan has not confirmed any details yet.</Text>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Price</Text>
+          {price?.status === 'available' ? (
+            <>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Wage floor</Text>
+                <Text style={styles.rowValue}>{rupees(price.floor_amount_paise)}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Recommended band</Text>
+                <Text style={styles.rowValue}>
+                  {rupees(price.recommended_low_paise)} – {rupees(price.recommended_high_paise)}
                 </Text>
               </View>
+              {price.wage_source && (
+                <Text style={isDemoRate ? styles.warningText : styles.muted}>
+                  Wage source: {price.wage_source.notification_ref}
+                  {isDemoRate ? ' (demonstration rate, not a government notification)' : ''}
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text style={styles.warningText}>
+              No price with a wage floor yet. A listing cannot be approved without one.
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Claims the artisan made</Text>
+          <Text style={styles.sectionCaption}>
+            A claim reaches buyers only once you verify it with evidence. Rejecting removes it.
+          </Text>
+        </View>
+
+        {assertedClaims.length === 0 && <Text style={styles.muted}>The artisan made no claims.</Text>}
+
+        {assertedClaims.map((c) => {
+          const verified = c.coordinator_verified;
+          return (
+            <View key={c.claim} style={styles.card} onLayout={(e) => handleInputLayout(c.claim, e)}>
+              <View style={styles.claimHeader}>
+                <Text style={styles.claimTitle}>{toWords(c.claim)}</Text>
+                <Text style={[styles.claimStatus, verified && styles.claimStatusVerified]}>
+                  {verified ? 'Verified' : 'To review'}
+                </Text>
+              </View>
+              {verified ? (
+                <Text style={styles.muted}>Evidence: {c.evidence_note}</Text>
+              ) : (
+                <>
+                  <TextInput
+                    mode="outlined"
+                    label="Evidence checked, or reason for rejecting"
+                    value={notes[c.claim] ?? ''}
+                    onChangeText={(text) => setNotes((prev) => ({ ...prev, [c.claim]: text }))}
+                    onFocus={() => handleInputFocus(c.claim)}
+                    outlineColor={colors.border}
+                    activeOutlineColor={colors.secondary}
+                    textColor={colors.text}
+                    style={styles.input}
+                    disabled={!awaiting}
+                  />
+                  <View style={styles.claimActions}>
+                    <Button
+                      mode="contained"
+                      onPress={() => decideClaim(c.claim, 'verified')}
+                      buttonColor={colors.secondary}
+                      textColor="#FFFFFF"
+                      style={styles.claimBtn}
+                      disabled={!awaiting || busyClaim !== null}
+                      loading={busyClaim === c.claim}
+                    >
+                      Verify
+                    </Button>
+                    <Button
+                      mode="outlined"
+                      onPress={() => decideClaim(c.claim, 'rejected')}
+                      textColor={colors.error}
+                      style={[styles.claimBtn, styles.rejectOutline]}
+                      disabled={!awaiting || busyClaim !== null}
+                    >
+                      Reject
+                    </Button>
+                  </View>
+                </>
+              )}
             </View>
+          );
+        })}
 
-            <Text style={styles.artisanAssertion}>Asserted by artisan during craft recording.</Text>
+        {unassertedClaims.length > 0 && (
+          <Text style={styles.muted}>
+            Not said by the artisan, so never shown to buyers: {unassertedClaims.map((c) => toWords(c.claim)).join(', ')}.
+          </Text>
+        )}
 
+        {awaiting && (
+          <View style={styles.card} onLayout={(e) => handleInputLayout('decision', e)}>
+            <Text style={styles.sectionTitle}>Decision</Text>
+            {readinessQuery.isLoading ? (
+              <Text style={styles.muted}>Checking the listing...</Text>
+            ) : approveProblems.length === 0 ? (
+              <Text style={styles.readyText}>Ready to approve.</Text>
+            ) : (
+              <>
+                <Text style={styles.sectionCaption}>Approval is blocked until these are resolved:</Text>
+                {approveProblems.map((problem) => (
+                  <Text key={problem} style={styles.problem}>• {problem}</Text>
+                ))}
+              </>
+            )}
             <TextInput
               mode="outlined"
-              label="Coordinator Evidence Note"
-              placeholder="e.g. Inspected loom mechanism and verified silk mark tag"
-              value={evidenceNotes[c.claim] || ''}
-              onChangeText={(text) => setEvidenceNotes((prev) => ({ ...prev, [c.claim]: text }))}
-              onFocus={() => handleInputFocus(c.claim)}
+              label="Note for the artisan (required to send back)"
+              value={listingReason}
+              onChangeText={setListingReason}
+              onFocus={() => handleInputFocus('decision')}
               outlineColor={colors.border}
               activeOutlineColor={colors.secondary}
               textColor={colors.text}
               style={styles.input}
-              theme={{ colors: { background: colors.surface } }}
+              multiline
+              numberOfLines={3}
             />
-
-            <View style={styles.claimActionRow}>
-              <Button
-                mode={decision === 'verified' ? 'contained' : 'outlined'}
-                onPress={() => handleClaimDecision(c.claim, 'verified')}
-                buttonColor={decision === 'verified' ? colors.secondary : undefined}
-                textColor={decision === 'verified' ? '#FFFFFF' : colors.secondary}
-                style={[styles.claimBtn, decision !== 'verified' && styles.claimBtnOutlined]}
-              >
-                Verify Claim
-              </Button>
-              <Button
-                mode={decision === 'rejected' ? 'contained' : 'outlined'}
-                onPress={() => handleClaimDecision(c.claim, 'rejected')}
-                buttonColor={decision === 'rejected' ? colors.error : undefined}
-                textColor={decision === 'rejected' ? '#FFFFFF' : colors.error}
-                style={[styles.claimBtn, decision !== 'rejected' && styles.claimBtnRejectOutlined]}
-              >
-                Reject Claim
-              </Button>
-            </View>
           </View>
-        );
-      })}
+        )}
 
-      {/* Final Decision Section (visible if not yet approved/rejected) */}
-      {listingDecisionStatus === 'pending' && (
-        <View
-          style={styles.decisionCard}
-          onLayout={(e) => handleInputLayout('decision', e)}
-        >
-          <Text style={styles.sectionTitle}>Final Decision</Text>
-          <Text style={styles.sectionCaption}>
-            Decision will be permanently logged against coordinator credentials.
-          </Text>
+        {actionError && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorBannerText}>{actionError}</Text>
+          </View>
+        )}
+      </ScrollView>
 
-          <TextInput
-            mode="outlined"
-            label="Decision Reason / Auditor Notes"
-            placeholder="Required if rejecting listing. Optional otherwise."
-            value={listingReason}
-            onChangeText={setListingReason}
-            onFocus={() => handleInputFocus('decision')}
-            outlineColor={colors.border}
-            activeOutlineColor={colors.secondary}
-            textColor={colors.text}
-            style={styles.input}
-            multiline
-            numberOfLines={3}
-            theme={{ colors: { background: colors.surface } }}
-          />
-
-          {reasonError && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorBannerText}>{reasonError}</Text>
-            </View>
-          )}
-
-          {!allClaimsDecided && (
-            <View style={styles.instructionBanner}>
-              <Text style={styles.instructionText}>
-                All claims must be individually verified or rejected before approving.
-              </Text>
-            </View>
-          )}
-
-        </View>
+      {awaiting && (
+        <BottomDock>
+          <View style={styles.actionRow}>
+            <Button
+              mode="contained"
+              onPress={() => decideListing('approved')}
+              buttonColor={colors.secondary}
+              textColor="#FFFFFF"
+              disabled={!canApprove}
+              loading={deciding}
+              style={styles.decisionBtn}
+              contentStyle={{ height: 48 }}
+            >
+              Approve
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={() => decideListing('rejected')}
+              textColor={colors.error}
+              disabled={deciding}
+              style={[styles.decisionBtn, styles.rejectOutline]}
+              contentStyle={{ height: 48 }}
+            >
+              Send back
+            </Button>
+          </View>
+        </BottomDock>
       )}
 
-      <View style={styles.bottomSpacer} />
-    </ScrollView>
-
-    {/* Docked Action Bar */}
-    {listingDecisionStatus === 'pending' && (
-      <BottomDock>
-        <View style={styles.actionRow}>
+      {listing.state === 'approved' && (
+        <BottomDock>
           <Button
             mode="contained"
-            onPress={() => handleListingDecision('approved')}
+            onPress={() => navigation.navigate('PublishExport', { listingId })}
             buttonColor={colors.secondary}
             textColor="#FFFFFF"
-            disabled={!allClaimsDecided}
             style={styles.decisionBtn}
             contentStyle={{ height: 48 }}
           >
-            Approve Listing
+            Validate for Export
           </Button>
-          <Button
-            mode="outlined"
-            onPress={() => handleListingDecision('rejected')}
-            textColor={colors.error}
-            style={[styles.decisionBtn, styles.rejectBtn]}
-            contentStyle={{ height: 48 }}
-          >
-            Reject Listing
-          </Button>
-        </View>
-      </BottomDock>
-    )}
-
-    {listingDecisionStatus === 'approved' && (
-      <BottomDock>
-        <Button
-          mode="contained"
-          onPress={() => navigation.navigate('PublishExport', { listingId })}
-          buttonColor={colors.secondary}
-          textColor="#FFFFFF"
-          style={styles.primaryActionBtn}
-          contentStyle={{ height: 48 }}
-        >
-          Proceed to Marketplace Export
-        </Button>
-      </BottomDock>
-    )}
-  </KeyboardAvoidingView>
+        </BottomDock>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  keyboardAvoid: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  container: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl + 48,
-    backgroundColor: colors.background,
-    flexGrow: 1,
-  },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  kicker: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    marginTop: 4,
-  },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.sm,
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.8,
-    color: colors.textMuted,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  statusBadge: {
+  keyboardAvoid: { flex: 1, backgroundColor: colors.background },
+  container: { padding: spacing.lg, backgroundColor: colors.background, flexGrow: 1 },
+  header: { marginBottom: spacing.md },
+  kicker: { fontSize: 11, fontWeight: '700', letterSpacing: 1.2, color: colors.textMuted, marginBottom: 4, textTransform: 'uppercase' },
+  title: { fontSize: 22, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 14, color: colors.textMuted, marginTop: 2 },
+  warningBanner: {
     backgroundColor: colors.badgeNeutral,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-  },
-  statusBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  approvedCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.secondary,
-    borderRadius: 8,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  approvedTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.secondary,
-    marginBottom: 4,
-  },
-  approvedText: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-    marginBottom: spacing.md,
-  },
-  primaryActionBtn: {
-    borderRadius: 8,
-    minHeight: spacing.tapTarget,
-    justifyContent: 'center',
-  },
-  sectionHeader: {
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  sectionCaption: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  claimCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  claimHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
-  },
-  claimTag: {
-    backgroundColor: colors.badgeNeutral,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  claimTagText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.6,
-    color: colors.textMuted,
-  },
-  claimTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  claimStatusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
-    backgroundColor: colors.badgeNeutral,
-  },
-  claimStatusVerified: {
-    backgroundColor: '#E8ECF2',
-  },
-  claimStatusRejected: {
-    backgroundColor: '#F7EBE8',
-  },
-  claimStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  claimStatusTextVerified: {
-    color: colors.secondary,
-  },
-  claimStatusTextRejected: {
-    color: colors.error,
-  },
-  artisanAssertion: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    marginBottom: spacing.sm,
-    fontSize: 13,
-  },
-  claimActionRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: 4,
-  },
-  claimBtn: {
-    flex: 1,
-    borderRadius: 8,
-  },
-  claimBtnOutlined: {
-    borderColor: colors.border,
-  },
-  claimBtnRejectOutlined: {
-    borderColor: colors.border,
-  },
-  decisionCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  instructionBanner: {
-    backgroundColor: colors.badgeNeutral,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
     padding: spacing.sm,
-    borderRadius: 6,
+    borderRadius: 4,
     marginBottom: spacing.md,
   },
-  instructionText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 16,
+  warningBannerText: { color: colors.error, fontSize: 12, fontWeight: '700', lineHeight: 16 },
+  photoStrip: { gap: spacing.sm, marginBottom: spacing.md },
+  photoCard: { alignItems: 'center' },
+  photo: { width: 140, height: 140, borderRadius: 8, backgroundColor: colors.badgeNeutral },
+  photoLabel: { fontSize: 11, color: colors.textMuted, marginTop: 4 },
+  card: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
+  sectionHeader: { marginBottom: spacing.sm },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
+  sectionCaption: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.xs },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, gap: spacing.md },
+  rowLabel: { fontSize: 13, color: colors.textMuted },
+  rowValue: { fontSize: 13, color: colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right', textTransform: 'capitalize' },
+  description: { fontSize: 13, color: colors.text, lineHeight: 19, marginTop: spacing.sm },
+  muted: { fontSize: 12, color: colors.textMuted, lineHeight: 17, marginBottom: spacing.sm },
+  warningText: { fontSize: 12, color: colors.error, lineHeight: 17, marginTop: spacing.xs },
+  claimHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
+  claimTitle: { fontSize: 15, fontWeight: '700', color: colors.text, textTransform: 'capitalize' },
+  claimStatus: { fontSize: 11, fontWeight: '700', color: colors.error },
+  claimStatusVerified: { color: colors.secondary },
+  input: { backgroundColor: colors.surface, marginBottom: spacing.sm, fontSize: 13 },
+  claimActions: { flexDirection: 'row', gap: spacing.sm },
+  claimBtn: { flex: 1, borderRadius: 8 },
+  rejectOutline: { borderColor: colors.error },
+  readyText: { fontSize: 13, color: colors.secondary, fontWeight: '700', marginBottom: spacing.sm },
+  problem: { fontSize: 12, color: colors.text, lineHeight: 18 },
   errorBanner: {
     backgroundColor: '#F7EBE8',
     borderWidth: 1,
@@ -621,39 +452,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm,
     marginBottom: spacing.md,
   },
-  errorBannerText: {
-    fontSize: 12,
-    color: colors.error,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  decisionBtn: {
-    flex: 1,
-    borderRadius: 8,
-    minHeight: spacing.tapTarget,
-    justifyContent: 'center',
-  },
-  rejectBtn: {
-    borderColor: colors.error,
-  },
-  bottomSpacer: {
-    height: 40,
-  },
-  switchRoleBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginRight: spacing.sm,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.indigoBorder,
-    backgroundColor: colors.indigoLight,
-  },
-  switchRoleText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.secondary,
-  },
+  errorBannerText: { fontSize: 12, color: colors.error },
+  actionRow: { flexDirection: 'row', gap: spacing.sm },
+  decisionBtn: { flex: 1, borderRadius: 8, minHeight: spacing.tapTarget, justifyContent: 'center' },
 });

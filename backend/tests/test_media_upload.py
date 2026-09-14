@@ -265,9 +265,18 @@ def test_retrying_the_same_file_returns_the_same_media_record():
 def test_upload_is_refused_once_the_listing_is_submitted():
     artisan = _register()
     listing_id = _listing(artisan)
-    assert client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan).status_code == 200
+    # Submission needs a photo and confirmed details (see ai/linkage/export.submission_problems).
+    assert _upload(listing_id, artisan, "image", _png(), "photo.png", "image/png").status_code == 200
+    confirm = client.post(
+        f"/api/v1/listings/{listing_id}/confirm",
+        json={"catalogue": {}, "confirmed_fields": [], "corrections": []},
+        headers=artisan,
+    )
+    assert confirm.status_code == 200, confirm.text
+    submit = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan)
+    assert submit.status_code == 200, submit.text
 
-    res = _upload(listing_id, artisan, "image", _png(), "photo.png", "image/png")
+    res = _upload(listing_id, artisan, "image", _png((40, 30)), "photo2.png", "image/png")
 
     assert res.status_code == 409, res.text
     assert res.json()["error"]["code"] == "LISTING_STATE_INVALID"

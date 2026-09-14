@@ -9,6 +9,7 @@ import type { CoordinatorStackParamList } from '../../types/navigation';
 import { colors, spacing } from '../../theme';
 import type { ExportResult } from '../../types/contracts';
 import { service } from '../../services';
+import { apiErrorOf } from '../../services/api';
 import { ErrorRetryCard, ProcessingIndicator, BottomDock } from '../../components';
 
 export default function PublishExportScreen() {
@@ -38,7 +39,8 @@ export default function PublishExportScreen() {
           if (!isActive) return;
 
           // If listing is no longer approved, or contains unverified claims, block export
-          const hasUnverifiedClaims = listing.claims?.some((c) => !c.coordinator_verified);
+          // Only claims the artisan made need a decision; unasserted ones never reach a buyer.
+          const hasUnverifiedClaims = listing.claims?.some((c) => c.asserted_by_artisan && !c.coordinator_verified);
           if (listing.state !== 'approved' && listing.state !== 'exported') {
             setStaleError('Listing status changed — please review again');
           } else if (hasUnverifiedClaims) {
@@ -80,7 +82,12 @@ export default function PublishExportScreen() {
       setExportResult(res);
     } catch (err) {
       // Contract: EXPORT_CONTRACT_INVALID -> "show export not ready; do not claim marketplace publication."
-      setExportError('Export not ready. The listing payload did not pass validation — check with coordinator before retrying.');
+      const reason = apiErrorOf(err)?.message;
+      setExportError(
+        reason
+          ? `Export not ready. ${reason}`
+          : 'Export not ready. The listing payload did not pass validation — check with coordinator before retrying.'
+      );
     } finally {
       setLoading(false);
     }
@@ -199,16 +206,14 @@ export default function PublishExportScreen() {
             {/* Step 3: Network Submission */}
             <View style={styles.pipelineStep}>
               <View style={styles.stepIndicator}>
-                <View style={[styles.stepDot, exportResult.network_submission === 'success' ? styles.stepDotSuccess : styles.stepDotPending]} />
+                <View style={[styles.stepDot, styles.stepDotPending]} />
               </View>
               <View style={styles.stepContent}>
                 <Text style={styles.stepTitle}>3. ONDC Network Submission</Text>
                 <Text style={styles.stepMeta}>
-                  {exportResult.network_submission === 'success'
-                    ? 'Confirmed · Published to ONDC Retail Registry (Simulated Demo)'
-                    : exportResult.network_submission === 'pending'
-                    ? 'In Progress · Awaiting confirmation'
-                    : 'Not Transmitted (Local Gateway Validated · Staged for Export)'}
+                  {exportResult.network_submission === 'simulated'
+                    ? 'Simulated for a demo · Nothing was sent to the ONDC network'
+                    : 'Not sent · Validated and staged only'}
                 </Text>
               </View>
             </View>
@@ -236,12 +241,21 @@ export default function PublishExportScreen() {
             </View>
           </View>
 
+          {(exportResult.warnings ?? []).length > 0 && (
+            <View style={styles.warningsCard}>
+              <Text style={styles.cardTitle}>Before this can go live</Text>
+              {(exportResult.warnings ?? []).map((warning) => (
+                <Text key={warning} style={styles.warningItem}>• {warning}</Text>
+              ))}
+            </View>
+          )}
+
           {/* Verifiable Provenance QR Code */}
           <View style={styles.qrCard}>
             <Text style={styles.kicker}>DIGITAL PROVENANCE</Text>
             <Text style={styles.qrTitle}>Verifiable Craft Credential</Text>
             <Text style={styles.qrSubtitle}>
-              Scan on any consumer network or retail outlet to verify authentic artisan origin and fair wage compliance.
+              Encodes the listing id and the SHA-256 hash of the validated payload, so a copy of the payload can be matched to this export.
             </Text>
 
             <View style={styles.qrCodeWrapper}>
@@ -325,7 +339,7 @@ export default function PublishExportScreen() {
       <BottomDock>
         <Button
           mode="outlined"
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('ReviewQueue')}
           textColor={colors.secondary}
           style={styles.returnBtn}
           contentStyle={{ height: 48 }}
@@ -435,6 +449,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  warningsCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.error,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  warningItem: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 18,
   },
   qrCard: {
     backgroundColor: colors.surface,

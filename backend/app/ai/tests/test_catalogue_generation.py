@@ -16,7 +16,7 @@ from google.genai import errors
 from app.ai import gemini_client
 from app.ai.adapters import GeminiCatalogueAdapter
 from app.ai.contracts import AdapterInfo, AIError, ErrorCode, TranscriptResult
-from app.ai.taxonomy.generation import draft_schema, response_schema, validate_draft
+from app.ai.taxonomy.generation import draft_schema, publish_schema, response_schema, validate_draft
 
 SAID = "This is a handwoven silk saree with an extra-weft border. It took me sixty hours on a pit loom."
 
@@ -128,6 +128,13 @@ def test_draft_schema_relaxes_only_the_unstated_facts(listing_schema):
         "properties.material_cost_inr.type",
         "properties.source.properties.asr_confidence.type",
     ])
+
+
+def test_publish_schema_relaxes_only_speech_confidence(listing_schema):
+    published = publish_schema()
+    assert published["properties"]["source"]["properties"]["asr_confidence"]["type"] == ["number", "null"]
+    published["properties"]["source"]["properties"]["asr_confidence"] = listing_schema["properties"]["source"]["properties"]["asr_confidence"]
+    assert published == listing_schema
 
 
 # --- draft validation ----------------------------------------------------------------

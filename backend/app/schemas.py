@@ -248,4 +248,7 @@ class ExportResult(BaseModel):
     status: str  # 'validated' | 'submitted' | 'exported' | 'failed'
     payload_hash: str
     contract_validation: ContractValidation
-    network_submission: str  # 'not_attempted' | 'pending' | 'success' | 'failed'
+    # 'not_attempted' | 'simulated'. Nothing is sent to a network yet.
+    network_submission: str
+    warnings: List[str] = []
+    payload: Optional[Dict[str, Any]] = None

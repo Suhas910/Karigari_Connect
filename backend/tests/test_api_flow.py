@@ -160,59 +160,77 @@ def test_full_artisan_and_coordinator_lifecycle():
     assert price_res["wage_source"]["notification_ref"]
     assert price_res["wage_source"]["state_code"] == "KA"
 
-    # 10. Confirm Listing Details (Artisan edits & confirmations)
+    # 10. Confirm Listing Details. The legacy catalogue is demo content outside the
+    # taxonomy, so the artisan replaces it, as the Confirm screen asks, and says yes to
+    # the natural-dye claim.
+    confirmed_catalogue = {
+        **cat_result["catalogue"],
+        "category": "wood_carving",
+        "materials": ["teak"],
+        "techniques": ["turned", "lacquered"],
+        "finish": "natural_dye",
+        "title": {"en": "Turned teak toy with natural lacquer", "local": None, "local_language": "kn"},
+        "description": {"en": "A teak toy turned on a lathe and finished with natural lacquer.", "local": None},
+        "labour": {"hours": 6.0, "skill_level": "skilled", "state_code": "KA"},
+        "material_cost_paise": 45000,
+        "provenance": {
+            "claims": [{"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}],
+            "gi_tag": None,
+        },
+    }
     confirm_payload = {
-        "catalogue": cat_result["catalogue"],
-        "confirmed_fields": ["material_cost_paise", "materials", "techniques"],
+        "catalogue": confirmed_catalogue,
+        "confirmed_fields": cat_result["needs_confirmation"] + ["provenance.natural_dye"],
         "corrections": []
     }
     res_confirm = client.post(f"/api/v1/listings/{listing_id}/confirm", json=confirm_payload, headers=artisan_headers)
-    assert res_confirm.status_code == 200
+    assert res_confirm.status_code == 200, res_confirm.text
     assert res_confirm.json()["status"] == "confirmed"
 
     # 11. Submit for Approval
     res_submit = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
-    assert res_submit.status_code == 200
+    assert res_submit.status_code == 200, res_submit.text
     assert res_submit.json()["state"] == "awaiting_approval"
 
-    # 12. Coordinator Reviews Statutory Claim (e.g. natural_dye / gi_tag)
+    # 12. Coordinator verifies the claim the artisan asserted, with evidence
     claim_review_req = {
         "decision": "verified",
-        "evidence_note": "Verified master artisan registration card and cluster sample under Shilp Samagam.",
+        "evidence_note": "Inspected the dye batch and the supplier record.",
         "reason": None
     }
-    res_claim = client.post(f"/api/v1/listings/{listing_id}/claims/gi_tag/review", json=claim_review_req, headers=coord_headers)
-    assert res_claim.status_code == 200
+    res_claim = client.post(f"/api/v1/listings/{listing_id}/claims/natural_dye/review", json=claim_review_req, headers=coord_headers)
+    assert res_claim.status_code == 200, res_claim.text
     assert res_claim.json()["coordinator_verified"] is True
 
     # 13. Coordinator Approves Listing
     approval_req = {
         "decision": "approve",
-        "reason": "All provenance claims verified and wage floor met."
+        "reason": "Claim verified and wage floor met."
     }
     res_approval = client.post(f"/api/v1/listings/{listing_id}/approval", json=approval_req, headers=coord_headers)
-    assert res_approval.status_code == 200
+    assert res_approval.status_code == 200, res_approval.text
     assert res_approval.json()["status"] == "approved"
 
-    # 14. Export to ONDC Marketplace
+    # 14. Export: validated against the committed ONDC schema. Nothing is sent to a
+    # network; a demo may ask for a simulated submission, which is labelled as one.
     export_req = {
         "target": "ondc",
         "schema_version": "1.0",
         "simulate_network_submission": True
     }
-    res_export = client.post(f"/api/v1/listings/{listing_id}/exports", json=export_req, headers=artisan_headers)
+    res_export = client.post(f"/api/v1/listings/{listing_id}/exports", json=export_req, headers=coord_headers)
     assert res_export.status_code == 200, res_export.text
     export_res = res_export.json()
-    assert export_res["status"] == "exported"
+    assert export_res["status"] == "validated"
     assert export_res["payload_hash"].startswith("sha256:")
     assert export_res["contract_validation"]["passed"] is True
-    assert export_res["network_submission"] == "success"
+    assert export_res["network_submission"] == "simulated"
 
-    # 15. Verify Final Listing State and Full Nested Structure
+    # 15. Final state: approved, not "exported" -- nothing reached a network.
     res_final = client.get(f"/api/v1/listings/{listing_id}", headers=artisan_headers)
     assert res_final.status_code == 200
     final_data = res_final.json()
-    assert final_data["state"] == "exported"
+    assert final_data["state"] == "approved"
     assert len(final_data["media"]) >= 2
     assert final_data["catalogue"] is not None
     assert final_data["price"] is not None

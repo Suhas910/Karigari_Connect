@@ -206,6 +206,14 @@ listListings: async (): Promise<Listing[]> => [
     };
   },
 
+  // Offline mode has no server checks to report.
+  getReadiness: async (listingId) => ({
+    listing_id: listingId,
+    state: 'awaiting_confirmation',
+    submit: [],
+    approve: [],
+  }),
+
   uploadMedia: async (listingId, kind, file) => ({
     status: 'complete',
     media_id: `mock_media_${kind}_${Date.now()}`,
@@ -401,9 +409,10 @@ listListings: async (): Promise<Listing[]> => [
     target: payload.target,
     status: 'validated',
     payload_hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-    contract_validation: { passed: true, schema_source: 'ONDC Protocol Spec v1.2.0' },
+    contract_validation: { passed: false, schema_source: 'Offline demo: not validated' },
     // Build guide: Never use 'syncing to ONDC' theatre for local gateway. Default: 'not_attempted'
-    network_submission: payload.simulate_network_submission ? 'success' : 'not_attempted',
+    network_submission: payload.simulate_network_submission ? 'simulated' : 'not_attempted',
+    warnings: ['Offline demo: no payload was built or validated.'],
   }),
 
   login: async (role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }> => ({

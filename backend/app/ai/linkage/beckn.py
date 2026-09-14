@@ -127,6 +127,9 @@ def listing_to_item(listing: Mapping, price_band: Mapping, provider_id: str) -> 
         # stale "yes" behind.
         _tag("priced_at_or_above_wage_floor", "yes" if fair >= floor else "no"),
     ]
+    if price_band.get("wage_source_ref"):
+        # The notification the floor rests on, so whoever reads the item can check it.
+        tags.append(_tag("wage_floor_source", price_band["wage_source_ref"]))
 
     return {
         "id": listing["listing_id"],

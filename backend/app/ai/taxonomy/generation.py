@@ -57,6 +57,20 @@ def draft_schema() -> dict:
     return copy.deepcopy(_draft_schema())
 
 
+@lru_cache(maxsize=1)
+def _publish_schema() -> dict:
+    """The listing schema for approval and export: every fact required, and only speech
+    confidence allowed to be null, because Gemini reports none."""
+    schema = json.loads(LISTING_SCHEMA_PATH.read_text(encoding="utf-8"))
+    source = schema["properties"]["source"]["properties"]
+    source["asr_confidence"] = _nullable(source["asr_confidence"])
+    return schema
+
+
+def publish_schema() -> dict:
+    return copy.deepcopy(_publish_schema())
+
+
 def response_schema(taxonomy: Mapping[str, Any]) -> dict:
     """What Gemini must return. One branch per category.
 
@@ -94,8 +108,8 @@ def response_schema(taxonomy: Mapping[str, Any]) -> dict:
     return {"anyOf": branches}
 
 
-def validate_draft(listing: Mapping[str, Any], taxonomy: Mapping[str, Any]) -> None:
-    """Raise CATALOGUE_SCHEMA_INVALID unless `listing` is a valid draft. Never repairs."""
+def listing_problems(listing: Mapping[str, Any], taxonomy: Mapping[str, Any], *, draft: bool) -> list[str]:
+    """Every way `listing` breaks the draft (or publish) schema or its category's lists."""
     try:
         from jsonschema import Draft202012Validator
     except ImportError as exc:
@@ -105,7 +119,8 @@ def validate_draft(listing: Mapping[str, Any], taxonomy: Mapping[str, Any]) -> N
             recoverable=False,
         ) from exc
 
-    errors = sorted(Draft202012Validator(_draft_schema()).iter_errors(listing), key=lambda e: list(e.path))
+    schema = _draft_schema() if draft else _publish_schema()
+    errors = sorted(Draft202012Validator(schema).iter_errors(listing), key=lambda e: list(e.path))
     problems = [f"{'.'.join(str(p) for p in e.path) or 'listing'}: {e.message}" for e in errors]
 
     category = next((c for c in taxonomy["categories"] if c["id"] == listing.get("category")), None)
@@ -114,7 +129,12 @@ def validate_draft(listing: Mapping[str, Any], taxonomy: Mapping[str, Any]) -> N
             outside = [v for v in listing.get(field) or [] if isinstance(v, str) and v not in category[field]]
             if outside:
                 problems.append(f"{field}: {', '.join(outside)} not allowed for {category['id']}")
+    return problems
 
+
+def validate_draft(listing: Mapping[str, Any], taxonomy: Mapping[str, Any]) -> None:
+    """Raise CATALOGUE_SCHEMA_INVALID unless `listing` is a valid draft. Never repairs."""
+    problems = listing_problems(listing, taxonomy, draft=True)
     if problems:
         raise AIError(
             ErrorCode.CATALOGUE_SCHEMA_INVALID,
@@ -124,4 +144,11 @@ def validate_draft(listing: Mapping[str, Any], taxonomy: Mapping[str, Any]) -> N
         )
 
 
-__all__ = ["LISTING_SCHEMA_PATH", "draft_schema", "response_schema", "validate_draft"]
+__all__ = [
+    "LISTING_SCHEMA_PATH",
+    "draft_schema",
+    "listing_problems",
+    "publish_schema",
+    "response_schema",
+    "validate_draft",
+]

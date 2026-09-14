@@ -422,6 +422,30 @@ def confirm_listing(
         "state": listing.state
     }
 
+@router.get("/{listing_id}/readiness")
+def listing_readiness(
+    listing_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """What still stops submission and approval, computed by the same checks those
+    endpoints run, so the app's checklists cannot disagree with the server."""
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this listing")
+
+    from ..ai.linkage.export import approval_problems, submission_problems
+
+    return {
+        "listing_id": listing.id,
+        "state": listing.state,
+        "submit": submission_problems(listing),
+        "approve": approval_problems(listing),
+    }
+
+
 @router.post("/{listing_id}/submit-for-approval")
 @router.post("/{listing_id}/submit-approval")
 def submit_for_approval(
@@ -435,6 +459,31 @@ def submit_for_approval(
 
     if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Not authorized to submit this listing")
+
+    from ..ai.linkage.export import submission_problems
+
+    if listing.state in ("approved", "export_queued", "exported"):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "LISTING_STATE_INVALID",
+                "message": f"The listing is already {listing.state}.",
+                "recoverable": False,
+                "action": None,
+            },
+        )
+    problems = submission_problems(listing)
+    if problems:
+        # This used to accept any listing; the app's checklist was ticked by hand.
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "LISTING_STATE_INVALID",
+                "message": "Not ready to submit: " + " ".join(problems),
+                "recoverable": True,
+                "action": "Finish the listing, then submit again.",
+            },
+        )
 
     listing.state = "awaiting_approval"
     db.commit()

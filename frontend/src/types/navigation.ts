@@ -14,7 +14,8 @@ export type ArtisanStackParamList = {
 };
 
 export type CoordinatorStackParamList = {
-  CoordinatorDashboard: undefined;
+  ReviewQueue: undefined;
+  ListingReview: { listingId: string };
   PublishExport: { listingId: string };
 };
 
