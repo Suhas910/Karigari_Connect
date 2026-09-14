@@ -100,9 +100,10 @@ def test_full_artisan_and_coordinator_lifecycle():
     assert res_job_result.status_code == 200
     job_result = res_job_result.json()
     assert "quality" in job_result
-    assert job_result["quality"]["blur"] in ["low", "medium", "high"]
-    assert len(job_result["transformations"]) > 0
-    assert "enhanced_url" in job_result
+    # Legacy image job: fixed demo grades, labelled as such, and no enhancement claimed.
+    assert job_result["adapter"]["provider"] == "fixture"
+    assert job_result["transformations"] == []
+    assert job_result["enhanced_url"] is None
 
     # 7. AI Multilingual Speech Transcription
     trans_req = {

@@ -350,6 +350,11 @@ export default function SpeakScreen() {
         {isComplete && transcriptText && (
           <View style={styles.transcriptCard}>
             <Text style={styles.guideTitle}>{t('speak.heardTitle', 'What we heard')}</Text>
+            {jobResult?.adapter?.provider === 'fixture' && (
+              <Text style={styles.demoText}>
+                {t('speak.demoTranscript', 'Demo transcript: your recording was not listened to.')}
+              </Text>
+            )}
             <Text style={styles.transcriptText}>{transcriptText}</Text>
             {jobResult?.needs_replay && (
               <Text style={styles.guideItem}>
@@ -527,6 +532,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.indigoBorder,
     marginTop: spacing.md,
+  },
+  demoText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.error,
+    marginBottom: spacing.xs,
   },
   transcriptText: {
     fontSize: 15,

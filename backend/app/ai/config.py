@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 _HERE = Path(__file__).resolve().parent
 
@@ -123,9 +124,20 @@ def gemini_model() -> str:
     return (os.getenv("CRAFTLINK_GEMINI_MODEL") or "gemini-3.5-flash").strip()
 
 
-def summary() -> dict[str, str]:
+def serving() -> dict[str, str]:
+    """What actually produces each result. `fixture` means fixed demo content."""
+    return {
+        "transcription": "fixture" if asr_mode() == "legacy" else asr_mode(),
+        "catalogue": "fixture" if catalogue_mode() == "legacy" else catalogue_mode(),
+        "image": "fixture" if image_mode() == "legacy" else image_mode(),
+        "photo_check": photo_check_mode(),
+    }
+
+
+def summary() -> dict[str, Any]:
     """Surfaced at `GET /api/v1/ai/config` so a demo can state its own configuration."""
     return {
+        "serving": serving(),
         "price_engine": price_engine(),
         "wage_table": wage_table_path().name,
         "provenance": provenance_mode(),

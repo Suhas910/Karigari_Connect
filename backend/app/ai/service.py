@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from .. import models, schemas
 from . import config
-from .gemini_client import gemini_client
+from .gemini_client import DEMO_NOTICE, gemini_client
 from .provenance_gate import enforce_catalogue
 from .pricing import bridge as price_bridge
 from .pricing.engine import InvalidPricingInput, WageRateUnavailable
@@ -18,6 +18,9 @@ from .contracts import AIError, ErrorCode, PhotoCheckResult, QualityReport, Tran
 from ..storage import MediaNotFound, StorageUnavailable, get_media_store
 
 logger = logging.getLogger(__name__)
+
+# Stamped on every result the legacy paths build from gemini_client's fixed content.
+LEGACY_ADAPTER = {"provider": "fixture", "model": "legacy-demo", "version": None, "on_device": True}
 
 # CRAFTLINK_ASR value -> adapters to try, in order. `legacy` is handled separately.
 _ASR_PREFERENCES = {
@@ -108,48 +111,38 @@ class AIService:
             models.MediaAssetModel.listing_id == listing_id
         ).first()
 
-        original_url = media.url if media and media.url else "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
+        if not media:
+            # Used to fall back to a stock photograph and grade that.
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "code": "LISTING_STATE_INVALID",
+                    "message": "This listing has no photo with that id.",
+                    "recoverable": True,
+                    "action": "Upload the photo first.",
+                },
+            )
+        original_url = media.url
         
-        # Perform image quality audit via Gemini or deterministic fallback
+        # Fixed demo grades: the photo is not opened.
         audit = gemini_client.audit_image_quality(original_url)
 
-        enhanced_media_id = str(uuid.uuid4())
-        # Provide clean studio-enhanced image variations
-        enhanced_url = original_url + "&auto=format&fit=crop&q=85&studio=true"
-        enhanced_urls = [
-            enhanced_url,
-            original_url + "&variant=white_backdrop",
-            original_url + "&variant=texture_detail"
-        ]
-
+        # Nothing was analysed and no enhanced photo exists, so none is claimed. This path
+        # used to list four transformations that never ran and return a stock photo URL
+        # with query parameters appended as the "enhanced" image.
         result_payload = {
             "job_id": "",
             "status": "complete",
             "quality": audit,
             "original_url": original_url,
-            "enhanced_media_id": enhanced_media_id,
-            "enhanced_url": enhanced_url,
-            "enhanced_urls": enhanced_urls,
-            "transformations": [
-                "Background clutter isolated and softened to neutral tone",
-                "Color temperature balanced to 5500K daylight studio benchmark",
-                "Shadow fill applied to highlight micro-weaving details",
-                "E-commerce square aspect ratio centering with 10% breathing margin"
-            ],
-            "human_review_required": audit.get("overall") == "needs_review"
+            "enhanced_media_id": None,
+            "enhanced_url": None,
+            "enhanced_urls": [],
+            "transformations": [],
+            "human_review_required": True,
+            "adapter": LEGACY_ADAPTER,
+            "notice": DEMO_NOTICE,
         }
-
-        # Create or update enhanced media asset
-        enhanced_media = models.MediaAssetModel(
-            id=enhanced_media_id,
-            listing_id=listing_id,
-            kind="image",
-            variant="enhanced",
-            status="complete",
-            url=enhanced_url,
-            metadata_json=json.dumps(audit)
-        )
-        db.add(enhanced_media)
 
         # Create Job
         job = models.JobModel(
@@ -372,8 +365,22 @@ class AIService:
             models.MediaAssetModel.listing_id == listing_id
         ).first()
 
-        audio_url = audio_media.url if audio_media and audio_media.url else "sample_audio.wav"
-        transcription_res = gemini_client.transcribe_and_translate(audio_url, declared_language=declared_language)
+        if not audio_media:
+            # Used to fall back to "sample_audio.wav" and return a transcript of nothing.
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "code": "LISTING_STATE_INVALID",
+                    "message": "This listing has no voice recording with that id.",
+                    "recoverable": True,
+                    "action": "Upload the recording first.",
+                },
+            )
+        transcription_res = {
+            **gemini_client.transcribe_and_translate(audio_media.url, declared_language=declared_language),
+            "adapter": LEGACY_ADAPTER,
+            "notice": DEMO_NOTICE,
+        }
 
         job = models.JobModel(
             job_id=str(uuid.uuid4()),
@@ -502,10 +509,12 @@ class AIService:
         declared_lang = listing.preferred_language or "kn"
         sample_text = ""
         asr_conf = None
+        asr_provider = None
         transcript_id = str(uuid.uuid4())
 
         if trans_job and trans_job.result_data:
             data = json.loads(trans_job.result_data)
+            asr_provider = (data.get("adapter") or {}).get("provider", "fixture")
             if "original_text" in data:
                 # Adapter transcript (TranscriptResult). Confidence may be None.
                 sample_text = data.get("english_translation") or data["original_text"]
@@ -516,8 +525,6 @@ class AIService:
             transcript_id = trans_job.job_id
         elif payload and isinstance(payload, dict) and payload.get("transcript"):
             sample_text = payload.get("transcript")
-        else:
-            sample_text = "Traditional handmade craft using natural materials."
 
         raw_cat = gemini_client.extract_catalogue_metadata(sample_text, declared_language=declared_lang)
 
@@ -567,11 +574,15 @@ class AIService:
             ),
             source=schemas.SourceInfo(
                 transcript_id=transcript_id,
-                asr_confidence=asr_conf
+                asr_confidence=asr_conf,
+                asr_provider=asr_provider,
+                catalogue_provider="fixture",
             )
         )
 
-        return AIService._gate_and_store(listing, catalogue_draft, field_confidence, needs_confirmation, db)
+        return AIService._gate_and_store(
+            listing, catalogue_draft, field_confidence, needs_confirmation, db, adapter=LEGACY_ADAPTER
+        )
 
     @staticmethod
     def _adapter_catalogue(
@@ -670,10 +681,17 @@ class AIService:
             source=schemas.SourceInfo(
                 transcript_id=cat["source"]["transcript_id"],
                 asr_confidence=cat["source"].get("asr_confidence"),
+                asr_provider=cat["source"].get("asr_provider"),
+                catalogue_provider=result.adapter.provider,
             ),
         )
         return AIService._gate_and_store(
-            listing, catalogue_draft, dict(result.field_confidence), list(result.needs_confirmation), db
+            listing,
+            catalogue_draft,
+            dict(result.field_confidence),
+            list(result.needs_confirmation),
+            db,
+            adapter=result.adapter.model_dump(),
         )
 
     @staticmethod
@@ -682,7 +700,8 @@ class AIService:
         catalogue_draft: schemas.CatalogueDraft,
         field_confidence: Dict[str, float],
         needs_confirmation: List[str],
-        db: Session
+        db: Session,
+        adapter: Optional[Dict[str, Any]] = None,
     ) -> schemas.CatalogueResult:
         listing_id = listing.id
         # --- Provenance gate -------------------------------------------------
@@ -709,7 +728,8 @@ class AIService:
             schema_version="1.0",
             catalogue=catalogue_draft,
             field_confidence=field_confidence,
-            needs_confirmation=needs_confirmation
+            needs_confirmation=needs_confirmation,
+            adapter=adapter,
         )
 
         # Upsert Catalogue in DB

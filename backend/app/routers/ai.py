@@ -8,6 +8,7 @@ from ..database import get_db
 from .. import models, schemas, auth
 from ..ai.service import ai_service
 from ..ai import config as ai_config
+from ..ai.gemini_status import gemini_status
 
 router = APIRouter(tags=["AI Pipeline"])
 
@@ -141,4 +142,4 @@ def ai_configuration():
     A capability whose honesty depends on someone remembering to say so out loud is not
     an honest capability.
     """
-    return ai_config.summary()
+    return {**ai_config.summary(), "gemini": gemini_status()}

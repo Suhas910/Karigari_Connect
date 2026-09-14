@@ -295,6 +295,8 @@ listListings: async (): Promise<Listing[]> => [
       enhanced_urls: [],
       transformations: [],
       human_review_required: false,
+      adapter: { provider: 'fixture', model: 'mockApi', on_device: true },
+      notice: 'Offline demo: the photo was not analysed.',
     };
   },
 
@@ -310,8 +312,14 @@ listListings: async (): Promise<Listing[]> => [
       labour: { hours: null, skill_level: null, state_code: null },
       material_cost_paise: null,
       provenance: { claims: [], gi_tag: null },
-      source: { transcript_id: payload?.transcript_id ?? 'offline', asr_confidence: null },
+      source: {
+        transcript_id: payload?.transcript_id ?? 'offline',
+        asr_confidence: null,
+        asr_provider: 'fixture',
+        catalogue_provider: 'fixture',
+      },
     },
+    adapter: { provider: 'fixture', model: 'mockApi', on_device: true },
     field_confidence: {},
     needs_confirmation: [
       'category', 'materials', 'techniques', 'title.en', 'description.en',

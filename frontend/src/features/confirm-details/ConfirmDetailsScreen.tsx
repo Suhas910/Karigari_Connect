@@ -197,6 +197,7 @@ export default function ConfirmDetailsScreen() {
   }
 
   const { catalogue, field_confidence, needs_confirmation } = result;
+  const isDemo = result.adapter?.provider === 'fixture' || catalogue.source?.catalogue_provider === 'fixture';
   const claims = catalogue.provenance?.claims ?? [];
   const claimNames = Array.from(
     new Set([
@@ -331,6 +332,14 @@ export default function ConfirmDetailsScreen() {
           title="Confirm Details"
           subtitle="Check every detail. Tap a value to change it."
         />
+
+        {isDemo && (
+          <View style={styles.demoBanner}>
+            <Text style={styles.demoBannerText}>
+              Demo details: these were not made from your description. Replace every field with your own.
+            </Text>
+          </View>
+        )}
 
         <View
           style={styles.listContainer}
@@ -544,6 +553,16 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderColor: colors.border,
   },
+  demoBanner: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    backgroundColor: colors.badgeNeutral,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+    padding: spacing.sm,
+    borderRadius: 4,
+  },
+  demoBannerText: { color: colors.error, fontSize: 12, fontWeight: '700', lineHeight: 16 },
   submitBtn: {
     marginTop: spacing.md,
     minHeight: spacing.tapTarget,

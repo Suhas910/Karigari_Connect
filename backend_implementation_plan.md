@@ -62,7 +62,7 @@ Build and verify the complete backend and AI services for **Karigari Connect** l
 
 ### Component 2: Backend AI Engine
 - **[backend/app/ai/gemini_client.py](file:///d:/IT/Karigari_Connect/backend/app/ai/gemini_client.py)**:
-  - Legacy integration with `google-genai` targeting `gemini-2.5-flash`, which no longer answers new keys, so it always returns fixed demo content.
+  - Legacy demo content. Makes no model calls; every result built from it is labelled `adapter.provider: "fixture"`.
   - Multimodal prompt generation for photo quality audits and regional voice note processing.
   - Deterministic high-fidelity fallback for offline demonstration and testing.
 - **[backend/app/ai/service.py](file:///d:/IT/Karigari_Connect/backend/app/ai/service.py)**:

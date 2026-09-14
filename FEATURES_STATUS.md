@@ -50,7 +50,7 @@
 
 ### AI Pipeline
 
-- **Gemini Client** (`backend/app/ai/gemini_client.py`): legacy. Its model, `gemini-2.5-flash`, returns 404 for new API keys (checked 2026-09-14), so this client always returns its fixed demo content. Real Gemini calls are in `app/ai/adapters/gemini_asr.py` and `gemini_catalogue.py` (`gemini-3.5-flash`), switched on with `CRAFTLINK_ASR=gemini` and `CRAFTLINK_CATALOGUE=gemini`.
+- **Gemini Client** (`backend/app/ai/gemini_client.py`): legacy demo content. It makes no model calls, and every result built from it says `adapter.provider: "fixture"`. Real Gemini calls are in `app/ai/adapters/` (`gemini-3.5-flash`), switched on with `CRAFTLINK_ASR=gemini`, `CRAFTLINK_CATALOGUE=gemini`, `CRAFTLINK_IMAGE=studio` and `CRAFTLINK_PHOTO_CHECK=gemini`. `GET /api/v1/ai/config` shows what is serving each capability and whether Gemini is answering.
 
 - **AI Service** (`backend/app/ai/service.py`):
   1. **AI Image Enhancer & Studio**: Quality audit (blur, lighting, framing, overall), studio enhancement variations (white backdrop, texture detail), actionable artisan guidance tips, enhanced media asset creation.

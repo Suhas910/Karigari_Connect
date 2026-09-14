@@ -143,7 +143,13 @@ def test_catalogue_comes_from_the_transcript_and_invents_nothing(gemini):
     assert cat["labour"] == {"hours": 60.0, "skill_level": None, "state_code": "KA"}
     assert cat["material_cost_paise"] is None
     assert cat["provenance"]["gi_tag"] is None
-    assert cat["source"] == {"transcript_id": job_id, "asr_confidence": None}
+    assert cat["source"] == {
+        "transcript_id": job_id,
+        "asr_confidence": None,
+        "asr_provider": "gemini",
+        "catalogue_provider": "gemini",
+    }
+    assert body["adapter"]["provider"] == "gemini"
     # handloom_weave is sensitive and unverified, so the provenance gate removes it.
     assert cat["techniques"] == ["extra_weft"]
     assert body["field_confidence"] == {}

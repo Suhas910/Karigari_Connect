@@ -26,6 +26,7 @@
     "uploading": "Sending your recording...",
     "heardTitle": "What we heard",
     "replayHint": "Listen to your recording and check the words. You can correct the details on the next screen.",
-    "playRecording": "Play recording"
+    "playRecording": "Play recording",
+    "demoTranscript": "Demo transcript: your recording was not listened to."
   }
 }

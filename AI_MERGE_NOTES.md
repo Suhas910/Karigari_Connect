@@ -56,9 +56,11 @@ The legacy behaviour — an unverified `GI-18` identifier reaching the response 
   outlines rather than itself. Quality thresholds were re-set for JPEG photos. None of
   this has been measured on real craft photographs or artisan recordings; the consented
   evaluation set is still the thing that decides.
-- **Legacy paths are still the defaults.** `gemini_client.py` targets `gemini-2.5-flash`,
-  which returns 404 for new keys, so the legacy image, speech and catalogue paths return
-  fixed demo content. Retiring them is a team decision, once the app uploads media.
+- **Legacy paths are still the defaults.** `gemini_client.py` now makes no model calls;
+  the legacy image, speech and catalogue results are fixed demo content labelled
+  `adapter.provider: "fixture"`, and the app shows a demo banner on them. `GET /ai/config`
+  reports what serves each capability and whether Gemini answers. Retiring the legacy
+  paths is a team decision, once the app uploads media.
 - **Real wage notifications and GI registry entries** are still not transcribed.
 
 ---

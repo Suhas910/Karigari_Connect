@@ -132,6 +132,9 @@ class ProvenanceInfo(BaseModel):
 class SourceInfo(BaseModel):
     transcript_id: str
     asr_confidence: Optional[float] = None  # None when the speech provider reports none
+    # Who produced the transcript and the catalogue. "fixture" means fixed demo content.
+    asr_provider: Optional[str] = None
+    catalogue_provider: Optional[str] = None
 
 class CatalogueDraft(BaseModel):
     listing_id: str
@@ -151,6 +154,7 @@ class CatalogueResult(BaseModel):
     catalogue: CatalogueDraft
     field_confidence: Dict[str, float] = {}
     needs_confirmation: List[str] = []
+    adapter: Optional[Dict[str, Any]] = None  # provider/model that generated it; "fixture" = demo
 
 # --- Pricing Schemas ---
 class WageSourceInfo(BaseModel):

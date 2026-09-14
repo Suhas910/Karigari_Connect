@@ -92,7 +92,20 @@ export interface CatalogueDraft {
   labour: { hours: number | null; skill_level: string | null; state_code: string | null };
   material_cost_paise: number | null;
   provenance: { claims: Claim[]; gi_tag: string | null };
-  source: { transcript_id: string; asr_confidence: number | null };
+  // *_provider: who produced it. 'fixture' means fixed demo content.
+  source: {
+    transcript_id: string;
+    asr_confidence: number | null;
+    asr_provider?: string | null;
+    catalogue_provider?: string | null;
+  };
+}
+
+export interface AdapterInfo {
+  provider: string;
+  model: string | null;
+  version?: string | null;
+  on_device?: boolean;
 }
 
 export interface CatalogueResult {
@@ -100,6 +113,7 @@ export interface CatalogueResult {
   catalogue: CatalogueDraft;
   field_confidence: Record<string, number>;
   needs_confirmation: string[];
+  adapter?: AdapterInfo | null;
 }
 
 export interface Listing {
@@ -139,6 +153,8 @@ export interface ImageJobResult {
   transformations?: string[];
   human_review_required?: boolean;
   photo_check?: { status: 'skipped' | 'complete' | 'unavailable'; issues?: string[] };
+  adapter?: AdapterInfo;
+  notice?: string;
   error?: ApiError['error'];
 }
 
@@ -183,6 +199,7 @@ export interface TranscriptJobResult {
   // Legacy backend path (CRAFTLINK_ASR=legacy).
   transcript?: string;
   translated_text?: string;
+  notice?: string;
   error?: ApiError['error'];
 }
 

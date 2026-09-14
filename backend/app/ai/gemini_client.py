@@ -1,101 +1,42 @@
 # backend/app/ai/gemini_client.py
-import os
-import json
-import logging
-from typing import Optional, Dict, Any, List
-from dotenv import load_dotenv
+"""
+Legacy demo content, served when CRAFTLINK_IMAGE, CRAFTLINK_ASR or CRAFTLINK_CATALOGUE
+is `legacy`.
 
-load_dotenv()
-logger = logging.getLogger(__name__)
+Nothing here calls a model. It used to, and that was worse than calling none:
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+- The photo audit sent a URL string, never the image, and asked for grades.
+- The transcription sent a URL string, never the audio, and asked the model to "generate a
+  realistic craft transcription" with a confidence between 0.85 and 0.99.
+- Every call used `gemini-2.5-flash`, which returns 404 for new API keys (checked
+  2026-09-14), and any error fell back to the content below with nothing saying so.
+
+So these return fixed demo content, and the service labels every result built from it
+with `adapter.provider: "fixture"`. The real paths are `adapters/gemini_asr.py`,
+`adapters/gemini_catalogue.py`, `vision/` and `adapters/gemini_photo.py`.
+"""
+from typing import Any, Dict
+
+DEMO_NOTICE = "Demo content. It was not made from this listing's photo, recording or description."
+
 
 class GeminiClient:
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        # Kept for callers that check it. There is no client: no request is ever made.
         self.client = None
-        if self.api_key:
-            try:
-                from google import genai
-                self.client = genai.Client(api_key=self.api_key)
-                logger.info("GeminiClient initialized with Google GenAI SDK (gemini-2.5-flash)")
-            except Exception as e:
-                logger.warning(f"Failed to initialize Google GenAI SDK: {e}. Falling back to deterministic pipeline.")
-        else:
-            logger.info("GEMINI_API_KEY not found in environment. Using deterministic AI fixtures.")
 
     def audit_image_quality(self, image_url: str) -> Dict[str, Any]:
-        """
-        Audit image quality (lighting, blur, framing) and generate actionable artisan guidance tips.
-        """
-        if self.client:
-            try:
-                prompt = (
-                    "You are an expert e-commerce craft photographer and quality auditor for rural Indian artisans. "
-                    "Analyze the product image at this URL: " + image_url + ".\n"
-                    "Evaluate:\n"
-                    "1. blur: 'low', 'medium', or 'high'\n"
-                    "2. lighting: 'acceptable', 'needs_correction', or 'poor'\n"
-                    "3. framing: 'acceptable', 'off_center', or 'cropped'\n"
-                    "4. overall: 'acceptable', 'needs_review', or 'rejected'\n"
-                    "5. guidance: list of 2-3 friendly, actionable tips in simple language for the artisan (e.g., 'Place craft against a plain cream or white cloth', 'Add warm light from the side to show weave depth').\n"
-                    "Respond with ONLY a JSON object matching this schema: "
-                    '{"blur": "low", "lighting": "acceptable", "framing": "acceptable", "overall": "acceptable", "guidance": ["tip1", "tip2"]}'
-                )
-                response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                )
-                text = response.text.strip()
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0].strip()
-                elif "```" in text:
-                    text = text.split("```")[1].split("```")[0].strip()
-                return json.loads(text)
-            except Exception as e:
-                logger.warning(f"Gemini image audit failed: {e}. Falling back to deterministic audit.")
-
-        # High-fidelity deterministic fallback
+        """Fixed grades. The photo is not opened, so there is no guidance to give."""
         return {
             "blur": "low",
             "lighting": "acceptable",
             "framing": "acceptable",
             "overall": "acceptable",
-            "guidance": [
-                "Handcrafted symmetry is well captured with clear edge definition.",
-                "Neutral studio background and lighting enhancement applied.",
-                "Surface texture, natural grain, and authentic artisan marks preserved."
-            ]
+            "guidance": [],
         }
 
     def transcribe_and_translate(self, audio_url_or_id: str, declared_language: str = "kn") -> Dict[str, Any]:
-        """
-        Transcribe audio voice note in regional language (Kannada, Hindi, English)
-        and provide English translation with confidence score.
-        """
-        if self.client:
-            try:
-                prompt = (
-                    f"You are an expert speech recognition and translation assistant for rural Indian craft artisans. "
-                    f"The artisan recorded a voice description in language '{declared_language}'. "
-                    f"Audio reference: {audio_url_or_id}.\n"
-                    "Generate a realistic craft transcription in the native script (Kannada/Hindi/English), "
-                    "its English translation, and ASR confidence score (0.85 to 0.99).\n"
-                    "Output JSON ONLY:\n"
-                    '{"transcript": "...", "translated_text": "...", "asr_confidence": 0.94, "detected_language": "..."}'
-                )
-                response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                )
-                text = response.text.strip()
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0].strip()
-                return json.loads(text)
-            except Exception as e:
-                logger.warning(f"Gemini transcription failed: {e}. Falling back to deterministic transcription.")
-
-        # Deterministic fixtures per language
+        """A fixed transcript per language. The recording is not opened."""
         fixtures = {
             "kn": {
                 "transcript": "ಇದು ಸಾಂಪ್ರದಾಯಿಕ ಚೆನ್ನಪಟ್ಟಣ ಕೈಕೆತ್ತನೆಯ ಮರದ ಆಟಿಕೆ. ಆಲೇಮರ ಮತ್ತು ನೈಸರ್ಗಿಕ ತರಕಾರಿ ಬಣ್ಣಗಳನ್ನು ಬಳಸಿ ಲೇತ್ ಯಂತ್ರದಲ್ಲಿ ಮಾಡಲಾಗಿದೆ. ಪೂರ್ಣಗೊಳಿಸಲು 6 ಗಂಟೆ ಶ್ರಮ ಬೇಕಾಯಿತು.",
@@ -119,46 +60,8 @@ class GeminiClient:
         return fixtures.get(declared_language, fixtures["kn"])
 
     def extract_catalogue_metadata(self, description_text: str, declared_language: str = "kn") -> Dict[str, Any]:
-        """
-        Extract structured catalogue schema with per-field confidence scores.
-        Fields with confidence < 0.85 will be flagged for artisan review.
-        """
-        if self.client:
-            try:
-                prompt = (
-                    "Extract structured handicraft catalogue details from this artisan description:\n"
-                    f"\"{description_text}\"\n"
-                    "Return ONLY JSON matching this structure:\n"
-                    "{\n"
-                    '  "category": "Woodcraft & Toys",\n'
-                    '  "materials": ["Ivory Wood (Aale Mara)", "Vegetable Lacquer Dye"],\n'
-                    '  "techniques": ["Lathe Turning", "Natural Lacquer Polishing"],\n'
-                    '  "title_en": "Channapatna Handcrafted Lacquer Wooden Craft",\n'
-                    '  "title_local": "ಚೆನ್ನಪಟ್ಟಣ ನೈಸರ್ಗಿಕ ಬಣ್ಣದ ಮರದ ಆಟಿಕೆ",\n'
-                    '  "description_en": "SEO friendly description in English...",\n'
-                    '  "description_local": "Regional description...",\n'
-                    '  "labour_hours": 6.0,\n'
-                    '  "skill_level": "skilled",\n'
-                    '  "material_cost_paise": 45000,\n'
-                    '  "claims": [{"claim": "natural_dye", "asserted_by_artisan": true, "coordinator_verified": false, "evidence_note": null}],\n'
-                    '  "gi_tag": null,\n'
-                    '  "field_confidence": {"category": 0.96, "materials": 0.92, "techniques": 0.90, "title": 0.95, "description": 0.92, "labour.hours": 0.88, "material_cost_paise": 0.82}\n'
-                    "}"
-                )
-                response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt,
-                )
-                text = response.text.strip()
-                if "```json" in text:
-                    text = text.split("```json")[1].split("```")[0].strip()
-                return json.loads(text)
-            except Exception as e:
-                logger.warning(f"Gemini catalogue extraction failed: {e}. Falling back to deterministic extraction.")
-
-        # Deterministic extraction
-        is_hi = declared_language == "hi"
-        if is_hi:
+        """A fixed catalogue per language. The description is not read."""
+        if declared_language == "hi":
             return {
                 "category": "Handloom Textiles",
                 "materials": ["Pure Mulberry Silk", "Gold Zari Thread", "Natural Dyes"],
@@ -184,31 +87,31 @@ class GeminiClient:
                     "material_cost_paise": 0.80  # < 0.85 prompts confirmation
                 }
             }
-        else:
-            return {
-                "category": "Woodcraft & Toys",
-                "materials": ["Ivory Wood (Aale Mara)", "Vegetable Lacquer Dye"],
-                "techniques": ["Lathe Turning", "Natural Lacquer Polishing"],
-                "title_en": "Channapatna Handcrafted Natural Lacquer Toy",
-                "title_local": "ಚೆನ್ನಪಟ್ಟಣ ನೈಸರ್ಗಿಕ ಬಣ್ಣದ ಸಾಂಪ್ರದಾಯಿಕ ಮರದ ಆಟಿಕೆ",
-                "description_en": "Authentic Channapatna wooden toy handcrafted on a traditional lathe using seasoned ivory wood and non-toxic natural vegetable lacquers. Safe for children and eco-friendly.",
-                "description_local": "ಸಾಂಪ್ರದಾಯಿಕ ಲೇತ್ ಯಂತ್ರದಲ್ಲಿ ನೈಸರ್ಗಿಕ ಬಣ್ಣಗಳನ್ನು ಬಳಸಿ ತಯಾರಿಸಿದ ಅಧಿಕೃತ ಚೆನ್ನಪಟ್ಟಣ ಮರದ ಆಟಿಕೆ. ಮಕ್ಕಳಿಗೆ ಸುರಕ್ಷಿತ ಮತ್ತು ಪರಿಸರ ಸ್ನೇಹಿ.",
-                "labour_hours": 6.0,
-                "skill_level": "skilled",
-                "material_cost_paise": 45000,
-                "claims": [
-                    {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
-                ],
-                "gi_tag": None,
-                "field_confidence": {
-                    "category": 0.97,
-                    "materials": 0.93,
-                    "techniques": 0.91,
-                    "title": 0.95,
-                    "description": 0.92,
-                    "labour.hours": 0.88,
-                    "material_cost_paise": 0.82  # < 0.85 prompts confirmation
-                }
+        return {
+            "category": "Woodcraft & Toys",
+            "materials": ["Ivory Wood (Aale Mara)", "Vegetable Lacquer Dye"],
+            "techniques": ["Lathe Turning", "Natural Lacquer Polishing"],
+            "title_en": "Channapatna Handcrafted Natural Lacquer Toy",
+            "title_local": "ಚೆನ್ನಪಟ್ಟಣ ನೈಸರ್ಗಿಕ ಬಣ್ಣದ ಸಾಂಪ್ರದಾಯಿಕ ಮರದ ಆಟಿಕೆ",
+            "description_en": "Authentic Channapatna wooden toy handcrafted on a traditional lathe using seasoned ivory wood and non-toxic natural vegetable lacquers. Safe for children and eco-friendly.",
+            "description_local": "ಸಾಂಪ್ರದಾಯಿಕ ಲೇತ್ ಯಂತ್ರದಲ್ಲಿ ನೈಸರ್ಗಿಕ ಬಣ್ಣಗಳನ್ನು ಬಳಸಿ ತಯಾರಿಸಿದ ಅಧಿಕೃತ ಚೆನ್ನಪಟ್ಟಣ ಮರದ ಆಟಿಕೆ. ಮಕ್ಕಳಿಗೆ ಸುರಕ್ಷಿತ ಮತ್ತು ಪರಿಸರ ಸ್ನೇಹಿ.",
+            "labour_hours": 6.0,
+            "skill_level": "skilled",
+            "material_cost_paise": 45000,
+            "claims": [
+                {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
+            ],
+            "gi_tag": None,
+            "field_confidence": {
+                "category": 0.97,
+                "materials": 0.93,
+                "techniques": 0.91,
+                "title": 0.95,
+                "description": 0.92,
+                "labour.hours": 0.88,
+                "material_cost_paise": 0.82  # < 0.85 prompts confirmation
             }
+        }
+
 
 gemini_client = GeminiClient()

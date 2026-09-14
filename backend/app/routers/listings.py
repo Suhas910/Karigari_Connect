@@ -166,13 +166,21 @@ def complete_media_upload(
     if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Not authorized to update this listing")
 
+    if not payload.url:
+        # This endpoint never receives a file. It used to fill in a stock photo or a sample
+        # sound, which then passed for the artisan's own media.
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "LISTING_STATE_INVALID",
+                "message": "No file was sent. This endpoint only records a URL.",
+                "recoverable": True,
+                "action": "Upload the file with POST /listings/{listing_id}/media/upload.",
+            },
+        )
+
     media_id = str(uuid.uuid4())
-    default_url = (
-        "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
-        if payload.kind == "image"
-        else "https://actions.google.com/sounds/v1/ambiences/outdoor_market.ogg"
-    )
-    url = payload.url or default_url
+    url = payload.url
 
     media = models.MediaAssetModel(
         id=media_id,

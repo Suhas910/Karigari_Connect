@@ -441,6 +441,14 @@ export default function ImageReviewScreen() {
         </View>
       )}
 
+      {jobResult?.adapter?.provider === 'fixture' && (
+        <View style={styles.demoBanner}>
+          <Text style={styles.demoBannerText}>
+            Demo result: your photo was not analysed and no cleaned photo was made.
+          </Text>
+        </View>
+      )}
+
       {guidance.length > 0 && (
         <View style={styles.guidanceCard}>
           <Text style={styles.guidanceTitle}>Tips for a better photo</Text>
@@ -958,6 +966,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: colors.secondary,
   },
+  demoBanner: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    backgroundColor: colors.badgeNeutral,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+    padding: spacing.sm,
+    borderRadius: 4,
+  },
+  demoBannerText: { color: colors.error, fontSize: 12, fontWeight: '700', lineHeight: 16 },
   guidanceCard: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
