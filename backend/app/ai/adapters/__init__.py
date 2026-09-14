@@ -16,6 +16,7 @@ the adapter lands, with no caller changing.
 from .base import ASRAdapter, AudioSource, CatalogueGeneratorAdapter, TranslationAdapter
 from .fixture import FixtureASRAdapter, UnavailableASRAdapter
 from .gemini_asr import GeminiASRAdapter
+from .gemini_catalogue import GeminiCatalogueAdapter
 from .local_asr import LocalWhisperASRAdapter
 from .registry import available_asr, get_asr, register_asr, resolve_asr
 
@@ -36,6 +37,7 @@ __all__ = [
     "DEFAULT_ASR_PREFERENCE",
     "FixtureASRAdapter",
     "GeminiASRAdapter",
+    "GeminiCatalogueAdapter",
     "LocalWhisperASRAdapter",
     "TranslationAdapter",
     "UnavailableASRAdapter",

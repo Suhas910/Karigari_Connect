@@ -112,17 +112,18 @@ class ClaimSchema(BaseModel):
 
 class MultilingualText(BaseModel):
     en: str
-    local: str
+    local: Optional[str] = None
     local_language: str = "hi"
 
 class MultilingualDesc(BaseModel):
     en: str
-    local: str
+    local: Optional[str] = None
 
+# None until the artisan states it. A generated catalogue does not estimate these.
 class LabourInfo(BaseModel):
-    hours: float
-    skill_level: str
-    state_code: str
+    hours: Optional[float] = None
+    skill_level: Optional[str] = None
+    state_code: Optional[str] = None
 
 class ProvenanceInfo(BaseModel):
     claims: List[ClaimSchema] = []
@@ -137,10 +138,11 @@ class CatalogueDraft(BaseModel):
     category: str
     materials: List[str] = []
     techniques: List[str] = []
+    finish: Optional[str] = None
     title: MultilingualText
     description: MultilingualDesc
     labour: LabourInfo
-    material_cost_paise: int
+    material_cost_paise: Optional[int] = None
     provenance: ProvenanceInfo
     source: SourceInfo
 

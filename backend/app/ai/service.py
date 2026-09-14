@@ -13,8 +13,8 @@ from .gemini_client import gemini_client
 from .provenance_gate import enforce_catalogue
 from .pricing import bridge as price_bridge
 from .pricing.engine import InvalidPricingInput, WageRateUnavailable
-from .adapters import DEFAULT_ASR_PREFERENCE, resolve_asr
-from .contracts import AIError, ErrorCode
+from .adapters import DEFAULT_ASR_PREFERENCE, GeminiCatalogueAdapter, resolve_asr
+from .contracts import AIError, ErrorCode, TranscriptResult
 from ..storage import MediaNotFound, StorageUnavailable, get_media_store
 
 logger = logging.getLogger(__name__)
@@ -301,6 +301,10 @@ class AIService:
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
+        if config.catalogue_mode() != "legacy":
+            return AIService._adapter_catalogue(listing, payload, db)
+
+        # LEGACY. Free-text extraction with a fixed fallback listing.
         # Check if there was a transcription job
         trans_job = db.query(models.JobModel).filter(
             models.JobModel.listing_id == listing_id,
@@ -380,6 +384,120 @@ class AIService:
             )
         )
 
+        return AIService._gate_and_store(listing, catalogue_draft, field_confidence, needs_confirmation, db)
+
+    @staticmethod
+    def _adapter_catalogue(
+        listing: models.ListingModel,
+        payload: Optional[Dict[str, Any]],
+        db: Session
+    ) -> schemas.CatalogueResult:
+        """Generate the catalogue from the listing's transcript with Gemini.
+
+        No transcript, no catalogue. A failed generation stores nothing and returns the
+        contract error.
+        """
+        mode = config.catalogue_mode()
+        if mode != "gemini":
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "code": "PROVIDER_UNAVAILABLE",
+                    "message": f"Unknown CRAFTLINK_CATALOGUE={mode!r}; expected legacy or gemini.",
+                    "recoverable": False,
+                    "action": None,
+                },
+            )
+
+        payload = payload or {}
+        facts = payload.get("confirmed_facts") or {}
+        if not isinstance(facts, dict):
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "CATALOGUE_SCHEMA_INVALID",
+                    "message": "confirmed_facts must be an object.",
+                    "recoverable": True,
+                    "action": "Send confirmed_facts as an object, e.g. {\"state_code\": \"KA\"}.",
+                },
+            )
+
+        query = db.query(models.JobModel).filter(
+            models.JobModel.listing_id == listing.id,
+            models.JobModel.type == "transcription",
+            models.JobModel.status == "complete"
+        )
+        if payload.get("transcript_id"):
+            query = query.filter(models.JobModel.job_id == payload["transcript_id"])
+        trans_job = query.order_by(models.JobModel.created_at.desc()).first()
+        data = json.loads(trans_job.result_data) if trans_job and trans_job.result_data else {}
+        if "original_text" not in data:
+            # A legacy transcription result was never derived from the audio.
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "code": "LISTING_STATE_INVALID",
+                    "message": "This listing has no completed transcript to generate from.",
+                    "recoverable": True,
+                    "action": "Transcribe the uploaded recording first (CRAFTLINK_ASR=gemini), then generate again.",
+                },
+            )
+        transcript = TranscriptResult.model_validate(
+            {key: data[key] for key in TranscriptResult.model_fields if key in data}
+        )
+
+        try:
+            result = GeminiCatalogueAdapter().generate(
+                transcript=transcript, confirmed_facts=facts, listing_id=listing.id
+            )
+        except AIError as exc:
+            logger.warning("Catalogue generation for %s failed: %s", listing.id, exc.message)
+            status_code = {
+                ErrorCode.CATALOGUE_SCHEMA_INVALID: 422,
+                ErrorCode.LISTING_STATE_INVALID: 409,
+            }.get(exc.code, 503)
+            raise HTTPException(status_code=status_code, detail=exc.as_dict()) from exc
+
+        cat = result.catalogue
+        cost_inr = cat.get("material_cost_inr")
+        catalogue_draft = schemas.CatalogueDraft(
+            listing_id=listing.id,
+            category=cat["category"],
+            materials=cat["materials"],
+            techniques=cat["techniques"],
+            finish=cat.get("finish"),
+            title=schemas.MultilingualText(
+                en=cat["title"]["en"],
+                local=cat["title"].get("local"),
+                local_language=cat["title"].get("local_language") or transcript.detected_language,
+            ),
+            description=schemas.MultilingualDesc(
+                en=cat["description"]["en"], local=cat["description"].get("local")
+            ),
+            labour=schemas.LabourInfo(**cat["labour"]),
+            material_cost_paise=None if cost_inr is None else round(cost_inr * 100),
+            provenance=schemas.ProvenanceInfo(
+                claims=[schemas.ClaimSchema(**c) for c in cat["provenance"]["claims"]],
+                gi_tag=None,
+            ),
+            source=schemas.SourceInfo(
+                transcript_id=cat["source"]["transcript_id"],
+                asr_confidence=cat["source"].get("asr_confidence"),
+            ),
+        )
+        return AIService._gate_and_store(
+            listing, catalogue_draft, dict(result.field_confidence), list(result.needs_confirmation), db
+        )
+
+    @staticmethod
+    def _gate_and_store(
+        listing: models.ListingModel,
+        catalogue_draft: schemas.CatalogueDraft,
+        field_confidence: Dict[str, float],
+        needs_confirmation: List[str],
+        db: Session
+    ) -> schemas.CatalogueResult:
+        listing_id = listing.id
         # --- Provenance gate -------------------------------------------------
         # Runs on whatever produced the catalogue -- model, fixture, anything. A
         # sensitive claim needs an artisan assertion AND a coordinator verification
@@ -471,6 +589,18 @@ class AIService:
                 material_cost_paise = material_cost_paise or 45000
                 labour_hours = labour_hours or 6.0
                 state_code = state_code or "KA"
+
+        if material_cost_paise is None or labour_hours is None:
+            # A generated catalogue leaves these null until the artisan states them.
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "CATALOGUE_SCHEMA_INVALID",
+                    "message": "Labour hours and material cost have not been confirmed for this listing.",
+                    "recoverable": True,
+                    "action": "Ask the artisan for the hours and the material cost, then price again.",
+                },
+            )
 
         state_code = (state_code or "KA").upper()
 

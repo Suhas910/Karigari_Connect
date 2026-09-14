@@ -141,7 +141,7 @@ class GeminiClient:
                     '  "skill_level": "skilled",\n'
                     '  "material_cost_paise": 45000,\n'
                     '  "claims": [{"claim": "natural_dye", "asserted_by_artisan": true, "coordinator_verified": false, "evidence_note": null}],\n'
-                    '  "gi_tag": "Channapatna Toys & Dolls (GI-18)",\n'
+                    '  "gi_tag": null,\n'
                     '  "field_confidence": {"category": 0.96, "materials": 0.92, "techniques": 0.90, "title": 0.95, "description": 0.92, "labour.hours": 0.88, "material_cost_paise": 0.82}\n'
                     "}"
                 )
@@ -171,10 +171,9 @@ class GeminiClient:
                 "skill_level": "master_artisan",
                 "material_cost_paise": 320000,
                 "claims": [
-                    {"claim": "handloom_weave", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None},
-                    {"claim": "gi_tag", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
+                    {"claim": "handloom_weave", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
                 ],
-                "gi_tag": "Banaras Brocades & Sarees (GI-99)",
+                "gi_tag": None,
                 "field_confidence": {
                     "category": 0.98,
                     "materials": 0.94,
@@ -198,10 +197,9 @@ class GeminiClient:
                 "skill_level": "skilled",
                 "material_cost_paise": 45000,
                 "claims": [
-                    {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None},
-                    {"claim": "gi_tag", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
+                    {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
                 ],
-                "gi_tag": "Channapatna Toys & Dolls (GI-18)",
+                "gi_tag": None,
                 "field_confidence": {
                     "category": 0.97,
                     "materials": 0.93,

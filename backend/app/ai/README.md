@@ -14,11 +14,11 @@ python -m app.ai.linkage.contract_test        # ONDC conformance, printable in o
 | Path | What | Needs credentials |
 |---|---|---|
 | `contracts.py` | `AI_INTERFACE_CONTRACTS.md` as Python types | no |
-| `taxonomy/` | Controlled vocabularies, listing JSON Schema, provenance guard | no |
+| `taxonomy/` | Controlled vocabularies, listing JSON Schema, generation schema, provenance guard | no |
 | `pricing/` | Wage-anchored price engine | no |
 | `linkage/` | ONDC payload builder, schema fetcher, contract test | no |
 | `vision/` | Photo quality assessor, deterministic image studio | no |
-| `adapters/` | Provider Protocols, registry, fixture replay, Gemini and local ASR | Gemini key; Bhashini |
+| `adapters/` | Provider Protocols, registry, fixture replay, Gemini and local ASR, Gemini catalogue | Gemini key; Bhashini |
 | `fixtures/` | Synthetic images and recorded transcripts | no |
 
 `adapters/gemini_asr.py` reads `GEMINI_API_KEY` and calls the Gemini API when

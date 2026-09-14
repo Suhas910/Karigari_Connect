@@ -35,3 +35,4 @@ os.environ.setdefault("CRAFTLINK_MEDIA_DIR", tempfile.mkdtemp(prefix="craftlink-
 # CRAFTLINK_ASR in backend/.env (loaded by python-dotenv, which never overrides) cannot
 # change it. Tests of the adapter path set the mode themselves.
 os.environ.setdefault("CRAFTLINK_ASR", "legacy")
+os.environ.setdefault("CRAFTLINK_CATALOGUE", "legacy")

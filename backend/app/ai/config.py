@@ -12,6 +12,7 @@ Every flag is read from the environment at import time and has a documented defa
     CRAFTLINK_PROVENANCE     enforce | off            (default: enforce)
     CRAFTLINK_ASR            gemini | local | legacy  (default: legacy)
     CRAFTLINK_GEMINI_MODEL   <model name>             (default: gemini-3.5-flash)
+    CRAFTLINK_CATALOGUE      gemini | legacy          (default: legacy)
 
 ## Why the defaults are what they are
 
@@ -28,6 +29,9 @@ legal exposure, not a cosmetic bug. This default fails closed.
 provider that answered is stamped on the result. The frontend still sends placeholder
 media ids instead of uploading, and with no uploaded file those modes refuse the job.
 The default flips once the app uploads real recordings.
+
+`CRAFTLINK_CATALOGUE=legacy` — `gemini` generates from a completed `gemini` or `local`
+transcript and refuses without one, so it waits on the same frontend change.
 
 Image processing is deliberately absent from this file. `vision/` is not wired to any
 route and is on hold pending a different approach.
@@ -92,6 +96,10 @@ def use_local_asr() -> bool:
     return asr_mode() == "local"
 
 
+def catalogue_mode() -> str:
+    return _flag("CRAFTLINK_CATALOGUE", "legacy")
+
+
 def gemini_model() -> str:
     # Not lowercased through _flag: model names are passed to the API verbatim.
     return (os.getenv("CRAFTLINK_GEMINI_MODEL") or "gemini-3.5-flash").strip()
@@ -104,6 +112,7 @@ def summary() -> dict[str, str]:
         "wage_table": wage_table_path().name,
         "provenance": provenance_mode(),
         "asr": asr_mode(),
+        "catalogue": catalogue_mode(),
         "gemini_model": gemini_model(),
         "image_pipeline": "on_hold",
     }

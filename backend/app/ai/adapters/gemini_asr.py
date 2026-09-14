@@ -52,7 +52,6 @@ from __future__ import annotations
 import io
 import json
 import logging
-import os
 import re
 import struct
 import sys
@@ -64,6 +63,7 @@ from typing import Any
 
 from ...media_inspect import MediaRejected, inspect_audio
 from ..contracts import AdapterInfo, AIError, ErrorCode, TranscriptResult
+from ._gemini import api_error, make_client, sdk_available
 from .base import AudioSource
 
 logger = logging.getLogger(__name__)
@@ -125,23 +125,6 @@ def _prompt(declared_language: str | None) -> str:
     )
 
 
-def _api_error(exc: Any) -> AIError:
-    code = getattr(exc, "code", None)
-    logger.warning("Gemini transcription failed: HTTP %s %s", code, getattr(exc, "message", exc))
-    if code == 429 or (isinstance(code, int) and code >= 500):
-        return AIError(
-            ErrorCode.PROVIDER_UNAVAILABLE,
-            "The speech service is busy. The recording is saved.",
-            recoverable=True,
-            action="retry_later",
-        )
-    return AIError(
-        ErrorCode.PROVIDER_UNAVAILABLE,
-        f"The speech service rejected the request (HTTP {code}).",
-        recoverable=False,
-    )
-
-
 class GeminiASRAdapter:
     """`ASRAdapter` backed by the Gemini API."""
 
@@ -156,29 +139,11 @@ class GeminiASRAdapter:
 
     def is_available(self) -> bool:
         """A key and the SDK are present. No network call."""
-        if self._client is not None:
-            return True
-        if not (self.api_key or os.getenv("GEMINI_API_KEY")):
-            return False
-        try:
-            from google import genai  # noqa: F401
-        except ImportError:
-            return False
-        return True
+        return self._client is not None or sdk_available(self.api_key)
 
     def _get_client(self) -> Any:
         if self._client is None:
-            api_key = self.api_key or os.getenv("GEMINI_API_KEY")
-            if not api_key:
-                # The SDK would raise a bare ValueError; the app needs a contract error.
-                raise AIError(
-                    ErrorCode.PROVIDER_UNAVAILABLE,
-                    "Gemini speech recognition is not configured (GEMINI_API_KEY is not set).",
-                    recoverable=False,
-                )
-            from google import genai
-
-            self._client = genai.Client(api_key=api_key)
+            self._client = make_client(self.api_key, "speech recognition")
         return self._client
 
     def transcribe(
@@ -235,7 +200,7 @@ class GeminiASRAdapter:
                 ),
             )
         except errors.APIError as exc:
-            raise _api_error(exc) from exc
+            raise api_error(exc, "speech", "The recording is saved.") from exc
         except Exception as exc:  # noqa: BLE001 - network and SDK failures become contract errors
             logger.warning("Gemini transcription failed: %s", exc)
             raise AIError(
