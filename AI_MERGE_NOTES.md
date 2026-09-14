@@ -1,10 +1,10 @@
 # AI layer: two implementations, one directory
 
-> **Status 2026-09-11 (updated).** Three of the five reconciliation steps below are now
-> done and verified through the live API: the price engine, the provenance gate, and a
-> configuration endpoint that reports which implementation is serving. Image processing
-> is **on hold** — `vision/` is not wired to any route and is not being worked on
-> pending a different approach. Gemini wiring is deferred. See "What is wired now".
+> **Status 2026-09-14.** Price, provenance and the config endpoint are done (2026-09-11).
+> Since then: real media upload; Gemini transcription of the uploaded audio; schema-
+> constrained Gemini catalogue generation; and the image studio on the uploaded photo,
+> with a segmentation model in place of the Otsu mask. Each new path is behind a flag
+> that defaults to legacy until teammates switch. See "What is wired now".
 
 ## What is wired now
 
@@ -16,7 +16,10 @@ compared on the same request. Flags live in `app/ai/config.py`.
 | `CRAFTLINK_PRICE_ENGINE` | `deterministic` | `deterministic` uses the tested engine; `legacy` uses `STATUTORY_WAGES` |
 | `CRAFTLINK_WAGE_TABLE` | shipped empty table | `demo` loads clearly-labelled fixture rates |
 | `CRAFTLINK_PROVENANCE` | `enforce` | Gate unverified claims before storage and response |
-| `CRAFTLINK_ASR` | `legacy` | `local` not enabled: media download path does not exist yet |
+| `CRAFTLINK_ASR` | `legacy` | `gemini` or `local` transcribe the uploaded recording |
+| `CRAFTLINK_CATALOGUE` | `legacy` | `gemini` generates into the taxonomy from that transcript |
+| `CRAFTLINK_IMAGE` | `legacy` | `studio` grades and enhances the uploaded photo |
+| `CRAFTLINK_PHOTO_CHECK` | `off` | `gemini` adds a second opinion that can only lower a photo's grade |
 
 `GET /api/v1/ai/config` reports the live configuration, unauthenticated, so "is this
 real?" is answerable from outside the process during a demo.
@@ -47,19 +50,16 @@ The legacy behaviour — an unverified `GI-18` identifier reaching the response 
 
 ### Still not done
 
-- **Image processing.** On hold by decision. `vision/quality.py` and `vision/studio.py`
-  are unwired. The background neutralisation uses a hand-rolled Otsu mask over colour
-  distance (`cv2` + `numpy`, no segmentation model), which is adequate on the synthetic
-  fixtures and visibly wrong on real photographs. The unit tests did not catch this
-  because they define "the subject" using the same mask they are checking, so a wrong
-  mask produces a passing test. A different approach is needed, not a patch.
-- **Catalogue generation** still comes from `gemini_client.py`, so the content is still
-  fixed demo text and materials/techniques are still free strings rather than taxonomy
-  enums. The gate constrains what may be *published*; it does not make the generation
-  real. Schema-constrained generation is the remaining half of the guard.
-- **Transcription** still returns a fixed transcript with a literal `0.94` confidence.
-  The local ASR adapter works, but the worker cannot yet fetch audio bytes from the
-  Supabase URLs the media records hold.
+- **Evidence on real photos and recordings.** The Otsu mask is replaced by rembg
+  `u2netp` (`vision/segmentation.py`); on drawn scenes with known masks it scored IoU
+  0.97 and up where Otsu scored 0.18-0.71, and its tests now compare against drawn
+  outlines rather than itself. Quality thresholds were re-set for JPEG photos. None of
+  this has been measured on real craft photographs or artisan recordings; the consented
+  evaluation set is still the thing that decides.
+- **Legacy paths are still the defaults.** `gemini_client.py` targets `gemini-2.5-flash`,
+  which returns 404 for new keys, so the legacy image, speech and catalogue paths return
+  fixed demo content. Retiring them is a team decision, once the app uploads media.
+- **Real wage notifications and GI registry entries** are still not transcribed.
 
 ---
 

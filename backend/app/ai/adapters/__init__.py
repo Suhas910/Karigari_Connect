@@ -17,6 +17,7 @@ from .base import ASRAdapter, AudioSource, CatalogueGeneratorAdapter, Translatio
 from .fixture import FixtureASRAdapter, UnavailableASRAdapter
 from .gemini_asr import GeminiASRAdapter
 from .gemini_catalogue import GeminiCatalogueAdapter
+from .gemini_photo import GeminiPhotoCheck
 from .local_asr import LocalWhisperASRAdapter
 from .registry import available_asr, get_asr, register_asr, resolve_asr
 
@@ -38,6 +39,7 @@ __all__ = [
     "FixtureASRAdapter",
     "GeminiASRAdapter",
     "GeminiCatalogueAdapter",
+    "GeminiPhotoCheck",
     "LocalWhisperASRAdapter",
     "TranslationAdapter",
     "UnavailableASRAdapter",

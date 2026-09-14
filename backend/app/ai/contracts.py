@@ -130,6 +130,18 @@ class QualityReport(_Strict):
         return self.overall != "unacceptable"
 
 
+class PhotoCheckResult(_Strict):
+    """Problems a measurement cannot see (no product, a person in frame), from a model.
+
+    Can only lower a photo's grade. `level` is the strictest grade its issues imply.
+    """
+
+    issues: list[str] = Field(default_factory=list)
+    level: QualityLevel = "acceptable"
+    guidance: list[str] = Field(default_factory=list)
+    adapter: AdapterInfo
+
+
 class ImageJobResult(_Strict):
     quality: QualityReport
     enhanced_media_id: str | None = None
@@ -232,6 +244,7 @@ __all__ = [
     "ErrorCode",
     "ImageJobResult",
     "LowConfidenceSpan",
+    "PhotoCheckResult",
     "PriceResult",
     "QualityLevel",
     "QualityReport",

@@ -6,10 +6,12 @@ deterministic enhancement recovers a photo with no recoverable detail in it, and
 `TEAM_BUILD_GUIDE.md` forbids inventing detail that was never captured. So a bad
 capture must be caught and re-shot, not "fixed".
 
-Everything here is measurement, not inference. There is no model, no weights and no
-network call. Given the same bytes it returns the same verdict on any machine, which
-is what makes the retake guidance testable and the failure modes explainable to the
-artisan in one sentence.
+Sharpness and exposure are measurement, not inference. Framing needs to know which
+pixels are the product, and that comes from a segmentation model (`segmentation.py`),
+which replaced a colour-distance mask that failed on patterned and same-coloured
+backdrops. Given the same bytes it returns the same verdict, which is what makes the
+retake guidance testable and the failure modes explainable to the artisan in one
+sentence.
 
 ## About the thresholds
 
@@ -35,11 +37,19 @@ import cv2
 import numpy as np
 
 from ..contracts import QualityLevel, QualityReport
+from .segmentation import subject_mask
 
 # Blur and framing are resolution-dependent measures. Every image is scaled to this
 # long edge before measurement so a 12 MP phone photo and a 2 MP one are graded on the
 # same scale. Without this, "sharpness" would mostly measure the camera.
 ANALYSIS_LONG_EDGE = 1024
+
+# Sharpness is measured smaller still, because phone photos are JPEGs. JPEG's 8x8 block
+# edges read as detail to the Laplacian once real detail is blurred away. Measured
+# 2026-09-14 on a blurred drawn scene saved at JPEG quality 70: at 1024 px the score rose
+# to 1.9x its PNG value and graded the photo acceptable; at 512 px it rose 1.26x, while
+# sharp photos stayed about 22x above blurred ones.
+SHARPNESS_LONG_EDGE = 512
 
 
 @dataclass(frozen=True)
@@ -49,10 +59,12 @@ class QualityThresholds:
     # Capture resolution below which detail is genuinely absent rather than soft.
     min_long_edge_px: int = 640
 
-    # Variance of the Laplacian on a 0..1 grayscale image at ANALYSIS_LONG_EDGE.
-    # Higher is sharper.
-    blur_acceptable_above: float = 2.0e-3
-    blur_unacceptable_below: float = 4.0e-4
+    # Variance of the Laplacian on a contrast-normalised 0..1 grayscale image at
+    # SHARPNESS_LONG_EDGE. Higher is sharper. Set 2026-09-14 from the fixtures and drawn
+    # scenes, PNG and JPEG q92/q70: blurred at most 1.0e-3 (fixture) and 6.1e-3 (scene),
+    # sharp at least 1.3e-1.
+    blur_acceptable_above: float = 2.5e-2
+    blur_unacceptable_below: float = 2.0e-3
 
     # Fraction of pixels crushed to black or blown to white. Clipped pixels have lost
     # their information permanently; no exposure correction brings them back.
@@ -104,62 +116,15 @@ def _contrast_normalised(gray: np.ndarray) -> np.ndarray:
     return np.clip((gray - low) / (high - low), 0.0, 1.0).astype(np.float32)
 
 
-def _analysis_copy(image: np.ndarray) -> np.ndarray:
+def _analysis_copy(image: np.ndarray, target_long_edge: int = ANALYSIS_LONG_EDGE) -> np.ndarray:
     """Scale to a fixed long edge so measures are comparable across cameras."""
     height, width = image.shape[:2]
     long_edge = max(height, width)
-    if long_edge == ANALYSIS_LONG_EDGE:
+    if long_edge == target_long_edge:
         return image
-    scale = ANALYSIS_LONG_EDGE / long_edge
+    scale = target_long_edge / long_edge
     interpolation = cv2.INTER_AREA if scale < 1 else cv2.INTER_LINEAR
     return cv2.resize(image, (max(1, round(width * scale)), max(1, round(height * scale))), interpolation=interpolation)
-
-
-def subject_mask(image: np.ndarray) -> np.ndarray:
-    """Separate the product from its background, deterministically.
-
-    Craft product photos share a useful property: the object is somewhere in the middle
-    and the background is whatever surrounds it at the frame edge. So estimate the
-    background from a border band, measure every pixel's distance from it, and take
-    Otsu's threshold of that distance map.
-
-    This is not segmentation and does not pretend to be. It is good enough to answer
-    "is the product big enough and roughly centred", which is the only question the
-    framing grade asks. A real segmentation model would be a dependency, a download and
-    a source of non-determinism, in exchange for precision this grade does not need.
-    """
-    blurred = cv2.GaussianBlur(image, (5, 5), 0)
-    lab = cv2.cvtColor(blurred, cv2.COLOR_BGR2LAB).astype(np.float32)
-
-    height, width = lab.shape[:2]
-    band = max(1, min(height, width) // 20)
-    border = np.concatenate([
-        lab[:band].reshape(-1, 3),
-        lab[-band:].reshape(-1, 3),
-        lab[:, :band].reshape(-1, 3),
-        lab[:, -band:].reshape(-1, 3),
-    ])
-    background = np.median(border, axis=0)
-
-    distance = np.linalg.norm(lab - background, axis=2)
-    peak = float(distance.max())
-    if peak <= 1e-6:
-        return np.zeros((height, width), dtype=np.uint8)
-
-    scaled = np.clip(distance / peak * 255.0, 0, 255).astype(np.uint8)
-    _, mask = cv2.threshold(scaled, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-
-    # Keep only the largest connected region: reflections and stray objects should not
-    # inflate the subject area.
-    count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
-    if count <= 1:
-        return mask
-    largest = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
-    return np.where(labels == largest, 255, 0).astype(np.uint8)
 
 
 def subject_bbox(image: np.ndarray) -> tuple[int, int, int, int] | None:
@@ -185,7 +150,8 @@ def measure(image: np.ndarray) -> dict[str, float]:
     # phone steadier when the actual problem is the light. Stretching between the 2nd
     # and 98th percentiles first separates "no detail" from "little light", which are
     # different problems with different retake instructions.
-    laplacian_var = float(cv2.Laplacian(_contrast_normalised(gray), cv2.CV_32F, ksize=3).var())
+    sharpness_gray = cv2.cvtColor(_analysis_copy(image, SHARPNESS_LONG_EDGE), cv2.COLOR_BGR2GRAY).astype(np.float32) / 255.0
+    laplacian_var = float(cv2.Laplacian(_contrast_normalised(sharpness_gray), cv2.CV_32F, ksize=3).var())
 
     total = float(gray.size)
     shadow_clip = float((gray <= 2 / 255).sum()) / total

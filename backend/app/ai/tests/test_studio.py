@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from app.ai.contracts import AIError, ErrorCode
+from app.ai.fixtures.segmentation_scenes import SCENE_NAMES, scenes
 from app.ai.vision.quality import assess, subject_mask
 from app.ai.vision.studio import _neutralise_background, enhance
 
@@ -37,15 +38,19 @@ def test_unusable_photos_are_refused_with_retake_guidance(stem):
     assert len(excinfo.value.message) > len("This photo cannot be used for a listing.")
 
 
-def test_background_neutralisation_never_touches_the_subject():
+@pytest.mark.parametrize("scene", SCENE_NAMES)
+def test_background_neutralisation_never_touches_the_subject(scene):
     """The promise, mechanically.
 
     Enhancement may improve the background. It may not alter the product, because a
     buyer receiving something that does not match its photograph is the exact failure
     this product exists to prevent.
+
+    The mask is the drawn outline of the product, not a computed one. The earlier
+    version of this test took the mask from `subject_mask`, so a wrong mask still passed.
     """
-    image = cv2.imread(str(image_fixture("good"))).astype(np.float32) / 255.0
-    mask = subject_mask((image * 255).astype(np.uint8))
+    bgr, mask = scenes()[scene]
+    image = bgr.astype(np.float32) / 255.0
     neutralised, changed = _neutralise_background(image, mask)
 
     assert changed
@@ -127,6 +132,33 @@ def test_quality_report_can_be_passed_in_to_avoid_recomputing():
     report = assess(image_fixture("good"))
     result = enhance(image_fixture("good"), quality=report)
     assert result.quality.model_dump() == report.model_dump()
+
+
+@pytest.mark.parametrize("scene", SCENE_NAMES)
+def test_studio_never_changes_the_products_own_pixels(scene):
+    """Regression guard, found by opening the output on 2026-09-14.
+
+    A grey-world white balance turned a beige pot grey (LAB b shifted by 16.6) and tinted
+    background the mask had taken in orange, while every other test in this file passed.
+    On a photo with acceptable lighting the studio may only lift the background and crop,
+    so the inside of the product, taken from its drawn outline, must come out unchanged.
+    """
+    image, truth = scenes()[scene]
+    result = enhance(image)
+    assert result.quality.lighting == "acceptable", "the scene must not need exposure correction for this check"
+    assert "resize" not in result.transformations
+
+    x, y, w, h = result.crop_box or (0, 0, image.shape[1], image.shape[0])
+    # Well inside the product, so the few edge pixels segmentation misses do not count.
+    inner = cv2.erode(truth, np.ones((15, 15), np.uint8))[y:y + h, x:x + w] > 0
+    assert inner.any()
+    difference = np.abs(image[y:y + h, x:x + w].astype(int) - result.image.astype(int))[inner]
+    assert difference.max() <= 1, f"product pixels changed by up to {difference.max()}"
+
+
+def test_white_balance_is_never_applied():
+    for stem in ("good", "off_centre", "underexposed"):
+        assert "white_balance" not in enhance(image_fixture(stem)).transformations
 
 
 def _subject_stats(image: np.ndarray, mask: np.ndarray) -> tuple[float, float]:

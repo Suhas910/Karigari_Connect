@@ -11,9 +11,30 @@ import cv2
 import numpy as np
 import pytest
 
+from app.ai.fixtures.segmentation_scenes import scenes
 from app.ai.vision.quality import assess, measure
 
 from .conftest import image_fixture
+
+
+def _jpeg(image: np.ndarray, quality: int) -> np.ndarray:
+    ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, quality])
+    assert ok
+    return cv2.imdecode(encoded, cv2.IMREAD_COLOR)
+
+
+@pytest.mark.parametrize("quality", [92, 70])
+def test_jpeg_compression_does_not_change_the_blur_grade(quality):
+    """Regression guard, measured 2026-09-14.
+
+    Phone photos are JPEGs, and JPEG's block edges read as detail once real detail is
+    blurred away. Measured at 1024 px, a blurred scene saved at quality 70 crossed into
+    "acceptable". Sharpness is now measured at 512 px (see quality.py).
+    """
+    scene = scenes()["vessel_on_striped_cloth"][0]
+    assert assess(_jpeg(cv2.GaussianBlur(scene, (0, 0), 6), quality)).blur != "acceptable"
+    assert assess(_jpeg(scene, quality)).blur == "acceptable"
+    assert assess(_jpeg(cv2.imread(str(image_fixture("blurred"))), quality)).blur == "unacceptable"
 
 
 def test_good_photo_passes_every_dimension():

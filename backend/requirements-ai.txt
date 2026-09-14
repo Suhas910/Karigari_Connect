@@ -15,6 +15,9 @@ jsonschema==4.26.0        # listing schema + the ONDC contract test
 opencv-python-headless==5.0.0.93
 numpy==2.5.3
 pillow==12.3.0
+# Subject segmentation (app/ai/vision/segmentation.py). Pulls in onnxruntime. The model
+# file (u2netp, 4.6 MB) downloads from rembg's GitHub releases on first use.
+rembg==2.0.84
 
 # --- ONDC schema extraction (app/ai/linkage/fetch_ondc_schema.py)
 # Only needed to regenerate schemas/on_search.json; the committed schema is plain JSON,

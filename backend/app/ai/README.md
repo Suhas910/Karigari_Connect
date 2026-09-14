@@ -17,7 +17,7 @@ python -m app.ai.linkage.contract_test        # ONDC conformance, printable in o
 | `taxonomy/` | Controlled vocabularies, listing JSON Schema, generation schema, provenance guard | no |
 | `pricing/` | Wage-anchored price engine | no |
 | `linkage/` | ONDC payload builder, schema fetcher, contract test | no |
-| `vision/` | Photo quality assessor, deterministic image studio | no |
+| `vision/` | Photo quality assessor, image studio, subject segmentation (rembg; the model downloads on first use) | no |
 | `adapters/` | Provider Protocols, registry, fixture replay, Gemini and local ASR, Gemini catalogue | Gemini key; Bhashini |
 | `fixtures/` | Synthetic images and recorded transcripts | no |
 
@@ -78,7 +78,10 @@ Three files must not be filled with plausible values. Tests fail if they are:
 Stated plainly so nobody quotes them as results:
 
 - `vision/quality.py` thresholds are engineering knobs tuned to separate the synthetic
-  fixtures. They have never seen a real craft photograph.
+  fixtures and drawn scenes, as PNG and JPEG. They have never seen a real craft photograph.
+- The segmentation scores in `vision/segmentation.py` (IoU 0.97 and up for `u2netp`) come
+  from drawn scenes. They show the old colour-distance mask failing; they say nothing
+  about real workshop photos.
 - `LOW_CONFIDENCE_BELOW` in `adapters/local_asr.py` is a starting point, not a
   calibrated operating point.
 - Whisper's `exp(avg_logprob)` confidence is a ranking heuristic, not a probability of

@@ -36,3 +36,5 @@ os.environ.setdefault("CRAFTLINK_MEDIA_DIR", tempfile.mkdtemp(prefix="craftlink-
 # change it. Tests of the adapter path set the mode themselves.
 os.environ.setdefault("CRAFTLINK_ASR", "legacy")
 os.environ.setdefault("CRAFTLINK_CATALOGUE", "legacy")
+os.environ.setdefault("CRAFTLINK_IMAGE", "legacy")
+os.environ.setdefault("CRAFTLINK_PHOTO_CHECK", "off")

@@ -23,10 +23,23 @@ Every applied transform is appended to `transformations`, in order. The app show
 original next to the enhanced image and never silently replaces it, so an artisan can
 always see what was done and reject it.
 
+## No white balance
+
+A grey-world white balance used to run on every photo. It assumes the frame should
+average to grey, so when the product fills most of the frame it removes the product's
+own colour. Measured 2026-09-14 inside the drawn outline of each segmentation scene: it
+shifted a beige pot's LAB b channel by 16.6 (warm to grey), a terracotta vessel's by 10.4,
+and tinted background stripes the mask had taken in orange. Every test passed; opening
+the output showed it. Colour is what a buyer relies on, so the studio no longer touches it.
+
+The segmentation mask still takes in a little background at the product's edge (0.9% of
+the background on the striped scene), which is left as captured rather than lifted.
+
 ## Contract note -- needs a team decision
 
 `AI_INTERFACE_CONTRACTS.md` gives the example transformation vocabulary as
-`["background_neutralization", "white_balance", "crop"]`. This module also emits
+`["background_neutralization", "white_balance", "crop"]`. This module no longer emits
+`white_balance` (see above), and also emits
 `exposure_normalization` and `resize`, because doing those and labelling them as one
 of the sanctioned three would be a lie in the audit trail. Adding two names to that
 list is a contract change: per the document's own change process it must be proposed
@@ -65,26 +78,8 @@ class EnhancementResult:
     quality: QualityReport
     transformations: list[str] = field(default_factory=list)
     human_review_required: bool = False
-
-
-def _white_balance(image: np.ndarray) -> tuple[np.ndarray, bool]:
-    """Grey-world correction, scaled by how strong the cast actually is.
-
-    Applied only when the channel means genuinely diverge. A neutral photo passed
-    through an unconditional grey-world step comes out slightly wrong, and an audit
-    trail listing a correction that corrected nothing is noise.
-    """
-    means = image.reshape(-1, 3).mean(axis=0)
-    if float(means.min()) < 1e-3:
-        return image, False
-
-    grey = float(means.mean())
-    gains = grey / means
-    if float(np.abs(gains - 1.0).max()) < 0.04:
-        return image, False
-
-    balanced = np.clip(image * gains[None, None, :], 0.0, 1.0)
-    return balanced.astype(np.float32), True
+    # (x, y, width, height) of the crop in the original photo's pixels, or None if uncropped.
+    crop_box: tuple[int, int, int, int] | None = None
 
 
 def _normalise_exposure(image: np.ndarray, target_median: float = 55.0) -> tuple[np.ndarray, bool]:
@@ -145,10 +140,12 @@ def _neutralise_background(image: np.ndarray, mask: np.ndarray) -> tuple[np.ndar
     return np.clip(blended, 0.0, 1.0).astype(np.float32), True
 
 
-def _crop_to_subject(image: np.ndarray, mask: np.ndarray) -> tuple[np.ndarray, bool]:
-    """Crop around the subject with a margin. Never crops into it."""
+def _crop_to_subject(
+    image: np.ndarray, mask: np.ndarray
+) -> tuple[np.ndarray, tuple[int, int, int, int] | None]:
+    """Crop around the subject with a margin. Never crops into it. Returns the box, or None."""
     if not mask.any():
-        return image, False
+        return image, None
 
     xs = np.flatnonzero(mask.any(axis=0))
     ys = np.flatnonzero(mask.any(axis=1))
@@ -162,8 +159,8 @@ def _crop_to_subject(image: np.ndarray, mask: np.ndarray) -> tuple[np.ndarray, b
 
     # Not worth recording a crop that removes almost nothing.
     if (nx1 - nx0 + 1) * (ny1 - ny0 + 1) > 0.95 * width * height:
-        return image, False
-    return image[ny0:ny1 + 1, nx0:nx1 + 1], True
+        return image, None
+    return image[ny0:ny1 + 1, nx0:nx1 + 1], (nx0, ny0, nx1 - nx0 + 1, ny1 - ny0 + 1)
 
 
 def _resize(image: np.ndarray, target_long_edge: int) -> tuple[np.ndarray, bool]:
@@ -206,19 +203,15 @@ def enhance(
     working = original.astype(np.float32) / 255.0
     applied: list[str] = []
 
-    # Order matters. Exposure and white balance run on the full frame before the
-    # subject is located, because the mask is easier to find on a corrected image.
-    # Only correct exposure the assessor actually judged wrong. An unconditional
-    # correction on an acceptable photo is a change made for no reason, and every
-    # change here is a change to how a real product looks to a buyer.
+    # Order matters. Exposure runs on the full frame before the subject is located,
+    # because the mask is easier to find on a corrected image. Only correct exposure the
+    # assessor actually judged wrong. An unconditional correction on an acceptable photo
+    # is a change made for no reason, and every change here is a change to how a real
+    # product looks to a buyer.
     if report.lighting != "acceptable":
         working, changed = _normalise_exposure(working)
         if changed:
             applied.append("exposure_normalization")
-
-    working, changed = _white_balance(working)
-    if changed:
-        applied.append("white_balance")
 
     mask = subject_mask((working * 255).astype(np.uint8))
 
@@ -226,8 +219,8 @@ def enhance(
     if changed:
         applied.append("background_neutralization")
 
-    working, changed = _crop_to_subject(working, mask)
-    if changed:
+    working, crop_box = _crop_to_subject(working, mask)
+    if crop_box is not None:
         applied.append("crop")
 
     working, changed = _resize(working, target_long_edge)
@@ -243,4 +236,5 @@ def enhance(
         # A photo that only just cleared the bar goes to a coordinator before it
         # reaches a buyer. The studio improves it; it cannot certify it.
         human_review_required=report.overall == "needs_correction",
+        crop_box=crop_box,
     )

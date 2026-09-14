@@ -76,7 +76,14 @@ def get_job_result(
         raise HTTPException(status_code=404, detail="Job not found")
 
     if job.status == "failed" and job.error_data:
-        return {"job_id": job.job_id, "status": "failed", "error": json.loads(job.error_data)}
+        # Whatever the job produced before failing (an image job's quality report and its
+        # retake guidance) comes back with the error.
+        return {
+            **json.loads(job.result_data or "{}"),
+            "job_id": job.job_id,
+            "status": "failed",
+            "error": json.loads(job.error_data),
+        }
 
     if not job.result_data:
         raise HTTPException(status_code=400, detail="Job result not yet available")

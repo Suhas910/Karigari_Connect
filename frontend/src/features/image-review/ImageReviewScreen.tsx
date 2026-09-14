@@ -10,6 +10,7 @@ import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
+import MediaImage from '../../components/MediaImage';
 
 export default function ImageReviewScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
@@ -71,7 +72,8 @@ export default function ImageReviewScreen() {
     queryKey: ['job', jobId],
     queryFn: () => service.getJobStatus(jobId!),
     enabled: !!jobId,
-    refetchInterval: (query) => (query.state.data?.status === 'complete' ? false : 1000),
+    refetchInterval: (query) =>
+      query.state.data?.status === 'complete' || query.state.data?.status === 'failed' ? false : 1000,
   });
 
   // 4. Query backend for studio results on complete status
@@ -82,7 +84,8 @@ export default function ImageReviewScreen() {
   } = useQuery({
     queryKey: ['imageJobResult', jobId],
     queryFn: () => service.getImageJobResult(jobId!),
-    enabled: !!jobId && job?.status === 'complete',
+    // Also fetched for a failed job: it carries the reason and the retake guidance.
+    enabled: !!jobId && (job?.status === 'complete' || job?.status === 'failed'),
   });
 
   // 5. Persist imageAccepted flag and studio results on successful completion
@@ -101,7 +104,7 @@ export default function ImageReviewScreen() {
               photos,
               coverIndex,
               imageAccepted: true,
-              enhancedPhotos: jobResult.enhanced_urls || [jobResult.enhanced_url],
+              enhancedPhotos: jobResult.enhanced_urls || (jobResult.enhanced_url ? [jobResult.enhanced_url] : []),
               qualityMetrics: jobResult.quality,
             },
           });
@@ -269,7 +272,9 @@ export default function ImageReviewScreen() {
   if (isFailed) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.hint}>{kickoffError || 'Something went wrong processing your photos.'}</Text>
+        <Text style={styles.hint}>
+          {kickoffError || jobResult?.error?.message || 'Something went wrong processing your photos.'}
+        </Text>
         <Button mode="contained" onPress={handleRetake} style={styles.retakeBtn} buttonColor={colors.primary}>
           Retake Photos
         </Button>
@@ -284,9 +289,11 @@ export default function ImageReviewScreen() {
 
   const activeOriginalUri = photos[selectedIndex] || '';
   const activeEnhancedUri = (enhancedPhotos[selectedIndex] || jobResult?.enhanced_url || '').trim();
-  // Only a real image URL. The legacy image job returns strings built by appending query
-  // parameters to the original's path, which point at nothing.
-  const hasEnhancedPhoto = /^https?:\/\//.test(activeEnhancedUri);
+  // A stored media path from the studio job, or an absolute URL. The legacy image job
+  // returns strings built by appending query parameters to a path, which point at nothing.
+  const hasEnhancedPhoto =
+    /^\/api\/v1\/media\/[^/?&]+\/content$/.test(activeEnhancedUri) || /^https?:\/\//.test(activeEnhancedUri);
+  const guidance = jobResult?.quality?.guidance ?? [];
   const isCurrentCover = selectedIndex === coverIndex;
 
   return (
@@ -394,7 +401,7 @@ export default function ImageReviewScreen() {
               <Text style={styles.sideHeaderText}>Cleaned Studio</Text>
             </View>
             {hasEnhancedPhoto ? (
-              <Image source={{ uri: activeEnhancedUri }} style={styles.sideImage} />
+              <MediaImage url={activeEnhancedUri} style={styles.sideImage} />
             ) : (
               <View style={styles.sideEmptyPlaceholder}>
                 <Text style={styles.sideEmptyText}>No Cleaned Photo</Text>
@@ -407,7 +414,7 @@ export default function ImageReviewScreen() {
         /* Cleaned Studio View */
         <View style={styles.previewCard}>
           {hasEnhancedPhoto ? (
-            <Image source={{ uri: activeEnhancedUri }} style={styles.mainImage} />
+            <MediaImage url={activeEnhancedUri} style={styles.mainImage} />
           ) : (
             <View style={styles.emptyPlaceholder}>
               <Text style={styles.emptyPlaceholderTitle}>No Cleaned Photo Yet</Text>
@@ -431,6 +438,15 @@ export default function ImageReviewScreen() {
               <Text style={styles.previewCoverFloatingText}>★ PRIMARY COVER</Text>
             </View>
           )}
+        </View>
+      )}
+
+      {guidance.length > 0 && (
+        <View style={styles.guidanceCard}>
+          <Text style={styles.guidanceTitle}>Tips for a better photo</Text>
+          {guidance.map((line) => (
+            <Text key={line} style={styles.guidanceItem}>• {line}</Text>
+          ))}
         </View>
       )}
 
@@ -942,6 +958,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderColor: colors.secondary,
   },
+  guidanceCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.indigoBorder,
+    padding: spacing.md,
+  },
+  guidanceTitle: { fontSize: 13, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
+  guidanceItem: { fontSize: 13, color: colors.textMuted, lineHeight: 20 },
   hint: { color: colors.text, marginTop: spacing.md, textAlign: 'center' },
   retakeBtn: { marginTop: spacing.md, borderRadius: 8 },
 });

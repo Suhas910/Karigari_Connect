@@ -116,24 +116,30 @@ export interface Listing {
 }
 
 // --- 5. JOB STATUS & AI STUDIO ---
+// Studio grades per dimension are 'acceptable' | 'needs_correction' | 'unacceptable'.
+// The legacy image job used other words, so these stay strings.
 export interface ImageQualityMetrics {
-  overall: 'acceptable' | 'needs_review' | 'rejected';
-  blur: 'low' | 'medium' | 'high';
-  lighting: 'acceptable' | 'needs_correction' | 'poor';
-  framing: 'acceptable' | 'off_center' | 'cropped';
+  overall: string;
+  blur: string;
+  lighting: string;
+  framing: string;
   guidance: string[];
 }
 
+// A failed job (e.g. MEDIA_QUALITY_INSUFFICIENT) has `error` and usually `quality`, but no enhanced photo.
 export interface ImageJobResult {
   job_id: string;
   status: 'complete' | 'failed';
-  quality: ImageQualityMetrics;
-  original_url: string;
-  enhanced_media_id: string;
-  enhanced_url: string;
+  quality?: ImageQualityMetrics;
+  original_media_id?: string;
+  original_url?: string;
+  enhanced_media_id?: string;
+  enhanced_url?: string;
   enhanced_urls?: string[];
-  transformations: string[];
-  human_review_required: boolean;
+  transformations?: string[];
+  human_review_required?: boolean;
+  photo_check?: { status: 'skipped' | 'complete' | 'unavailable'; issues?: string[] };
+  error?: ApiError['error'];
 }
 
 export interface JobStatus {

@@ -13,8 +13,8 @@ from .gemini_client import gemini_client
 from .provenance_gate import enforce_catalogue
 from .pricing import bridge as price_bridge
 from .pricing.engine import InvalidPricingInput, WageRateUnavailable
-from .adapters import DEFAULT_ASR_PREFERENCE, GeminiCatalogueAdapter, resolve_asr
-from .contracts import AIError, ErrorCode, TranscriptResult
+from .adapters import DEFAULT_ASR_PREFERENCE, GeminiCatalogueAdapter, GeminiPhotoCheck, resolve_asr
+from .contracts import AIError, ErrorCode, PhotoCheckResult, QualityReport, TranscriptResult
 from ..storage import MediaNotFound, StorageUnavailable, get_media_store
 
 logger = logging.getLogger(__name__)
@@ -98,6 +98,10 @@ class AIService:
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
+        if config.image_mode() != "legacy":
+            return AIService._studio_image_job(listing, media_id, db)
+
+        # LEGACY. Grades a URL string it never opens; see vision/ and adapters/gemini_photo.py.
         # Find media asset
         media = db.query(models.MediaAssetModel).filter(
             models.MediaAssetModel.id == media_id,
@@ -162,6 +166,189 @@ class AIService:
         listing.state = "processing"
         db.add(job)
         db.commit()
+        db.refresh(job)
+        return job
+
+    @staticmethod
+    def _photo_check(data: bytes, mime_type: str) -> tuple[Dict[str, Any], Optional[PhotoCheckResult]]:
+        """The optional Gemini second opinion. Returns (summary for the response, result)."""
+        if config.photo_check_mode() == "off":
+            return {"status": "skipped"}, None
+        try:
+            result = GeminiPhotoCheck().check(data, mime_type)
+        except AIError as exc:
+            # The measured grade stands on its own. A missing second opinion is reported,
+            # not treated as a failed photo.
+            logger.warning("Photo check unavailable: %s", exc.message)
+            return {"status": "unavailable", "code": exc.code.value, "message": exc.message}, None
+        return {"status": "complete", "issues": result.issues, "adapter": result.adapter.model_dump()}, result
+
+    @staticmethod
+    def _stricter(report: QualityReport, check: PhotoCheckResult) -> QualityReport:
+        """Apply the photo check. It can lower the overall grade and add guidance, never raise it."""
+        order = ["acceptable", "needs_correction", "unacceptable"]
+        overall = max(report.overall, check.level, key=order.index)
+        guidance = [*report.guidance, *[g for g in check.guidance if g not in report.guidance]]
+        return report.model_copy(update={"overall": overall, "guidance": guidance})
+
+    @staticmethod
+    def _studio_image_job(
+        listing: models.ListingModel,
+        media_id: str,
+        db: Session
+    ) -> models.JobModel:
+        """Grade and enhance the uploaded photo.
+
+        An unusable photo is a failed job carrying MEDIA_QUALITY_INSUFFICIENT and the
+        quality report, so the app can show the retake guidance. A usable one produces an
+        enhanced JPEG stored as its own media asset; the original is never replaced.
+        """
+        image_mode, check_mode = config.image_mode(), config.photo_check_mode()
+        if image_mode != "studio" or check_mode not in ("off", "gemini"):
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "code": "PROVIDER_UNAVAILABLE",
+                    "message": (
+                        f"Unknown CRAFTLINK_IMAGE={image_mode!r} or CRAFTLINK_PHOTO_CHECK={check_mode!r}; "
+                        "expected legacy or studio, and off or gemini."
+                    ),
+                    "recoverable": False,
+                    "action": None,
+                },
+            )
+
+        media = db.query(models.MediaAssetModel).filter(
+            models.MediaAssetModel.id == media_id,
+            models.MediaAssetModel.listing_id == listing.id
+        ).first()
+        if not media or media.kind != "image" or media.variant != "original" or not media.storage_path:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "code": "LISTING_STATE_INVALID",
+                    "message": "This listing has no uploaded photo with that id.",
+                    "recoverable": True,
+                    "action": "Upload the photo with POST /listings/{listing_id}/media/upload and use the media_id it returns.",
+                },
+            )
+
+        import cv2
+        import numpy as np
+
+        from .. import media_inspect
+        from ..storage import get_media_store as active_store
+        from .vision import segmentation
+        from .vision.quality import assess
+        from .vision.studio import enhance
+
+        job = models.JobModel(
+            job_id=str(uuid.uuid4()),
+            listing_id=listing.id,
+            type="image_studio",
+            status="processing",
+            attempt=1,
+        )
+        result: Dict[str, Any] = {
+            "job_id": job.job_id,
+            "original_media_id": media.id,
+            "original_url": media.url,
+        }
+        error: Optional[AIError] = None
+        stored = None  # (store, key) of the enhanced file, for cleanup if the row fails
+
+        try:
+            metadata = json.loads(media.metadata_json or "{}")
+            data = get_media_store(metadata.get("storage_backend")).get(media.storage_path)
+            image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
+            if image is None:
+                raise AIError(
+                    ErrorCode.MEDIA_QUALITY_INSUFFICIENT,
+                    "This photo could not be read. Take it again.",
+                    recoverable=True,
+                    action="retake_photo",
+                )
+
+            report = assess(image)
+            result["photo_check"], check = AIService._photo_check(data, metadata.get("content_type", "image/jpeg"))
+            if check is not None:
+                report = AIService._stricter(report, check)
+            result["quality"] = report.model_dump()
+
+            enhanced = enhance(image, quality=report)  # raises MEDIA_QUALITY_INSUFFICIENT when unusable
+            ok, encoded = cv2.imencode(".jpg", enhanced.image, [cv2.IMWRITE_JPEG_QUALITY, 90])
+            if not ok:
+                raise AIError(ErrorCode.PROVIDER_UNAVAILABLE, "The enhanced photo could not be encoded.", recoverable=True, action="retry_later")
+            jpeg = encoded.tobytes()
+
+            enhanced_id = str(uuid.uuid4())
+            key = f"listings/{listing.id}/image/{enhanced_id}.jpg"
+            store = active_store()
+            store.put(key, jpeg, "image/jpeg")
+            stored = (store, key)
+            url = f"/api/v1/media/{enhanced_id}/content"
+            sha = media_inspect.sha256_hex(jpeg)
+            db.add(models.MediaAssetModel(
+                id=enhanced_id,
+                listing_id=listing.id,
+                kind="image",
+                variant="enhanced",
+                status="complete",
+                url=url,
+                storage_path=key,
+                checksum=f"sha256:{sha}",
+                metadata_json=json.dumps({
+                    "content_type": "image/jpeg",
+                    "size_bytes": len(jpeg),
+                    "stored_sha256": sha,
+                    "storage_backend": store.name,
+                    "source_media_id": media.id,
+                    "transformations": enhanced.transformations,
+                }),
+            ))
+            result.update({
+                "enhanced_media_id": enhanced_id,
+                "enhanced_url": url,
+                "enhanced_urls": [url],
+                "transformations": enhanced.transformations,
+                "human_review_required": enhanced.human_review_required,
+                "adapter": {
+                    "provider": "studio",
+                    "model": f"rembg-{segmentation.model_name()}",
+                    "version": None,
+                    "on_device": True,
+                },
+            })
+        except MediaNotFound:
+            logger.error("Image job: media %s points at missing object %s", media.id, media.storage_path)
+            error = AIError(ErrorCode.LISTING_STATE_INVALID, "The photo is missing from storage.", recoverable=True, action="retake_photo")
+        except StorageUnavailable as exc:
+            logger.error("Image job: media store unavailable for %s: %s", media.id, exc)
+            error = AIError(ErrorCode.PROVIDER_UNAVAILABLE, "The photo could not be read or saved.", recoverable=True, action="retry_later")
+        except AIError as exc:
+            error = exc
+
+        if error is None:
+            job.status = "complete"
+            result["status"] = "complete"
+            listing.state = "processing"
+        else:
+            job.status = "failed"
+            result["status"] = "failed"
+            job.error_data = json.dumps(error.as_dict())
+        job.result_data = json.dumps(result)
+
+        db.add(job)
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
+            if stored:
+                try:
+                    stored[0].delete(stored[1])
+                except Exception as cleanup_exc:  # noqa: BLE001
+                    logger.error("Orphaned enhanced photo %s: %s", stored[1], cleanup_exc)
+            raise
         db.refresh(job)
         return job
 
