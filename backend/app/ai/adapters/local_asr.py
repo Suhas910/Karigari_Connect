@@ -46,6 +46,7 @@ comparison exists, no accuracy claim about either belongs in the deck.
 from __future__ import annotations
 
 import math
+import os
 import uuid
 from pathlib import Path
 from typing import Any
@@ -55,6 +56,10 @@ from .base import AudioSource
 
 DEFAULT_MODEL = "small"
 DEFAULT_COMPUTE_TYPE = "int8"
+
+# Set to 1 to let the adapter download a missing model the first time it is used. Off by
+# default: see `_load`.
+ALLOW_DOWNLOAD_ENV = "CRAFTLINK_WHISPER_ALLOW_DOWNLOAD"
 
 # Spans below this are read back to the artisan for confirmation. Provisional, like the
 # image thresholds: set it from the evaluation set, not from intuition. Erring low
@@ -77,14 +82,16 @@ class LocalWhisperASRAdapter:
 
     def __init__(
         self,
-        model_size: str = DEFAULT_MODEL,
+        model_size: str | None = None,
         *,
         device: str = "cpu",
         compute_type: str = DEFAULT_COMPUTE_TYPE,
         low_confidence_below: float = LOW_CONFIDENCE_BELOW,
         download_root: str | None = None,
     ):
-        self.model_size = model_size
+        # The registry builds this with no arguments, so the size comes from the environment
+        # when not given: a machine may only have a smaller model downloaded.
+        self.model_size = model_size or os.getenv("CRAFTLINK_WHISPER_MODEL", "").strip() or DEFAULT_MODEL
         self.device = device
         self.compute_type = compute_type
         self.low_confidence_below = low_confidence_below
@@ -120,12 +127,26 @@ class LocalWhisperASRAdapter:
                 recoverable=False,
             ) from exc
 
-        self._model = WhisperModel(
-            self.model_size,
-            device=self.device,
-            compute_type=self.compute_type,
-            download_root=self.download_root,
-        )
+        # Never download inside a request unless asked to. The first download of "small" is
+        # hundreds of megabytes; on 2026-09-14 one stalled at 0 bytes and held every
+        # transcription request open with no timeout. Download ahead of time instead:
+        #     python -m app.ai.adapters.local_asr
+        try:
+            self._model = WhisperModel(
+                self.model_size,
+                device=self.device,
+                compute_type=self.compute_type,
+                download_root=self.download_root,
+                local_files_only=os.getenv(ALLOW_DOWNLOAD_ENV) != "1",
+            )
+        except Exception as exc:  # noqa: BLE001 - a missing or broken model is one contract error
+            raise AIError(
+                ErrorCode.PROVIDER_UNAVAILABLE,
+                f"Speech recognition is not ready on this server: the whisper-{self.model_size} "
+                "model is not downloaded (python -m app.ai.adapters.local_asr).",
+                recoverable=True,
+                action="retry_later",
+            ) from exc
         return self._model
 
     # ---------- transcription
@@ -235,3 +256,12 @@ class LocalWhisperASRAdapter:
 
 
 __all__ = ["LocalWhisperASRAdapter", "LOW_CONFIDENCE_BELOW"]
+
+
+if __name__ == "__main__":
+    # Download a model ahead of time: python -m app.ai.adapters.local_asr [small|tiny|...]
+    import sys
+
+    from faster_whisper import download_model
+
+    print(download_model(sys.argv[1] if len(sys.argv) > 1 else DEFAULT_MODEL))

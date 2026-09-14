@@ -22,6 +22,12 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Karigari Connect to use product photos from your library."
+        }
+      ],
+      [
         "expo-audio",
         {
           "microphonePermission": "Allow Karigari Connect to record your voice to describe craft details."

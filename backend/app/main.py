@@ -5,11 +5,12 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 
-from .database import engine, Base
+from .database import engine, Base, add_missing_nullable_columns
 from .routers import auth as auth_router, listings, ai, coordinator, media, products, images
 
 # Initialize Database Schema
 Base.metadata.create_all(bind=engine)
+add_missing_nullable_columns(engine, Base.metadata)
 
 app = FastAPI(
     title="Karigari Connect API",

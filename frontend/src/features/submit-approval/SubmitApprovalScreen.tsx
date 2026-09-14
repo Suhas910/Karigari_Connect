@@ -109,6 +109,10 @@ export default function SubmitApprovalScreen() {
                   <Text key={problem} style={styles.problem}>• {problem}</Text>
                 ))
               )}
+              <Text style={styles.consent}>
+                Once your coordinator approves, your product photos are shown publicly to buyers. Your voice
+                recording and original photos stay private.
+              </Text>
             </Card.Content>
           </Card>
 
@@ -173,6 +177,7 @@ const styles = StyleSheet.create({
   readyText: { color: colors.secondary, fontSize: 14, fontWeight: '600' },
   problem: { color: colors.text, fontSize: 14, lineHeight: 21 },
   muted: { color: colors.textMuted, fontSize: 13, lineHeight: 19 },
+  consent: { color: colors.textMuted, fontSize: 12, lineHeight: 17, marginTop: spacing.md },
   submitBtn: { minHeight: spacing.tapTarget, justifyContent: 'center', borderRadius: 8 },
   errorText: { color: colors.error, textAlign: 'center', marginBottom: spacing.md, fontSize: 13 },
 });

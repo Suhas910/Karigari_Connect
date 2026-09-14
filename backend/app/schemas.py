@@ -110,6 +110,11 @@ class ClaimSchema(BaseModel):
     coordinator_verified: bool = False
     evidence_note: Optional[str] = None
 
+class RejectedClaimSchema(BaseModel):
+    claim: str
+    reason: str
+    rejected_at: str
+
 class MultilingualText(BaseModel):
     en: str
     local: Optional[str] = None
@@ -215,6 +220,9 @@ class ListingResponse(BaseModel):
     catalogue: Optional[CatalogueResult] = None
     price: Optional[PriceResult] = None
     claims: List[ClaimSchema] = []
+    rejected_claims: List[RejectedClaimSchema] = []
+    rejection_reason: Optional[str] = None  # set while the listing is sent back
+    public_photo_urls: List[str] = []  # buyer-facing copies; only while approved
     created_at: str
     updated_at: str
 

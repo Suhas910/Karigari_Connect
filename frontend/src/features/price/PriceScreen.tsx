@@ -30,13 +30,26 @@ export default function PriceScreen() {
   const [sellingPrice, setSellingPrice] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [priceError, setPriceError] = useState<string | null>(null);
+  // Prices similar pieces sold for, in paise. The engine lets them raise the band, never the floor down.
+  const [comparables, setComparables] = useState<number[]>([]);
+  const [comparableInput, setComparableInput] = useState('');
+  const [recalculating, setRecalculating] = useState(false);
 
-  const fetchPrice = async () => {
-    setLoading(true);
+  const fetchPrice = async (nextComparables?: number[]) => {
+    // Recalculating for a new comparable stays on the page; a full-screen spinner used to
+    // reset the scroll and lose the artisan's place.
+    const recalculation = Array.isArray(nextComparables);
+    if (recalculation) setRecalculating(true);
+    else setLoading(true);
     setPriceError(null);
     setOutcome(null);
     try {
       const existing = await getDraft(draftId);
+      // Retry buttons call this with an event, so only an array counts as new comparables.
+      const comps: number[] = Array.isArray(nextComparables)
+        ? nextComparables
+        : existing?.payload?.comparablesPaise ?? [];
+      setComparables(comps);
       // The catalogue the artisan confirmed. Never a default: a made-up hour count or
       // material cost produces a floor that looks official and is not.
       let cat: CatalogueDraft | null = existing?.payload?.catalogue ?? null;
@@ -60,6 +73,7 @@ export default function PriceScreen() {
         labour_hours: hours,
         skill_level: skill,
         state_code: stateCode,
+        comparables_paise: comps.length > 0 ? comps : undefined,
       });
       setPrice(result);
       setOutcome(result.status === 'available' ? 'priced' : 'wage_unavailable');
@@ -81,6 +95,7 @@ export default function PriceScreen() {
               ...(existing?.payload ?? {}),
               priceReviewed: true,
               priceResult: result,
+              comparablesPaise: comps,
             },
           });
         } catch (dbErr) {
@@ -98,7 +113,19 @@ export default function PriceScreen() {
       }
     } finally {
       setLoading(false);
+      setRecalculating(false);
     }
+  };
+
+  const addComparable = () => {
+    const rupees = parseInt(comparableInput, 10);
+    if (!rupees || rupees <= 0) return;
+    setComparableInput('');
+    fetchPrice([...comparables, rupees * 100]);
+  };
+
+  const removeComparable = (index: number) => {
+    fetchPrice(comparables.filter((_, i) => i !== index));
   };
 
   const handlePriceInputFocus = () => {
@@ -307,6 +334,56 @@ export default function PriceScreen() {
             </Card.Content>
           </Card>
 
+          <Card style={styles.breakdownCard}>
+            <Card.Content>
+              <Text style={styles.sectionLabel}>SIMILAR PIECES SELL FOR</Text>
+              <Text style={styles.sellingPriceSubtitle}>
+                Add prices you have seen similar pieces sell for. They can raise the suggested band. They never
+                lower your floor.
+              </Text>
+              <View style={styles.priceInputRow}>
+                <Text style={styles.currencyPrefix}>₹</Text>
+                <TextInput
+                  mode="outlined"
+                  keyboardType="numeric"
+                  value={comparableInput}
+                  onChangeText={(val) => setComparableInput(val.replace(/[^0-9]/g, ''))}
+                  onFocus={handlePriceInputFocus}
+                  placeholder="Price you have seen"
+                  style={styles.priceInput}
+                  outlineColor={colors.border}
+                  activeOutlineColor={colors.primary}
+                  textColor={colors.text}
+                />
+                <Button
+                  mode="outlined"
+                  onPress={addComparable}
+                  disabled={!comparableInput || recalculating}
+                  loading={recalculating}
+                  textColor={colors.primary}
+                  style={styles.addComparableBtn}
+                >
+                  Add
+                </Button>
+              </View>
+              {comparables.length > 0 && (
+                <View style={styles.presetChipsRow}>
+                  {comparables.map((paise, index) => (
+                    <Chip
+                      key={`${paise}-${index}`}
+                      onClose={() => removeComparable(index)}
+                      style={styles.presetChip}
+                      textStyle={styles.presetChipText}
+                      compact
+                    >
+                      {paiseToRupees(paise)}
+                    </Chip>
+                  ))}
+                </View>
+              )}
+            </Card.Content>
+          </Card>
+
           {/* Your Listing / Asking Price Card */}
           <Card style={styles.sellingPriceCard}>
             <Card.Content>
@@ -469,6 +546,7 @@ const styles = StyleSheet.create({
   sourceText: { color: colors.text, fontSize: 13, marginTop: spacing.xs, fontWeight: '500' },
   sourceRef: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   continueBtn: { minHeight: spacing.tapTarget, justifyContent: 'center', borderRadius: 8 },
+  addComparableBtn: { marginLeft: spacing.sm, borderRadius: 8, borderColor: colors.border },
   unavailableCard: {
     backgroundColor: colors.surface,
     borderRadius: 10,

@@ -2,6 +2,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
 import { Text, ActivityIndicator, IconButton, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -46,19 +47,6 @@ export default function CaptureScreen() {
     return <View style={styles.centered}><ActivityIndicator /></View>;
   }
 
-  if (!permission.granted) {
-    return (
-      <View style={styles.centered}>
-        <Text style={{ color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-          Camera access is needed to photograph your product.
-        </Text>
-        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
-          <Text style={{ color: '#FFF' }}>Allow Camera Access</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   const ensureDraft = async () => {
     if (activeDraftId) return activeDraftId;
     const result = await service.createListing({ preferred_language: 'kn' });
@@ -100,12 +88,12 @@ export default function CaptureScreen() {
   };
 
   // Sends one photo to the server. False means it is still only on the phone.
-  const uploadPhoto = async (draftId: string, uri: string) => {
+  const uploadPhoto = async (draftId: string, uri: string, type = 'image/jpeg') => {
     try {
       const res = await service.uploadMedia(draftId, 'image', {
         uri,
         name: uri.split('/').pop() || 'photo.jpg',
-        type: 'image/jpeg',
+        type,
       });
       mediaIdsRef.current = { ...mediaIdsRef.current, [uri]: res.media_id };
       return true;
@@ -136,6 +124,36 @@ export default function CaptureScreen() {
       });
     } catch (err) {
       setUploadError('Could not capture photo. Try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Photos already on the phone. quality < 1 makes iOS hand back JPEG, not HEIC.
+  const handlePickFromGallery = async () => {
+    setUploadError(null);
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      quality: 0.8,
+    });
+    if (picked.canceled || picked.assets.length === 0) return;
+
+    setIsSaving(true);
+    try {
+      const draftId = await ensureDraft();
+      setPhotos([...urisRef.current, ...picked.assets.map((asset) => asset.uri)]);
+      await persistPhotos(draftId);
+      let failed = 0;
+      for (const asset of picked.assets) {
+        if (!(await uploadPhoto(draftId, asset.uri, asset.mimeType ?? 'image/jpeg'))) failed += 1;
+      }
+      await persistPhotos(draftId);
+      if (failed > 0) {
+        setUploadError('Photos saved on your device, but some did not upload. They will retry when you continue.');
+      }
+    } catch (err) {
+      setUploadError('Could not add the photos. Try again.');
     } finally {
       setIsSaving(false);
     }
@@ -176,6 +194,48 @@ export default function CaptureScreen() {
     }
     navigation.navigate('ImageReview', { draftId: activeDraftId });
   };
+
+  // Without the camera the artisan can still use photos already on the phone.
+  if (!permission.granted) {
+    return (
+      <View style={styles.centered}>
+        <Text style={{ color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
+          Camera access is needed to photograph your product.
+        </Text>
+        <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
+          <Text style={{ color: '#FFF' }}>Allow Camera Access</Text>
+        </TouchableOpacity>
+        <Button
+          mode="text"
+          icon="image-multiple"
+          textColor={colors.primary}
+          onPress={handlePickFromGallery}
+          loading={isSaving}
+          disabled={isSaving}
+          style={{ marginTop: spacing.md }}
+        >
+          Choose from gallery instead
+        </Button>
+        {uploadError && <Text style={{ color: colors.error, marginTop: spacing.sm, textAlign: 'center' }}>{uploadError}</Text>}
+        {capturedUris.length > 0 && (
+          <Button
+            mode="contained"
+            onPress={handleContinue}
+            buttonColor={colors.primary}
+            textColor="#FFFFFF"
+            disabled={isSaving}
+            style={{ marginTop: spacing.md }}
+          >
+            Continue with {capturedUris.length} photo{capturedUris.length > 1 ? 's' : ''}
+          </Button>
+        )}
+        {/* This screen has no header; without this there was no way back. */}
+        <Button mode="text" icon="arrow-left" textColor={colors.text} onPress={() => navigation.goBack()} style={{ marginTop: spacing.lg }}>
+          Back
+        </Button>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -231,6 +291,16 @@ export default function CaptureScreen() {
             : `${capturedUris.length} photo${capturedUris.length > 1 ? 's' : ''} captured — tap stack to view all`}
         </Text>
         {uploadError && <Text style={styles.errorText}>{uploadError}</Text>}
+        <Button
+          mode="text"
+          icon="image-multiple"
+          textColor="#FFFFFF"
+          onPress={handlePickFromGallery}
+          disabled={isSaving}
+          style={styles.galleryPickBtn}
+        >
+          Choose from gallery
+        </Button>
 
         <View style={styles.buttonRow}>
           {/* Left: Photo Stack Thumbnail */}
@@ -459,6 +529,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl,
     backgroundColor: 'rgba(28, 25, 23, 0.82)',
   },
+  galleryPickBtn: { alignSelf: 'center', marginBottom: spacing.sm },
   hint: {
     color: '#FFF',
     textAlign: 'center',

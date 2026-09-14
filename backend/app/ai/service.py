@@ -449,6 +449,15 @@ class AIService:
             audio = get_media_store(metadata.get("storage_backend")).get(media.storage_path)
             adapter = resolve_asr(preference)
             result = adapter.transcribe(audio, declared_language=declared_language, transcript_id=job.job_id)
+            if not (result.original_text or "").strip():
+                # A silent recording used to finish as "complete" with empty text, so the app
+                # showed nothing and product details were generated from no words at all.
+                raise AIError(
+                    ErrorCode.ASR_LOW_CONFIDENCE,
+                    "No speech was heard in this recording.",
+                    recoverable=True,
+                    action="record_again",
+                )
         except MediaNotFound:
             logger.error("Transcription: media %s points at missing object %s", media.id, media.storage_path)
             error = AIError(
@@ -637,7 +646,7 @@ class AIService:
                     "code": "LISTING_STATE_INVALID",
                     "message": "This listing has no completed transcript to generate from.",
                     "recoverable": True,
-                    "action": "Transcribe the uploaded recording first (CRAFTLINK_ASR=gemini), then generate again.",
+                    "action": "Transcribe the uploaded recording first (CRAFTLINK_ASR=local or gemini), then generate again.",
                 },
             )
         transcript = TranscriptResult.model_validate(

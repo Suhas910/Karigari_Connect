@@ -7,7 +7,8 @@ The rules, and what each replaced:
 - A claim review can only decide on a claim that exists. It used to create a missing
   claim with `asserted_by_artisan: true`, putting words in the artisan's mouth.
 - Verifying needs the artisan's own assertion and an evidence note. Rejecting needs a
-  reason and removes the claim, so it cannot reach a buyer.
+  reason, which is stored; the claim is kept as rejected so it cannot reach a buyer or be
+  re-asserted unseen. It used to be deleted, losing the reason.
 - Approval checks the listing (`ai/linkage/export.approval_problems`). It used to set
   `approved` on any listing in any state.
 - Export is for coordinators, on approved listings, and is validated against the
@@ -17,15 +18,19 @@ The rules, and what each replaced:
 """
 import hashlib
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from .. import auth, models, schemas
+from .. import auth, models, public_media, schemas
 from ..ai.linkage.export import ExportRefused, approval_problems, build_export
 from ..database import get_db
+from ..storage import MediaNotFound, StorageUnavailable
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Coordinator & Marketplace Export"])
 
@@ -63,6 +68,8 @@ def review_claim(
     ).first()
     if not claim_model:
         raise _error(404, "LISTING_STATE_INVALID", f"This listing has no claim {claim!r} to review.")
+    if claim_model.rejected_at is not None:
+        raise _error(409, "LISTING_STATE_INVALID", f"The claim {claim!r} was already rejected: {claim_model.rejection_reason}")
 
     decision = payload.decision.lower()
     if decision in ("verified", "verify", "approve", "approved"):
@@ -86,7 +93,9 @@ def review_claim(
         reason = (payload.reason or payload.evidence_note or "").strip()
         if not reason:
             raise _error(422, "PROVENANCE_VERIFICATION_REQUIRED", "Rejecting a claim needs a reason.")
-        db.delete(claim_model)
+        claim_model.coordinator_verified = False
+        claim_model.rejection_reason = reason
+        claim_model.rejected_at = datetime.now(timezone.utc)
         db.commit()
         return {"claim": claim, "coordinator_verified": False, "evidence_note": reason, "removed": True}
 
@@ -115,6 +124,8 @@ def decide_approval(
         if not reason:
             raise _error(422, "LISTING_STATE_INVALID", "Rejecting a listing needs a reason the artisan can act on.")
         listing.state = "rejected"
+        listing.rejection_reason = reason
+        listing.rejected_at = datetime.now(timezone.utc)
         db.commit()
         return {"status": listing.state, "reason": reason}
 
@@ -126,11 +137,26 @@ def decide_approval(
             "Not ready to approve: " + " ".join(problems),
             "Review the pending claims, or send the listing back to the artisan.",
         )
+    # Approval is what makes the photos public, so it does not happen without them.
+    try:
+        public_photos = public_media.publish(listing)
+    except (StorageUnavailable, MediaNotFound, OSError) as exc:
+        db.rollback()
+        logger.error("Public photo copies for listing %s failed: %s", listing_id, exc)
+        raise _error(
+            503,
+            "PROVIDER_UNAVAILABLE",
+            "Could not make the public copies of the photos, so the listing is not approved yet.",
+            "Retry shortly.",
+        )
     listing.state = "approved"
+    listing.rejection_reason = None
+    listing.rejected_at = None
     db.commit()
     return {
         "status": listing.state,
         "reason": reason or f"Approved by {current_user.username}",
+        "public_photos": public_photos,
     }
 
 

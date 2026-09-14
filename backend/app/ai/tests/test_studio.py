@@ -169,6 +169,37 @@ def _subject_stats(image: np.ndarray, mask: np.ndarray) -> tuple[float, float]:
     return float(np.median(lab[:, :, 0][subject])), float(np.mean(hsv[:, :, 0][subject]))
 
 
+def _dark_backdrop_scene() -> np.ndarray:
+    """A well-lit orange piece on dark, textured cloth, drawn so no photo file is needed."""
+    rng = np.random.default_rng(3)
+    image = rng.normal(40, 9, (800, 1200, 3)).clip(0, 255).astype(np.uint8)
+    cv2.ellipse(image, (600, 400), (330, 95), 0, 0, 360, (45, 115, 215), -1)
+    cv2.ellipse(image, (600, 370), (300, 30), 0, 0, 360, (70, 140, 235), -1)  # highlight
+    return image
+
+
+def test_a_dark_backdrop_does_not_brighten_a_well_lit_product():
+    """Regression guard, found by opening the output on 2026-09-14.
+
+    Exposure used to be judged on the whole frame. A red flute on dark fabric was graded
+    "too dark", given the maximum gain, and came out pale pink. The product was lit
+    correctly; only the cloth was dark.
+    """
+    image = _dark_backdrop_scene()
+    mask = subject_mask(image)
+    assert mask.any(), "the scene must have a findable product for this check"
+
+    report = assess(image)
+    assert not any("too dark" in line for line in report.guidance)
+
+    result = enhance(image, quality=report)
+    assert "exposure_normalization" not in result.transformations
+    before_l, before_h = _subject_stats(image, mask)
+    after_l, after_h = _subject_stats(result.image, subject_mask(result.image))
+    assert abs(after_l - before_l) < 12.0, f"product lightness moved {before_l:.1f} -> {after_l:.1f}"
+    assert abs(after_h - before_h) < 20.0, f"product hue moved {before_h:.1f} -> {after_h:.1f}"
+
+
 @pytest.mark.parametrize("stem", ["good", "off_centre"])
 def test_enhancement_preserves_the_products_own_appearance(stem):
     """Regression guard for a bug that every other test in this file missed.

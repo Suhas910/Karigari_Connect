@@ -13,7 +13,9 @@ import { apiErrorOf } from '../../services/api';
 import { BottomDock, ErrorRetryCard, ProcessingIndicator } from '../../components';
 import MediaImage from '../../components/MediaImage';
 
-const toWords = (id?: string | null) => (id ?? '').replace(/_/g, ' ');
+// Capitalises word starts only. The `capitalize` text style lowercases the rest on iOS,
+// which showed the state code KA as "Ka".
+const toWords = (id?: string | null) => (id ?? '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 const rupees = (paise?: number | null) =>
   paise == null ? '—' : `₹${Math.round(paise / 100).toLocaleString('en-IN')}`;
 
@@ -246,7 +248,7 @@ export default function CoordinatorReviewScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Claims the artisan made</Text>
           <Text style={styles.sectionCaption}>
-            A claim reaches buyers only once you verify it with evidence. Rejecting removes it.
+            A claim reaches buyers only once you verify it with evidence. Rejecting keeps it off the listing and records your reason.
           </Text>
         </View>
 
@@ -312,6 +314,16 @@ export default function CoordinatorReviewScreen() {
           </Text>
         )}
 
+        {(listing.rejected_claims ?? []).map((r) => (
+          <View key={`rejected-${r.claim}`} style={styles.card}>
+            <View style={styles.claimHeader}>
+              <Text style={styles.claimTitle}>{toWords(r.claim)}</Text>
+              <Text style={styles.claimStatus}>Rejected</Text>
+            </View>
+            <Text style={styles.muted}>Reason: {r.reason}</Text>
+          </View>
+        ))}
+
         {awaiting && (
           <View style={styles.card} onLayout={(e) => handleInputLayout('decision', e)}>
             <Text style={styles.sectionTitle}>Decision</Text>
@@ -331,7 +343,10 @@ export default function CoordinatorReviewScreen() {
               mode="outlined"
               label="Note for the artisan (required to send back)"
               value={listingReason}
-              onChangeText={setListingReason}
+              onChangeText={(text) => {
+                setListingReason(text);
+                setActionError(null); // the "write a reason" error no longer applies
+              }}
               onFocus={() => handleInputFocus('decision')}
               outlineColor={colors.border}
               activeOutlineColor={colors.secondary}
@@ -352,6 +367,8 @@ export default function CoordinatorReviewScreen() {
 
       {awaiting && (
         <BottomDock>
+          {/* Also here: the banner at the end of the scroll view is off-screen when these are tapped. */}
+          {actionError && <Text style={styles.dockError}>{actionError}</Text>}
           <View style={styles.actionRow}>
             <Button
               mode="contained"
@@ -430,7 +447,8 @@ const styles = StyleSheet.create({
   sectionCaption: { fontSize: 12, color: colors.textMuted, marginBottom: spacing.xs },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, gap: spacing.md },
   rowLabel: { fontSize: 13, color: colors.textMuted },
-  rowValue: { fontSize: 13, color: colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right', textTransform: 'capitalize' },
+  rowValue: { fontSize: 13, color: colors.text, fontWeight: '600', flexShrink: 1, textAlign: 'right' },
+  dockError: { color: colors.error, fontSize: 13, textAlign: 'center', marginBottom: spacing.sm },
   description: { fontSize: 13, color: colors.text, lineHeight: 19, marginTop: spacing.sm },
   muted: { fontSize: 12, color: colors.textMuted, lineHeight: 17, marginBottom: spacing.sm },
   warningText: { fontSize: 12, color: colors.error, lineHeight: 17, marginTop: spacing.xs },

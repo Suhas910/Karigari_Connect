@@ -58,6 +58,9 @@ class ListingModel(Base):
     # Valid states: 'draft', 'processing', 'awaiting_confirmation', 'awaiting_approval',
     # 'approved', 'export_queued', 'exported', 'rejected', 'failed'
     preferred_language = Column(String, default="en", nullable=False)
+    # The coordinator's reason the last time the listing was sent back, for the artisan.
+    rejection_reason = Column(Text, nullable=True)
+    rejected_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -68,6 +71,7 @@ class ListingModel(Base):
     claims = relationship("ClaimModel", back_populates="listing", cascade="all, delete-orphan")
     jobs = relationship("JobModel", back_populates="listing", cascade="all, delete-orphan")
     exports = relationship("ExportRecordModel", back_populates="listing", cascade="all, delete-orphan")
+    public_photos = relationship("PublicPhotoModel", back_populates="listing", cascade="all, delete-orphan")
 
 class MediaAssetModel(Base):
     __tablename__ = "media_assets"
@@ -84,6 +88,21 @@ class MediaAssetModel(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     listing = relationship("ListingModel", back_populates="media")
+
+class PublicPhotoModel(Base):
+    """A buyer-facing copy of one photo, which exists only while its listing is approved.
+    See app/public_media.py."""
+    __tablename__ = "public_photos"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=False)
+    source_media_id = Column(String, ForeignKey("media_assets.id"), nullable=False)
+    storage_backend = Column(String, nullable=False)  # 'local' | 'supabase'
+    storage_path = Column(String, nullable=False)
+    url = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    listing = relationship("ListingModel", back_populates="public_photos")
 
 class CatalogueModel(Base):
     __tablename__ = "catalogues"
@@ -133,6 +152,10 @@ class ClaimModel(Base):
     coordinator_verified = Column(Boolean, default=False, nullable=False)
     evidence_note = Column(Text, nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
+    # A rejected claim is kept, with the coordinator's reason, so it cannot be re-asserted
+    # unseen. Readers that feed buyers or approval use `export.live_claims`.
+    rejection_reason = Column(Text, nullable=True)
+    rejected_at = Column(DateTime(timezone=True), nullable=True)
 
     listing = relationship("ListingModel", back_populates="claims")
 

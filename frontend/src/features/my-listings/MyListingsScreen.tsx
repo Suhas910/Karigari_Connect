@@ -107,8 +107,11 @@ export default function MyListingsScreen() {
 
   const handleCardPress = (listing: Listing) => {
     switch (listing.state) {
-      case 'draft':
       case 'rejected':
+        // Back to the saved details, with the coordinator's reason shown on the card.
+        navigation.navigate('ConfirmDetails', { draftId: listing.id });
+        break;
+      case 'draft':
       case 'failed':
         useDraftStore.getState().setActiveDraft(listing.id);
         navigation.navigate('Capture');
@@ -329,6 +332,12 @@ export default function MyListingsScreen() {
                       </Text>
                     )}
                   </View>
+
+                  {item.state === 'rejected' && item.rejection_reason ? (
+                    <Text style={styles.rejectionText} numberOfLines={3}>
+                      Coordinator: {item.rejection_reason}
+                    </Text>
+                  ) : null}
                 </View>
 
                 <IconButton
@@ -356,6 +365,7 @@ export default function MyListingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  rejectionText: { color: colors.error, fontSize: 12, lineHeight: 16, marginTop: 6 },
   switchRoleBtn: {
     flexDirection: 'row',
     alignItems: 'center',

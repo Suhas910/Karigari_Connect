@@ -82,8 +82,15 @@ class EnhancementResult:
     crop_box: tuple[int, int, int, int] | None = None
 
 
-def _normalise_exposure(image: np.ndarray, target_median: float = 55.0) -> tuple[np.ndarray, bool]:
-    """Lift or lower overall brightness by a single gain on lightness.
+def _normalise_exposure(
+    image: np.ndarray, mask: np.ndarray | None = None, target_median: float = 55.0
+) -> tuple[np.ndarray, bool]:
+    """Lift or lower overall brightness by a single gain on lightness, judged on the product.
+
+    The gain comes from the product's own lightness when it can be found, and this was a
+    real bug too. Judged on the whole frame, a dark cloth behind a correctly lit piece
+    reads as a dark photo: on 2026-09-14 a red Channapatna flute on dark fabric got the
+    maximum gain of 3 and came out pale pink, a colour the product does not have.
 
     Deliberately a gain, not a percentile stretch, and this was a real bug rather than
     a preference. A stretch maps the darkest pixel to black and the brightest to white,
@@ -100,7 +107,8 @@ def _normalise_exposure(image: np.ndarray, target_median: float = 55.0) -> tuple
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     lightness = lab[:, :, 0]
 
-    median = float(np.median(lightness))
+    region = lightness[mask > 0] if mask is not None and mask.any() else lightness
+    median = float(np.median(region))
     if median < 1e-3:
         return image, False  # nothing recoverable to scale
 
@@ -209,7 +217,7 @@ def enhance(
     # is a change made for no reason, and every change here is a change to how a real
     # product looks to a buyer.
     if report.lighting != "acceptable":
-        working, changed = _normalise_exposure(working)
+        working, changed = _normalise_exposure(working, subject_mask(original))
         if changed:
             applied.append("exposure_normalization")
 

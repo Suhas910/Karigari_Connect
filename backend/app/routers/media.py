@@ -8,6 +8,9 @@ is forwarded. The AI jobs read the same bytes in-process through `app.storage`, 
 do not go through HTTP at all.
 
 Access mirrors `GET /listings/{id}`: the owning artisan, or any coordinator or admin.
+
+The one exception is `GET /public/photos/{name}`: buyer-facing copies of approved photos,
+re-encoded without metadata and kept apart from these files (`app/public_media.py`).
 """
 import json
 import logging
@@ -74,6 +77,31 @@ def get_media_content(
             # Personal data: no shared or intermediate caches.
             "Cache-Control": "private, no-store",
             # Serve exactly the type validated at upload; never let a client re-sniff.
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@router.get("/public/photos/{name}")
+def get_public_photo(name: str):
+    """A buyer-facing photo copy, for local storage. Supabase serves its public bucket itself.
+
+    No sign-in: the file exists only while its listing is approved, under a random name.
+    """
+    from .. import public_media
+
+    if not public_media.PUBLIC_NAME.match(name):
+        raise HTTPException(status_code=404, detail="Photo not found")
+    try:
+        data = public_media.get_public_store("local").get(name)
+    except MediaNotFound:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return Response(
+        content=data,
+        media_type="image/jpeg",
+        headers={
+            # Short, because unpublishing must take effect for buyers soon after.
+            "Cache-Control": "public, max-age=300",
             "X-Content-Type-Options": "nosniff",
         },
     )

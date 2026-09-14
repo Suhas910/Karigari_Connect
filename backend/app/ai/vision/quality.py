@@ -164,13 +164,21 @@ def measure(image: np.ndarray) -> dict[str, float]:
         "shadow_clip_frac": shadow_clip,
         "highlight_clip_frac": highlight_clip,
         "mean_luma": mean_luma,
+        # Brightness of the product itself; the frame's when no product is found. A dark
+        # backdrop behind a well-lit piece is not a dark photo, and "move near a window"
+        # would be wrong advice (seen on 2026-09-14 with a flute on dark fabric).
+        "subject_mean_luma": mean_luma,
         "subject_area_frac": 0.0,
         "subject_centre_offset": 0.0,
     }
 
-    box = subject_bbox(analysis)
-    if box is not None:
-        x, y, w, h = box
+    mask = subject_mask(analysis)  # once: segmentation is the slow part
+    if mask.any():
+        metrics["subject_mean_luma"] = float(gray[mask > 0].mean())
+        xs = np.flatnonzero(mask.any(axis=0))
+        ys = np.flatnonzero(mask.any(axis=1))
+        x, y = int(xs[0]), int(ys[0])
+        w, h = int(xs[-1] - xs[0] + 1), int(ys[-1] - ys[0] + 1)
         frame_h, frame_w = analysis.shape[:2]
         metrics["subject_area_frac"] = (w * h) / float(frame_w * frame_h)
         centre = np.array([x + w / 2.0, y + h / 2.0])
@@ -214,7 +222,7 @@ def assess(
     if clipped > thresholds.clip_unacceptable_above:
         lighting: QualityLevel = "unacceptable"
     elif clipped > thresholds.clip_needs_correction_above or not (
-        thresholds.luma_low <= metrics["mean_luma"] <= thresholds.luma_high
+        thresholds.luma_low <= metrics["subject_mean_luma"] <= thresholds.luma_high
     ):
         lighting = "needs_correction"
     else:
@@ -228,7 +236,7 @@ def assess(
         # common case for a merely dim photo.
         clipped_bright = metrics["highlight_clip_frac"] > metrics["shadow_clip_frac"]
         clipped_dark = metrics["shadow_clip_frac"] > metrics["highlight_clip_frac"]
-        too_bright = clipped_bright or (not clipped_dark and metrics["mean_luma"] > thresholds.luma_high)
+        too_bright = clipped_bright or (not clipped_dark and metrics["subject_mean_luma"] > thresholds.luma_high)
         if too_bright:
             guidance.append("The light is too strong. Move out of direct sun and take it again.")
         else:

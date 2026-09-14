@@ -267,9 +267,20 @@ def test_upload_is_refused_once_the_listing_is_submitted():
     listing_id = _listing(artisan)
     # Submission needs a photo and confirmed details (see ai/linkage/export.submission_problems).
     assert _upload(listing_id, artisan, "image", _png(), "photo.png", "image/png").status_code == 200
+    # Confirm needs generated details to confirm: the legacy path makes them without a model.
+    audio = client.post(f"/api/v1/listings/{listing_id}/media", json={"kind": "audio", "url": "https://example.invalid/note.m4a"}, headers=artisan)
+    assert audio.status_code == 200, audio.text
+    transcription = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/transcription",
+        json={"audio_media_id": audio.json()["media_id"], "declared_language": "kn"},
+        headers=artisan,
+    )
+    assert transcription.status_code == 200, transcription.text
+    generated = client.post(f"/api/v1/listings/{listing_id}/jobs/catalogue", json={}, headers=artisan)
+    assert generated.status_code == 200, generated.text
     confirm = client.post(
         f"/api/v1/listings/{listing_id}/confirm",
-        json={"catalogue": {}, "confirmed_fields": [], "corrections": []},
+        json={"catalogue": {}, "confirmed_fields": generated.json()["needs_confirmation"], "corrections": []},
         headers=artisan,
     )
     assert confirm.status_code == 200, confirm.text

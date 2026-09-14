@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated, Modal, Pressable, ScrollView } from 'react-native';
 import { Text, Button, ActivityIndicator, IconButton } from 'react-native-paper';
-import { useAudioRecorder, useAudioPlayer, RecordingPresets, AudioModule } from 'expo-audio';
+import { useAudioRecorder, useAudioPlayer, RecordingPresets, AudioModule, setAudioModeAsync } from 'expo-audio';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
@@ -160,6 +160,7 @@ export default function SpeakScreen() {
   const handleSelectLanguage = async (code: string) => {
     await i18n.changeLanguage(code);
     setMenuVisible(false);
+    setRecordError(null); // it was translated into the previous language
     try {
       const existing = await getDraft(draftId);
       await saveDraft({
@@ -217,11 +218,15 @@ export default function SpeakScreen() {
         setRecordError(t('speak.micPermissionRequired'));
         return;
       }
+      // iOS refuses to record until the audio session allows it; without this every
+      // recording failed to start.
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
       await recorder.prepareToRecordAsync();
       recorder.record();
       setJobId(null);
       setIsRecording(true);
     } catch (err) {
+      console.warn('[Speak] Could not start recording', err);
       setRecordError(t('speak.startRecordingError'));
     }
   };
@@ -231,6 +236,8 @@ export default function SpeakScreen() {
     try {
       await recorder.stop();
       setIsRecording(false);
+      // Back to playback mode, so "Play recording" uses the speaker, not the earpiece.
+      await setAudioModeAsync({ allowsRecording: false, playsInSilentMode: true });
       const uri = recorder.uri;
       if (!uri) {
         setRecordError(t('speak.processingError'));

@@ -112,16 +112,16 @@ export default function PublishExportScreen() {
         <View style={styles.header}>
           <Text style={styles.kicker}>MARKETPLACE INTEGRATION</Text>
           <Text style={styles.title}>Export Listing</Text>
-          <Text style={styles.subtitle}>ID: {listingId} · Target: ONDC Retail Network (v1.0.0)</Text>
+          <Text style={styles.subtitle}>ID: {listingId} · Target: ONDC retail catalogue (on_search)</Text>
         </View>
 
         {/* Pre-Export Initiation Card */}
         {!exportResult && !exportError && !staleError && (
           <>
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>Ready for Local Gateway Staging</Text>
+              <Text style={styles.cardTitle}>Ready to Validate for ONDC</Text>
               <Text style={styles.cardText}>
-                This listing has been verified by the craft coordinator. Proceeding will validate schema conformity against ONDC standards, seal the record with a cryptographic signature, and stage it on the local gateway.
+                This listing is approved. Proceeding builds its ONDC catalogue payload, checks it against the published ONDC retail schema, and records a SHA-256 hash of it. Nothing is sent to the ONDC network.
               </Text>
             </View>
 
@@ -129,11 +129,11 @@ export default function PublishExportScreen() {
             <View style={styles.demoControlCard}>
               <View style={styles.demoControlRow}>
                 <View style={{ flex: 1, marginRight: spacing.sm }}>
-                  <Text style={styles.demoControlTitle}>DEMO BROADCAST SIMULATION</Text>
+                  <Text style={styles.demoControlTitle}>DEMO: SIMULATED SUBMISSION</Text>
                   <Text style={styles.demoControlSubtitle}>
                     {simulateBroadcast
-                      ? 'Demo Simulation Active: Simulating live ONDC registry broadcast for presentation.'
-                      : 'MVP Default: Local gateway staging only. Live ONDC production broadcast is not claimed.'}
+                      ? 'On: the result is labelled a simulated submission, for a demo. Nothing is sent.'
+                      : 'Off: validate only. Nothing is sent to the ONDC network either way.'}
                   </Text>
                 </View>
                 <Switch
@@ -196,7 +196,7 @@ export default function PublishExportScreen() {
                 <View style={styles.stepConnector} />
               </View>
               <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>2. Payload Cryptographic Hash</Text>
+                <Text style={styles.stepTitle}>2. Payload Hash</Text>
                 <Text style={styles.stepMeta}>
                   SHA-256: {exportResult.payload_hash ? `${exportResult.payload_hash.substring(0, 16)}...` : 'Pending'}
                 </Text>
@@ -213,7 +213,7 @@ export default function PublishExportScreen() {
                 <Text style={styles.stepMeta}>
                   {exportResult.network_submission === 'simulated'
                     ? 'Simulated for a demo · Nothing was sent to the ONDC network'
-                    : 'Not sent · Validated and staged only'}
+                    : 'Not sent · Validated only'}
                 </Text>
               </View>
             </View>
@@ -223,11 +223,11 @@ export default function PublishExportScreen() {
           <View style={styles.demoControlCard}>
             <View style={styles.demoControlRow}>
               <View style={{ flex: 1, marginRight: spacing.sm }}>
-                <Text style={styles.demoControlTitle}>DEMO BROADCAST SIMULATION</Text>
+                <Text style={styles.demoControlTitle}>DEMO: SIMULATED SUBMISSION</Text>
                 <Text style={styles.demoControlSubtitle}>
                   {simulateBroadcast
-                    ? 'Showing simulated live ONDC registry broadcast.'
-                    : 'MVP Default: Staged locally. Switch on to simulate live registry broadcast.'}
+                    ? 'Labelled a simulated submission. Nothing was sent.'
+                    : 'Validated only. Switch on to label this a simulated submission for a demo.'}
                 </Text>
               </View>
               <Switch
@@ -253,7 +253,7 @@ export default function PublishExportScreen() {
           {/* Verifiable Provenance QR Code */}
           <View style={styles.qrCard}>
             <Text style={styles.kicker}>DIGITAL PROVENANCE</Text>
-            <Text style={styles.qrTitle}>Verifiable Craft Credential</Text>
+            <Text style={styles.qrTitle}>Export Fingerprint</Text>
             <Text style={styles.qrSubtitle}>
               Encodes the listing id and the SHA-256 hash of the validated payload, so a copy of the payload can be matched to this export.
             </Text>
@@ -273,7 +273,7 @@ export default function PublishExportScreen() {
             </View>
 
             <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>REGISTRY HASH</Text>
+              <Text style={styles.metaLabel}>PAYLOAD HASH</Text>
               <Text style={styles.metaValue} numberOfLines={1} ellipsizeMode="middle">
                 {exportResult.payload_hash || 'N/A'}
               </Text>
@@ -288,7 +288,7 @@ export default function PublishExportScreen() {
               accessibilityRole="button"
             >
               <Text style={styles.jsonToggleText}>
-                {showJsonPayload ? 'Hide Technical Payload' : 'Inspect Signed JSON Payload'}
+                {showJsonPayload ? 'Hide Export Record' : 'Inspect Export Record'}
               </Text>
               <Text style={styles.jsonToggleIcon}>{showJsonPayload ? '▲' : '▼'}</Text>
             </TouchableOpacity>
@@ -330,7 +330,7 @@ export default function PublishExportScreen() {
           style={styles.primaryBtn}
           contentStyle={{ height: 48 }}
         >
-          {simulateBroadcast ? 'Simulate ONDC Broadcast (Demo)' : 'Validate & Stage for Export'}
+          {simulateBroadcast ? 'Validate & Label as Simulated (Demo)' : 'Validate for ONDC Export'}
         </Button>
       </BottomDock>
     )}
@@ -339,7 +339,8 @@ export default function PublishExportScreen() {
       <BottomDock>
         <Button
           mode="outlined"
-          onPress={() => navigation.navigate('ReviewQueue')}
+          // popTo, not navigate: in React Navigation 7 navigate pushed a second queue on top.
+          onPress={() => navigation.popTo('ReviewQueue')}
           textColor={colors.secondary}
           style={styles.returnBtn}
           contentStyle={{ height: 48 }}

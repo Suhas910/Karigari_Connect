@@ -28,6 +28,7 @@ class _RecordingAdapter:
     def __init__(self):
         self.received = []
         self.error = None
+        self.text = "This is a handwoven silk saree."
 
     def is_available(self):
         return True
@@ -39,7 +40,7 @@ class _RecordingAdapter:
         return TranscriptResult(
             transcript_id=transcript_id,
             detected_language="en",
-            original_text="This is a handwoven silk saree.",
+            original_text=self.text,
             overall_confidence=None,
             adapter=AdapterInfo(provider="gemini", model="gemini-3.5-flash", version="test", on_device=False),
         )
@@ -143,6 +144,21 @@ def test_a_provider_failure_is_a_failed_job_with_a_contract_error(adapter):
     job_id = _transcribe(listing_id, headers, media_id).json()["job_id"]
 
     assert client.get(f"/api/v1/jobs/{job_id}", headers=headers).json()["status"] == "failed"
+    result = client.get(f"/api/v1/jobs/{job_id}/result", headers=headers).json()
+    assert result["status"] == "failed"
+    assert result["error"]["code"] == "ASR_LOW_CONFIDENCE"
+    assert result["error"]["action"] == "record_again"
+
+
+def test_a_silent_recording_fails_instead_of_completing_empty(adapter):
+    """Found on the simulator on 2026-09-14: silence came back "complete" with empty text,
+    so the app showed nothing and product details were generated from no words."""
+    adapter.text = "   "
+    headers, listing_id = _artisan()
+    media_id = _upload(listing_id, headers, "audio", _wav(), "note.wav", "audio/wav")
+
+    job_id = _transcribe(listing_id, headers, media_id).json()["job_id"]
+
     result = client.get(f"/api/v1/jobs/{job_id}/result", headers=headers).json()
     assert result["status"] == "failed"
     assert result["error"]["code"] == "ASR_LOW_CONFIDENCE"

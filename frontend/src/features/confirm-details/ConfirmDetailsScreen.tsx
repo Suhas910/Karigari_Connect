@@ -466,7 +466,13 @@ export default function ConfirmDetailsScreen() {
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {allNeedsConfirmationHandled ? 'Continue to Pricing' : 'Confirm Highlighted Details to Continue'}
+          {allNeedsConfirmationHandled
+            ? 'Continue to Pricing'
+            : (() => {
+                // Say how many are left: the unconfirmed ones can be scrolled out of view.
+                const left = needs_confirmation.filter((key) => !confirmedFields.has(key)).length;
+                return `Confirm ${left} more detail${left === 1 ? '' : 's'} to continue`;
+              })()}
         </Button>
       </BottomDock>
     </KeyboardAvoidingView>

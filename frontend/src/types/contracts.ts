@@ -56,6 +56,13 @@ export interface Claim {
   evidence_note: string | null;
 }
 
+// Kept so the reason is on record; never shown to buyers.
+export interface RejectedClaim {
+  claim: string;
+  reason: string;
+  rejected_at: string;
+}
+
 // Standardized to integer paise
 export interface PriceResult {
   calculation_version: string;
@@ -125,6 +132,9 @@ export interface Listing {
   catalogue: CatalogueResult | null; 
   price: PriceResult | null;
   claims: Claim[];
+  rejected_claims?: RejectedClaim[];
+  rejection_reason?: string | null; // the coordinator's reason, while the listing is sent back
+  public_photo_urls?: string[]; // buyer-facing copies, only while approved
   created_at: string;
   updated_at: string;
 }

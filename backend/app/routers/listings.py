@@ -16,7 +16,8 @@ router = APIRouter(prefix="/listings", tags=["Listings"])
 
 # States in which the artisan is still assembling the listing. Once it is submitted, the
 # media a coordinator reviewed must not change underneath them.
-UPLOADABLE_STATES = {"draft", "processing", "awaiting_confirmation"}
+# "rejected": a listing sent back often needs a better photo.
+UPLOADABLE_STATES = {"draft", "processing", "awaiting_confirmation", "rejected"}
 _READ_CHUNK_BYTES = 1024 * 1024
 
 def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
@@ -31,11 +32,22 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
         for m in listing.media
     ]
 
+    from pydantic import ValidationError
+
     catalogue_data = None
-    if listing.catalogue:
+    stored = json.loads(listing.catalogue.catalogue_data) if listing.catalogue else None
+    if stored is not None:
+        try:
+            schemas.CatalogueDraft.model_validate(stored)
+        except ValidationError:
+            # One malformed stored catalogue used to fail GET /listings for the artisan's
+            # whole list (2026-09-14). Return this listing without it instead.
+            logger.error("Listing %s has an invalid stored catalogue; returning it without one", listing.id)
+            stored = None
+    if stored is not None:
         catalogue_data = {
             "schema_version": listing.catalogue.schema_version,
-            "catalogue": json.loads(listing.catalogue.catalogue_data),
+            "catalogue": stored,
             "field_confidence": json.loads(listing.catalogue.field_confidence),
             "needs_confirmation": json.loads(listing.catalogue.needs_confirmation)
         }
@@ -75,6 +87,16 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
             "evidence_note": c.evidence_note
         }
         for c in listing.claims
+        if c.rejected_at is None
+    ]
+    rejected_claims = [
+        {
+            "claim": c.claim,
+            "reason": c.rejection_reason or "",
+            "rejected_at": c.rejected_at.isoformat(),
+        }
+        for c in listing.claims
+        if c.rejected_at is not None
     ]
 
     return {
@@ -86,6 +108,9 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
         "catalogue": catalogue_data,
         "price": price_data,
         "claims": claims_list,
+        "rejected_claims": rejected_claims,
+        "rejection_reason": listing.rejection_reason if listing.state == "rejected" else None,
+        "public_photo_urls": [photo.url for photo in listing.public_photos],
         "created_at": listing.created_at.isoformat() if listing.created_at else "",
         "updated_at": listing.updated_at.isoformat() if listing.updated_at else ""
     }
@@ -363,24 +388,43 @@ def confirm_listing(
 
     cat_model = db.query(models.CatalogueModel).filter(models.CatalogueModel.listing_id == listing_id).first()
     if not cat_model:
-        # Create new if not existing
-        cat_model = models.CatalogueModel(
-            listing_id=listing_id,
-            schema_version="1.0",
-            catalogue_data=json.dumps(payload.catalogue),
-            field_confidence=json.dumps({}),
-            needs_confirmation=json.dumps([])
+        # This used to store whatever was sent as a brand-new catalogue. A partial one then
+        # failed validation on every read of the listing (2026-09-14).
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "code": "LISTING_STATE_INVALID",
+                "message": "There are no generated product details to confirm yet.",
+                "recoverable": True,
+                "action": "Generate the product details from the recording first.",
+            },
         )
-        db.add(cat_model)
-    else:
-        # Merge catalogue updates
-        current_data = json.loads(cat_model.catalogue_data)
-        current_data.update(payload.catalogue)
-        cat_model.catalogue_data = json.dumps(current_data)
-        # Clear out confirmed fields from needs_confirmation
-        current_needs = json.loads(cat_model.needs_confirmation)
-        updated_needs = [f for f in current_needs if f not in payload.confirmed_fields]
-        cat_model.needs_confirmation = json.dumps(updated_needs)
+
+    # Merge the artisan's changes, and keep the result only if it is still a whole catalogue.
+    from pydantic import ValidationError
+
+    current_data = json.loads(cat_model.catalogue_data)
+    current_data.update(payload.catalogue)
+    try:
+        schemas.CatalogueDraft.model_validate(current_data)
+    except ValidationError as exc:
+        missing = "; ".join(
+            f"{'.'.join(str(part) for part in error['loc'])}: {error['msg'].lower()}" for error in exc.errors()[:5]
+        )
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "CATALOGUE_SCHEMA_INVALID",
+                "message": f"The details are incomplete ({missing}).",
+                "recoverable": True,
+                "action": "Fill in the missing details and confirm again.",
+            },
+        )
+    cat_model.catalogue_data = json.dumps(current_data)
+    # Clear out confirmed fields from needs_confirmation
+    current_needs = json.loads(cat_model.needs_confirmation)
+    updated_needs = [f for f in current_needs if f not in payload.confirmed_fields]
+    cat_model.needs_confirmation = json.dumps(updated_needs)
 
     # The artisan's answer on each claim they were asked about. "Yes" is the assertion the
     # provenance gate waits for (a generator can never make it); "no" removes a claim that no
@@ -399,6 +443,8 @@ def confirm_listing(
                 models.ClaimModel.listing_id == listing_id,
                 models.ClaimModel.claim == name,
             ).first()
+            if row and row.rejected_at is not None:
+                continue  # a coordinator rejected it; saying yes again does not revive it
             if name not in stated:
                 if row and not row.coordinator_verified:
                     db.delete(row)
@@ -412,6 +458,26 @@ def confirm_listing(
                         asserted_by_artisan=True,
                         coordinator_verified=False,
                     ))
+
+    if listing.state in ("approved", "exported"):
+        # Changed after approval: buyers must not see photos of a version nobody approved.
+        from .. import public_media
+        from ..storage import StorageUnavailable
+
+        try:
+            public_media.unpublish(listing)
+        except StorageUnavailable as exc:
+            db.rollback()
+            logger.error("Could not take down public photos for listing %s: %s", listing_id, exc)
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "PROVIDER_UNAVAILABLE",
+                    "message": "Could not take down the public photos, so the change was not saved.",
+                    "recoverable": True,
+                    "action": "Retry shortly.",
+                },
+            )
 
     listing.state = "awaiting_approval"
     db.commit()

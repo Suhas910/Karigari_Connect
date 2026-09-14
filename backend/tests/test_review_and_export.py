@@ -128,7 +128,7 @@ def test_verifying_needs_the_artisans_assertion_and_evidence():
     assert _verify(coordinator, asserted).json()["coordinator_verified"] is True
 
 
-def test_rejecting_a_claim_needs_a_reason_and_removes_it():
+def test_rejecting_a_claim_needs_a_reason_and_keeps_it_off_the_listing():
     artisan, coordinator = _user("artisan"), _user("coordinator")
     listing_id = _confirmed(artisan)
     path = f"/listings/{listing_id}/claims/natural_dye/review"
@@ -136,7 +136,51 @@ def test_rejecting_a_claim_needs_a_reason_and_removes_it():
 
     res = _post(path, coordinator, {"decision": "rejected", "reason": "No dye record."})
     assert res.status_code == 200 and res.json()["removed"] is True
-    assert client.get(f"/api/v1/listings/{listing_id}", headers=artisan).json()["claims"] == []
+    listing = client.get(f"/api/v1/listings/{listing_id}", headers=artisan).json()
+    assert listing["claims"] == []
+    assert [(r["claim"], r["reason"]) for r in listing["rejected_claims"]] == [("natural_dye", "No dye record.")]
+
+
+def test_a_rejected_claim_cannot_be_reviewed_again_or_count_against_approval():
+    artisan, coordinator = _user("artisan"), _user("coordinator")
+    listing_id = _confirmed(artisan)
+    _post(f"/listings/{listing_id}/claims/natural_dye/review", coordinator, {"decision": "rejected", "reason": "No dye record."})
+    assert _verify(coordinator, listing_id).status_code == 409
+    readiness = client.get(f"/api/v1/listings/{listing_id}/readiness", headers=artisan).json()
+    assert readiness["approve"] == []
+
+
+def test_the_artisan_saying_yes_again_does_not_revive_a_rejected_claim():
+    artisan, coordinator = _user("artisan"), _user("coordinator")
+    listing_id = _confirmed(artisan)
+    _post(f"/listings/{listing_id}/claims/natural_dye/review", coordinator, {"decision": "rejected", "reason": "No dye record."})
+    body = {
+        "catalogue": {**GOOD_CATALOGUE, "provenance": {"claims": [
+            {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None},
+        ], "gi_tag": None}},
+        "confirmed_fields": ["provenance.natural_dye"],
+        "corrections": [],
+    }
+    assert _post(f"/listings/{listing_id}/confirm", artisan, body).status_code == 200
+    listing = client.get(f"/api/v1/listings/{listing_id}", headers=artisan).json()
+    assert listing["claims"] == [] and len(listing["rejected_claims"]) == 1
+
+
+def test_missing_nullable_columns_are_added_to_an_existing_database(tmp_path):
+    from sqlalchemy import create_engine, inspect, text
+
+    from app.database import Base, add_missing_nullable_columns
+
+    eng = create_engine(f"sqlite:///{tmp_path / 'old.db'}")
+    with eng.begin() as conn:  # the claims table as it was before rejections were kept
+        conn.execute(text(
+            "CREATE TABLE claims (id VARCHAR PRIMARY KEY, listing_id VARCHAR NOT NULL, claim VARCHAR NOT NULL, "
+            "asserted_by_artisan BOOLEAN NOT NULL, coordinator_verified BOOLEAN NOT NULL, "
+            "evidence_note TEXT, verified_at DATETIME)"
+        ))
+    assert set(add_missing_nullable_columns(eng, Base.metadata)) == {"claims.rejection_reason", "claims.rejected_at"}
+    assert {"rejection_reason", "rejected_at"} <= {c["name"] for c in inspect(eng).get_columns("claims")}
+    assert add_missing_nullable_columns(eng, Base.metadata) == []
 
 
 def test_artisans_cannot_review_claims():
