@@ -7,12 +7,15 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
+import { apiErrorOf } from '../../services/api';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
-import type { PriceResult } from '../../types/contracts';
+import type { CatalogueDraft, PriceResult } from '../../types/contracts';
 import { ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../../components';
 
 const paiseToRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
+
+type Outcome = 'priced' | 'wage_unavailable' | 'details_missing';
 
 export default function PriceScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
@@ -22,6 +25,8 @@ export default function PriceScreen() {
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [price, setPrice] = useState<PriceResult | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [catalogue, setCatalogue] = useState<CatalogueDraft | null>(null);
   const [sellingPrice, setSellingPrice] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [priceError, setPriceError] = useState<string | null>(null);
@@ -29,24 +34,35 @@ export default function PriceScreen() {
   const fetchPrice = async () => {
     setLoading(true);
     setPriceError(null);
+    setOutcome(null);
     try {
       const existing = await getDraft(draftId);
-      const cat = existing?.payload?.catalogue;
-      const materialCostInr = cat?.material_cost_paise ? Math.round(cat.material_cost_paise / 100) : 800;
-      const labourHours = cat?.labour?.hours ?? 12;
-      const stateCode = cat?.labour?.state_code ?? 'KA';
-      const skillLevel = cat?.labour?.skill_level ?? 'skilled';
-      const techniques = cat?.techniques ?? ['handloom_weave'];
+      // The catalogue the artisan confirmed. Never a default: a made-up hour count or
+      // material cost produces a floor that looks official and is not.
+      let cat: CatalogueDraft | null = existing?.payload?.catalogue ?? null;
+      if (!cat) {
+        const listing = await service.getListing(draftId).catch(() => null);
+        cat = listing?.catalogue?.catalogue ?? null;
+      }
+      setCatalogue(cat);
+
+      const hours = cat?.labour?.hours;
+      const cost = cat?.material_cost_paise;
+      const skill = cat?.labour?.skill_level;
+      const stateCode = cat?.labour?.state_code;
+      if (hours == null || cost == null || !skill || !stateCode) {
+        setOutcome('details_missing');
+        return;
+      }
 
       const result = await service.requestPrice(draftId, {
-        material_cost_inr: materialCostInr,
-        labour_hours: labourHours,
+        material_cost_paise: cost,
+        labour_hours: hours,
+        skill_level: skill,
         state_code: stateCode,
-        skill_level: skillLevel,
-        techniques,
-        comparables: [],
       });
       setPrice(result);
+      setOutcome(result.status === 'available' ? 'priced' : 'wage_unavailable');
 
       if (existing?.payload?.finalPricePaise) {
         setSellingPrice(String(Math.round(existing.payload.finalPricePaise / 100)));
@@ -72,7 +88,14 @@ export default function PriceScreen() {
         }
       }
     } catch (err) {
-      setPriceError('Could not load price calculation. Check connection and try again.');
+      const code = apiErrorOf(err)?.code;
+      if (code === 'WAGE_RATE_UNAVAILABLE') {
+        setOutcome('wage_unavailable');
+      } else if (code === 'CATALOGUE_SCHEMA_INVALID') {
+        setOutcome('details_missing');
+      } else {
+        setPriceError('Could not load price calculation. Check connection and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -138,18 +161,23 @@ export default function PriceScreen() {
     return <ProcessingIndicator hint="Calculating fair wage protection…" />;
   }
 
-  if (priceError || !price) {
+  if (outcome === 'details_missing') {
     return (
       <ErrorRetryCard
-        errorText={priceError ?? 'Something went wrong loading your price.'}
-        onRetry={fetchPrice}
-        retryLabel="Retry"
+        errorText="Some details are missing. The hours, material cost, skill level and state are needed to calculate a fair price."
+        onRetry={() =>
+          navigation.navigate('ConfirmDetails', {
+            draftId,
+            transcriptId: catalogue?.source?.transcript_id ?? '',
+          })
+        }
+        retryLabel="Back to details"
       />
     );
   }
 
   // Hard rule: never invent a number. If unavailable, say so plainly — calm, not alarming.
-  if (price.status === 'unavailable') {
+  if (outcome === 'wage_unavailable') {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <ScrollView contentContainerStyle={styles.container}>
@@ -190,6 +218,18 @@ export default function PriceScreen() {
     );
   }
 
+  if (priceError || !price) {
+    return (
+      <ErrorRetryCard
+        errorText={priceError ?? 'Something went wrong loading your price.'}
+        onRetry={fetchPrice}
+        retryLabel="Retry"
+      />
+    );
+  }
+
+  // Demo and offline wage tables mark their rates with this scheme instead of a real source URL.
+  const isDemoRate = !!price.wage_source?.source_url?.startsWith('unsourced://');
   const floorRupees = Math.round((price.floor_amount_paise || 0) / 100);
   const recLowRupees = Math.round((price.recommended_low_paise || 0) / 100);
   const recHighRupees = Math.round((price.recommended_high_paise || 0) / 100);
@@ -217,6 +257,14 @@ export default function PriceScreen() {
         />
 
         <View style={styles.content}>
+          {isDemoRate && (
+            <View style={styles.demoBanner}>
+              <Text style={styles.demoBannerText}>
+                DEMO RATE: this wage is not from an official notification. Do not use it for a real sale.
+              </Text>
+            </View>
+          )}
+
           <Card style={styles.breakdownCard}>
             <Card.Content>
               <Text style={styles.sectionLabel}>COST BREAKDOWN</Text>
@@ -242,14 +290,16 @@ export default function PriceScreen() {
                 <Text style={styles.floorValue}>{paiseToRupees(price.floor_amount_paise)}</Text>
               </View>
               <Text style={styles.floorNotice}>
-                Never sell below this amount. It covers your material expenses and official minimum skilled wage.
+                {isDemoRate
+                  ? 'Calculated with a demo wage rate, so this floor is for illustration only.'
+                  : 'Never sell below this amount. It covers your material expenses and official minimum skilled wage.'}
               </Text>
             </Card.Content>
           </Card>
 
           <Card style={styles.statCard}>
             <Card.Content>
-              <Text style={styles.statSectionLabel}>RECOMMENDED MARKETPLACE BAND (AI HEURISTIC)</Text>
+              <Text style={styles.statSectionLabel}>RECOMMENDED MARKETPLACE BAND</Text>
               <Text style={styles.statValue}>
                 {paiseToRupees(price.recommended_low_paise)} – {paiseToRupees(price.recommended_high_paise)}
               </Text>
@@ -351,6 +401,15 @@ export default function PriceScreen() {
 const styles = StyleSheet.create({
   container: { backgroundColor: colors.background, flexGrow: 1, paddingBottom: spacing.xxl },
   content: { paddingHorizontal: spacing.lg },
+  demoBanner: {
+    backgroundColor: colors.badgeNeutral,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+    padding: spacing.sm,
+    borderRadius: 4,
+    marginBottom: spacing.md,
+  },
+  demoBannerText: { color: colors.error, fontSize: 12, fontWeight: '700', lineHeight: 16 },
   breakdownCard: {
     backgroundColor: colors.surface,
     borderRadius: 10,

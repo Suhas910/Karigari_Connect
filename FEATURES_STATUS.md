@@ -50,12 +50,12 @@
 
 ### AI Pipeline
 
-- **Gemini Client** (`backend/app/ai/gemini_client.py`): Google GenAI SDK (`gemini-2.5-flash`) for multimodal image auditing, regional voice transcription, and catalogue metadata extraction. Fully deterministic high-fidelity fallback when `GEMINI_API_KEY` is absent.
+- **Gemini Client** (`backend/app/ai/gemini_client.py`): legacy. Its model, `gemini-2.5-flash`, returns 404 for new API keys (checked 2026-09-14), so this client always returns its fixed demo content. Real Gemini calls are in `app/ai/adapters/gemini_asr.py` and `gemini_catalogue.py` (`gemini-3.5-flash`), switched on with `CRAFTLINK_ASR=gemini` and `CRAFTLINK_CATALOGUE=gemini`.
 
 - **AI Service** (`backend/app/ai/service.py`):
   1. **AI Image Enhancer & Studio**: Quality audit (blur, lighting, framing, overall), studio enhancement variations (white backdrop, texture detail), actionable artisan guidance tips, enhanced media asset creation.
   2. **Multilingual Auto-Cataloger**: Regional speech transcription (Kannada `kn`, Hindi `hi`, English `en`) with ASR confidence scoring; dual-language SEO title/description; craft taxonomy extraction (category, materials, techniques); per-field confidence scoring; flags fields `< 0.85` into `needs_confirmation`.
-  3. **Dynamic Pricing Assistant & Fair Wage Engine**: Statutory minimum craft wage lookup — KA: `KLS-2025-WAGE-44` Rs.78.50/hr, UP: `UP-MINWAGE-89` Rs.68.00/hr, RJ: `RJ-MINWAGE-102` Rs.72.00/hr, TN: `TN-HANDLOOM-81` Rs.82.00/hr, MP: `MP-WAGE-07` Rs.66.00/hr, IN (Central): `CENTRAL-FLOOR-WAGE-2025` Rs.75.00/hr. Integer paise calculation: `floor = material_cost + (hours x hourly_wage)`. Recommended band: `1.25x - 1.55x floor`. Returns `WAGE_RATE_UNAVAILABLE` for unsupported state codes.
+  3. **Fair Wage Price Engine** (`app/ai/pricing/`): `floor = material cost + labour hours x the state's skilled hourly wage`, in integer paise. Rates come only from `pricing/wage_table.json`, which ships empty until official state notifications are transcribed with their source links. Until then pricing refuses with `WAGE_RATE_UNAVAILABLE`. `CRAFTLINK_WAGE_TABLE=demo` uses demo rates that are labelled as demo data in every response. Hours, material cost, skill level and state come from the artisan's confirmed catalogue; nothing is defaulted.
 
 - **AI Router** (`backend/app/routers/ai.py`):
   - `POST /api/v1/listings/{id}/jobs/image-studio` — Dispatch image studio job (alias: `/ai/image-studio`).
@@ -107,7 +107,6 @@
 ## Pending / To-Be-Implemented Features
 
 - **Asynchronous Job Processing**: Currently jobs execute synchronously within the request. True background task queue (e.g., Celery + Redis or FastAPI BackgroundTasks) for long-running Gemini inference not yet implemented.
-- **Supabase Storage Integration**: Media upload currently uses provided/default URLs. Direct byte-stream upload to Supabase buckets not wired end-to-end.
 - **Deployment Configuration**: Dockerfile and CI/CD pipeline configurations.
 - **Frontend Integration**: Connect backend endpoints with the mobile app UI (React Native / Expo).
 - **Performance Optimizations**: Caching layer (e.g., Redis) for frequently accessed product/listing data.
@@ -118,6 +117,7 @@
 ## Notes
 
 - All implemented features are functional and verified via automated pytest (3/3 passed) and manual Postman/curl testing.
-- The backend runs fully offline using deterministic AI fixtures when `GEMINI_API_KEY` is not set; live Gemini 2.5 Flash is used when the key is configured in `.env`.
+- The backend runs offline on fixtures when `GEMINI_API_KEY` is not set. Which paths call Gemini is described under Gemini Client above.
+- Uploaded media is stored in `backend/media_store/`, or in the private Supabase bucket `media` when `CRAFTLINK_MEDIA_STORAGE=supabase`.
 - SQLite (`karigari.db`) is used as the local development database; PostgreSQL (Neon) is configured via `DATABASE_URL` in `.env` for production.
 - Pending features are prioritized according to the project roadmap defined in `backend_implementation_plan.md`.

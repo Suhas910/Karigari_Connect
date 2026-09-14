@@ -374,6 +374,37 @@ def confirm_listing(
         updated_needs = [f for f in current_needs if f not in payload.confirmed_fields]
         cat_model.needs_confirmation = json.dumps(updated_needs)
 
+    # The artisan's answer on each claim they were asked about. "Yes" is the assertion the
+    # provenance gate waits for (a generator can never make it); "no" removes a claim that no
+    # coordinator has verified. Only the artisan can assert.
+    if current_user.role == "artisan":
+        stated = {
+            c.get("claim"): c
+            for c in ((payload.catalogue.get("provenance") or {}).get("claims") or [])
+            if isinstance(c, dict)
+        }
+        for field in payload.confirmed_fields:
+            if not field.startswith("provenance."):
+                continue
+            name = field.split(".", 1)[1]
+            row = db.query(models.ClaimModel).filter(
+                models.ClaimModel.listing_id == listing_id,
+                models.ClaimModel.claim == name,
+            ).first()
+            if name not in stated:
+                if row and not row.coordinator_verified:
+                    db.delete(row)
+            elif stated[name].get("asserted_by_artisan") is True:
+                if row:
+                    row.asserted_by_artisan = True
+                else:
+                    db.add(models.ClaimModel(
+                        listing_id=listing_id,
+                        claim=name,
+                        asserted_by_artisan=True,
+                        coordinator_verified=False,
+                    ))
+
     listing.state = "awaiting_approval"
     db.commit()
 

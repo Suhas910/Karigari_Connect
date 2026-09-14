@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { useDraftStore } from '../../store/draftStore';
 import { ProcessingIndicator } from '../../components';
+import MediaImage from '../../components/MediaImage';
 
 // --- State visual metadata mapping ---
 const STATE_META: Record<ListingState, { label: string; color: string; bg: string }> = {
@@ -115,7 +116,7 @@ export default function MyListingsScreen() {
       case 'awaiting_confirmation':
         navigation.navigate('ConfirmDetails', {
           draftId: listing.id,
-          transcriptId: listing.catalogue?.catalogue.source.transcript_id ?? 'transcript_uuid',
+          transcriptId: listing.catalogue?.catalogue.source?.transcript_id,
         });
         break;
       case 'awaiting_approval':
@@ -278,7 +279,7 @@ export default function MyListingsScreen() {
                 {/* Craft Thumbnail or Category Icon */}
                 <View style={styles.thumbnailContainer}>
                   {firstPhoto ? (
-                    <Image source={{ uri: firstPhoto }} style={styles.thumbnailImage} />
+                    <MediaImage url={firstPhoto} style={styles.thumbnailImage} />
                   ) : (
                     <View style={styles.thumbnailPlaceholder}>
                       <IconButton

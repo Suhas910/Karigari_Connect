@@ -6,7 +6,6 @@ import { Text, ActivityIndicator, IconButton, Button } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
-import * as Crypto from 'expo-crypto';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { useDraftStore } from '../../store/draftStore';
@@ -22,6 +21,9 @@ export default function CaptureScreen() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [galleryVisible, setGalleryVisible] = useState(false);
   const { activeDraftId, setActiveDraft } = useDraftStore();
+  // Refs, not state: background uploads finish after later renders and must see the latest values.
+  const urisRef = useRef<string[]>([]);
+  const mediaIdsRef = useRef<Record<string, string>>({});
 
   // Restore photos from active draft on mount if available
   useEffect(() => {
@@ -30,6 +32,8 @@ export default function CaptureScreen() {
       try {
         const draft = await getDraft(activeDraftId);
         if (draft?.payload?.photos && Array.isArray(draft.payload.photos)) {
+          urisRef.current = draft.payload.photos;
+          mediaIdsRef.current = draft.payload.photoMediaIds ?? {};
           setCapturedUris(draft.payload.photos);
         }
       } catch (err) {
@@ -70,6 +74,46 @@ export default function CaptureScreen() {
     return newId;
   };
 
+  const setPhotos = (uris: string[]) => {
+    urisRef.current = uris;
+    setCapturedUris(uris);
+  };
+
+  // Photos and their server media ids, saved so a closed app can resume.
+  const persistPhotos = async (draftId: string) => {
+    try {
+      const existing = await getDraft(draftId);
+      await saveDraft({
+        id: draftId,
+        listing_id: existing?.listing_id ?? draftId,
+        state: existing?.state ?? 'draft',
+        preferred_language: existing?.preferred_language ?? 'kn',
+        payload: {
+          ...(existing?.payload ?? {}),
+          photos: urisRef.current,
+          photoMediaIds: mediaIdsRef.current,
+        },
+      });
+    } catch (dbErr) {
+      console.error('Failed to save photos to draft payload', dbErr);
+    }
+  };
+
+  // Sends one photo to the server. False means it is still only on the phone.
+  const uploadPhoto = async (draftId: string, uri: string) => {
+    try {
+      const res = await service.uploadMedia(draftId, 'image', {
+        uri,
+        name: uri.split('/').pop() || 'photo.jpg',
+        type: 'image/jpeg',
+      });
+      mediaIdsRef.current = { ...mediaIdsRef.current, [uri]: res.media_id };
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
   const handleCapture = async () => {
     if (!cameraRef.current) return;
     setIsSaving(true);
@@ -79,34 +123,17 @@ export default function CaptureScreen() {
       if (!photo) return;
 
       const draftId = await ensureDraft();
-      const updated = [...capturedUris, photo.uri];
-      setCapturedUris(updated);
+      setPhotos([...urisRef.current, photo.uri]);
+      await persistPhotos(draftId);
 
-      try {
-        const existing = await getDraft(draftId);
-        await saveDraft({
-          id: draftId,
-          listing_id: existing?.listing_id ?? draftId,
-          state: existing?.state ?? 'draft',
-          preferred_language: existing?.preferred_language ?? 'kn',
-          payload: {
-            ...(existing?.payload ?? {}),
-            photos: updated,
-          },
-        });
-      } catch (dbErr) {
-        console.error('Failed to save photos to draft payload', dbErr);
-      }
-
-      try {
-        await service.completeMediaUpload(draftId, {
-          kind: 'image',
-          upload_token: Crypto.randomUUID(),
-          client_checksum: 'mock_checksum',
-        });
-      } catch (uploadErr) {
-        setUploadError('Photo saved on your device, but upload failed. It will retry when you continue.');
-      }
+      // In the background, so the next photo can be taken straight away.
+      uploadPhoto(draftId, photo.uri).then(async (ok) => {
+        if (ok) {
+          await persistPhotos(draftId);
+        } else {
+          setUploadError('Photo saved on your device, but upload failed. It will retry when you continue.');
+        }
+      });
     } catch (err) {
       setUploadError('Could not capture photo. Try again.');
     } finally {
@@ -115,29 +142,38 @@ export default function CaptureScreen() {
   };
 
   const handleRemovePhoto = async (indexToRemove: number) => {
-    const updated = capturedUris.filter((_, idx) => idx !== indexToRemove);
-    setCapturedUris(updated);
+    const removed = urisRef.current[indexToRemove];
+    const { [removed]: _removedId, ...remaining } = mediaIdsRef.current;
+    mediaIdsRef.current = remaining;
+    setPhotos(urisRef.current.filter((_, idx) => idx !== indexToRemove));
     if (activeDraftId) {
-      try {
-        const existing = await getDraft(activeDraftId);
-        await saveDraft({
-          id: activeDraftId,
-          listing_id: existing?.listing_id ?? activeDraftId,
-          state: existing?.state ?? 'draft',
-          preferred_language: existing?.preferred_language ?? 'kn',
-          payload: {
-            ...(existing?.payload ?? {}),
-            photos: updated,
-          },
-        });
-      } catch (err) {
-        console.error('Failed to update photos after deletion', err);
-      }
+      await persistPhotos(activeDraftId);
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!activeDraftId) return;
+    const notUploaded = () => urisRef.current.filter((uri) => !mediaIdsRef.current[uri]);
+
+    if (notUploaded().length > 0) {
+      setIsSaving(true);
+      setUploadError(null);
+      for (const uri of notUploaded()) {
+        await uploadPhoto(activeDraftId, uri);
+      }
+      await persistPhotos(activeDraftId);
+      setIsSaving(false);
+
+      const remaining = notUploaded().length;
+      if (remaining > 0) {
+        setUploadError(
+          remaining === 1
+            ? '1 photo could not upload. Check your connection and try again, or remove it.'
+            : `${remaining} photos could not upload. Check your connection and try again, or remove them.`
+        );
+        return;
+      }
+    }
     navigation.navigate('ImageReview', { draftId: activeDraftId });
   };
 

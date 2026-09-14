@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, Modal, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated, Modal, Pressable, ScrollView } from 'react-native';
 import { Text, Button, ActivityIndicator, IconButton } from 'react-native-paper';
-import { useAudioRecorder, RecordingPresets, AudioModule } from 'expo-audio';
+import { useAudioRecorder, useAudioPlayer, RecordingPresets, AudioModule } from 'expo-audio';
 import { useTranslation } from 'react-i18next';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
+import { apiErrorOf } from '../../services/api';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
@@ -30,10 +31,14 @@ export default function SpeakScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [recordError, setRecordError] = useState<string | null>(null);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [audioMediaId, setAudioMediaId] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const player = useAudioPlayer(audioUri);
 
   const glowAnim = useRef(new Animated.Value(0)).current;
 
-  // Sync draft's preferred language and existing recording on load if previously set
+  // Restore the preferred language, the recording and its transcription job from the draft
   useEffect(() => {
     if (!draftId) return;
     (async () => {
@@ -42,9 +47,15 @@ export default function SpeakScreen() {
         if (draft?.preferred_language && draft.preferred_language !== i18n.language) {
           await i18n.changeLanguage(draft.preferred_language);
         }
+        if (draft?.payload?.audioUri) {
+          setAudioUri(draft.payload.audioUri);
+          setHasRecording(true);
+        }
+        if (draft?.payload?.audioMediaId) {
+          setAudioMediaId(draft.payload.audioMediaId);
+        }
         if (draft?.payload?.transcriptId) {
           setJobId(draft.payload.transcriptId);
-          setHasRecording(true);
         }
       } catch (err) {
         console.error('Failed to sync preferred language or recording from draft', err);
@@ -100,16 +111,51 @@ export default function SpeakScreen() {
 
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0];
 
-  // Poll transcription job — same pattern as ImageReviewScreen (contract: GET /jobs/{job_id}).
+  // Poll transcription job (contract: GET /jobs/{job_id}). Stops once it has finished either way.
   const { data: job } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => service.getJobStatus(jobId!),
     enabled: !!jobId,
-    refetchInterval: (query) => (query.state.data?.status === 'complete' ? false : 1500),
+    refetchInterval: (query) =>
+      query.state.data?.status === 'complete' || query.state.data?.status === 'failed' ? false : 1500,
   });
   const isProcessing = !!jobId && (!job || job.status === 'processing' || job.status === 'queued');
   const isFailed = job?.status === 'failed';
   const isComplete = job?.status === 'complete';
+
+  const { data: jobResult } = useQuery({
+    queryKey: ['jobResult', jobId],
+    queryFn: () => service.getJobResult(jobId!),
+    enabled: !!jobId && (isComplete || isFailed),
+  });
+  const transcriptText = jobResult?.original_text ?? jobResult?.transcript ?? null;
+  const failure = jobResult?.error;
+  const failureText = !isFailed
+    ? null
+    : failure?.code === 'ASR_LOW_CONFIDENCE'
+    ? t('speak.noSpeech', 'We could not hear any speech. Please record again, closer to the phone.')
+    : failure?.code === 'MEDIA_QUALITY_INSUFFICIENT'
+    ? t('speak.unreadableRecording', 'This recording could not be read. Please record again.')
+    : failure?.action === 'retry_later'
+    ? t('speak.providerBusy', 'The service is busy. Your recording is saved. Try again in a minute.')
+    : t('speak.transcriptionFailed');
+  const canRetry =
+    !!audioUri && !sending && !isRecording && ((isFailed && failure?.action === 'retry_later') || !!recordError);
+
+  const persist = async (changes: Record<string, unknown>) => {
+    try {
+      const existing = await getDraft(draftId);
+      await saveDraft({
+        id: draftId,
+        listing_id: existing?.listing_id ?? draftId,
+        state: existing?.state ?? 'draft',
+        preferred_language: i18n.language,
+        payload: { ...(existing?.payload ?? {}), ...changes },
+      });
+    } catch (dbErr) {
+      console.error('Failed to save recording to draft', dbErr);
+    }
+  };
 
   const handleSelectLanguage = async (code: string) => {
     await i18n.changeLanguage(code);
@@ -128,6 +174,41 @@ export default function SpeakScreen() {
     }
   };
 
+  // Upload the recording (unless the server already has it), then transcribe it.
+  const sendRecording = async (uri: string, mediaId: string | null) => {
+    setRecordError(null);
+    setSending(true);
+    try {
+      let id = mediaId;
+      if (!id) {
+        const uploaded = await service.uploadMedia(draftId, 'audio', {
+          uri,
+          name: uri.split('/').pop() || 'voice-note.m4a',
+          type: 'audio/mp4',
+        });
+        id = uploaded.media_id;
+        setAudioMediaId(id);
+        await persist({ audioMediaId: id });
+      }
+      const res = await service.requestTranscription(draftId, {
+        audio_media_id: id,
+        declared_language: i18n.language,
+      });
+      setJobId(res.job_id);
+      await persist({ transcriptId: res.job_id });
+    } catch (err) {
+      // Contract: PROVIDER_UNAVAILABLE -> keep the recording and offer a retry.
+      const code = apiErrorOf(err)?.code;
+      setRecordError(
+        code === 'MEDIA_QUALITY_INSUFFICIENT'
+          ? t('speak.unreadableRecording', 'This recording could not be read. Please record again.')
+          : t('speak.processingError')
+      );
+    } finally {
+      setSending(false);
+    }
+  };
+
   const startRecording = async () => {
     setRecordError(null);
     try {
@@ -138,6 +219,7 @@ export default function SpeakScreen() {
       }
       await recorder.prepareToRecordAsync();
       recorder.record();
+      setJobId(null);
       setIsRecording(true);
     } catch (err) {
       setRecordError(t('speak.startRecordingError'));
@@ -149,40 +231,30 @@ export default function SpeakScreen() {
     try {
       await recorder.stop();
       setIsRecording(false);
-      setHasRecording(true);
-      const recordedUri = recorder.uri;
-
-      const res = await service.requestTranscription(draftId, {
-        audio_media_id: 'mock_audio_123',
-        declared_language: i18n.language,
-      });
-      setJobId(res.job_id);
-
-      try {
-        const existing = await getDraft(draftId);
-        await saveDraft({
-          id: draftId,
-          listing_id: existing?.listing_id ?? draftId,
-          state: existing?.state ?? 'draft',
-          preferred_language: i18n.language,
-          payload: {
-            ...(existing?.payload ?? {}),
-            audioUri: recordedUri || existing?.payload?.audioUri,
-            transcriptId: res.job_id,
-          },
-        });
-      } catch (dbErr) {
-        console.error('Failed to save audioUri/transcriptId to draft', dbErr);
+      const uri = recorder.uri;
+      if (!uri) {
+        setRecordError(t('speak.processingError'));
+        return;
       }
+      setHasRecording(true);
+      setAudioUri(uri);
+      setAudioMediaId(null);
+      await persist({ audioUri: uri, audioMediaId: null, transcriptId: null });
+      await sendRecording(uri, null);
     } catch (err) {
-      // Contract: PROVIDER_UNAVAILABLE -> queue/retry, preserve draft. Never leave artisan with no feedback.
-      setHasRecording(false);
+      setIsRecording(false);
       setRecordError(t('speak.processingError'));
     }
   };
 
+  const playRecording = async () => {
+    await player.seekTo(0);
+    player.play();
+  };
+
   const handleContinue = () => {
-    navigation.navigate('ConfirmDetails', { draftId, transcriptId: jobId ?? 'transcript_uuid' });
+    if (!jobId) return;
+    navigation.navigate('ConfirmDetails', { draftId, transcriptId: jobId });
   };
 
   return (
@@ -194,7 +266,7 @@ export default function SpeakScreen() {
         subtitle={t('speak.subtitle')}
       />
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.guideCard}>
           <Text style={styles.guideTitle}>{t('speak.guideTitle')}</Text>
           <Text style={styles.guideItem}>• {t('speak.guideItemMaterials')}</Text>
@@ -230,7 +302,7 @@ export default function SpeakScreen() {
             <TouchableOpacity
               style={[styles.micBtn, isRecording && styles.micActive]}
               onPress={isRecording ? stopRecording : startRecording}
-              disabled={isProcessing}
+              disabled={isProcessing || sending}
               accessibilityRole="button"
               accessibilityLabel={isRecording ? t('speak.stop') : t('speak.start')}
             >
@@ -252,18 +324,52 @@ export default function SpeakScreen() {
         </View>
 
         {recordError && <Text style={styles.errorText}>{recordError}</Text>}
+        {failureText && <Text style={styles.errorText}>{failureText}</Text>}
 
-        {isProcessing && (
+        {canRetry && (
+          <Button
+            mode="outlined"
+            onPress={() => sendRecording(audioUri!, audioMediaId)}
+            textColor={colors.text}
+            style={styles.retryBtn}
+            icon="refresh"
+          >
+            {t('speak.tryAgain', 'Try again')}
+          </Button>
+        )}
+
+        {(isProcessing || sending) && (
           <View style={styles.processingRow}>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.processingText}>{t('speak.transcribing')}</Text>
+            <Text style={styles.processingText}>
+              {sending ? t('speak.uploading', 'Sending your recording...') : t('speak.transcribing')}
+            </Text>
           </View>
         )}
 
-        {isFailed && (
-          <Text style={styles.errorText}>{t('speak.transcriptionFailed')}</Text>
+        {isComplete && transcriptText && (
+          <View style={styles.transcriptCard}>
+            <Text style={styles.guideTitle}>{t('speak.heardTitle', 'What we heard')}</Text>
+            <Text style={styles.transcriptText}>{transcriptText}</Text>
+            {jobResult?.needs_replay && (
+              <Text style={styles.guideItem}>
+                {t('speak.replayHint', 'Listen to your recording and check the words. You can correct the details on the next screen.')}
+              </Text>
+            )}
+            {audioUri && (
+              <Button
+                mode="outlined"
+                onPress={playRecording}
+                textColor={colors.text}
+                style={styles.playBtn}
+                icon="play"
+              >
+                {t('speak.playRecording', 'Play recording')}
+              </Button>
+            )}
+          </View>
         )}
-      </View>
+      </ScrollView>
 
       {/* Dedicated Language Selection Modal */}
       <Modal
@@ -280,7 +386,7 @@ export default function SpeakScreen() {
                   {t('speak.languageLabel') || 'Select Voice Language'}
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  Choose the regional dialect you will record in
+                  Choose the language you will record in
                 </Text>
               </View>
               <IconButton
@@ -388,8 +494,9 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
     alignItems: 'center',
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
   },
   guideCard: {
@@ -411,6 +518,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 20,
+  },
+  transcriptCard: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.indigoBorder,
+    marginTop: spacing.md,
+  },
+  transcriptText: {
+    fontSize: 15,
+    color: colors.text,
+    lineHeight: 22,
+    marginBottom: spacing.xs,
+  },
+  playBtn: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    borderRadius: 8,
+    borderColor: colors.border,
+  },
+  retryBtn: {
+    marginTop: spacing.sm,
+    borderRadius: 8,
+    borderColor: colors.border,
   },
   micSection: {
     alignItems: 'center',

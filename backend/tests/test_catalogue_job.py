@@ -188,6 +188,66 @@ def test_price_refuses_until_the_material_cost_is_known(gemini):
     assert res.json()["error"]["code"] == "CATALOGUE_SCHEMA_INVALID"
 
 
+def _confirm(listing_id, headers, catalogue, confirmed_fields):
+    return client.post(
+        f"/api/v1/listings/{listing_id}/confirm",
+        json={"catalogue": catalogue, "confirmed_fields": confirmed_fields, "corrections": []},
+        headers=headers,
+    )
+
+
+def test_price_uses_the_confirmed_catalogue_not_defaults(gemini):
+    headers, listing_id, _ = _transcribed()
+    cat = _generate(listing_id, headers).json()["catalogue"]
+    confirmed = {
+        **cat,
+        "labour": {"hours": 12, "skill_level": "semi_skilled", "state_code": "KA"},
+        "material_cost_paise": 30000,
+    }
+    res = _confirm(listing_id, headers, confirmed, ["labour.hours", "labour.skill_level", "labour.state_code", "material_cost_paise"])
+    assert res.status_code == 200, res.text
+
+    price = client.post(f"/api/v1/listings/{listing_id}/price", json={}, headers=headers)
+    assert price.status_code == 200, price.text
+    inputs = price.json()["inputs"]
+    assert inputs["material_cost_paise"] == 30000
+    assert inputs["labour_hours"] == 12
+    assert inputs["skill_level"] == "semi_skilled"
+    assert price.json()["wage_source"]["state_code"] == "KA"
+
+
+def test_price_with_no_catalogue_and_no_inputs_is_refused(gemini):
+    headers, listing_id = _artisan()
+    res = client.post(f"/api/v1/listings/{listing_id}/price", json={}, headers=headers)
+    assert res.status_code == 422, res.text
+    assert res.json()["error"]["code"] == "CATALOGUE_SCHEMA_INVALID"
+
+
+def test_artisan_yes_on_a_claim_records_the_assertion(gemini):
+    headers, listing_id, _ = _transcribed()
+    cat = _generate(listing_id, headers).json()["catalogue"]
+    claims = [{**c, "asserted_by_artisan": True} for c in cat["provenance"]["claims"]]
+
+    res = _confirm(listing_id, headers, {**cat, "provenance": {**cat["provenance"], "claims": claims}}, ["provenance.handloom_weave"])
+    assert res.status_code == 200, res.text
+
+    rows = [c for c in client.get(f"/api/v1/listings/{listing_id}", headers=headers).json()["claims"] if c["claim"] == "handloom_weave"]
+    assert len(rows) == 1
+    assert rows[0]["asserted_by_artisan"] is True
+    assert rows[0]["coordinator_verified"] is False
+
+
+def test_artisan_no_on_a_claim_removes_it(gemini):
+    headers, listing_id, _ = _transcribed()
+    cat = _generate(listing_id, headers).json()["catalogue"]
+
+    res = _confirm(listing_id, headers, {**cat, "provenance": {**cat["provenance"], "claims": []}}, ["provenance.handloom_weave"])
+    assert res.status_code == 200, res.text
+
+    claims = client.get(f"/api/v1/listings/{listing_id}", headers=headers).json()["claims"]
+    assert all(c["claim"] != "handloom_weave" for c in claims)
+
+
 def test_an_unknown_catalogue_mode_fails_loudly(gemini, monkeypatch):
     headers, listing_id, _ = _transcribed()
     monkeypatch.setenv("CRAFTLINK_CATALOGUE", "gpt")

@@ -577,32 +577,42 @@ class AIService:
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
-        # If inputs not supplied, extract from catalogue
-        if material_cost_paise is None or labour_hours is None:
+        # Inputs not in the request come from the confirmed catalogue, never from defaults.
+        # A floor computed from a made-up hour count looks official and is not.
+        if None in (material_cost_paise, labour_hours, skill_level, state_code):
             cat_model = db.query(models.CatalogueModel).filter(models.CatalogueModel.listing_id == listing_id).first()
-            if cat_model:
-                cat_data = json.loads(cat_model.catalogue_data)
-                material_cost_paise = material_cost_paise or cat_data.get("material_cost_paise", 45000)
-                labour_hours = labour_hours or cat_data.get("labour", {}).get("hours", 6.0)
-                state_code = state_code or cat_data.get("labour", {}).get("state_code", "KA")
-            else:
-                material_cost_paise = material_cost_paise or 45000
-                labour_hours = labour_hours or 6.0
-                state_code = state_code or "KA"
+            cat_data = json.loads(cat_model.catalogue_data) if cat_model else {}
+            labour = cat_data.get("labour") or {}
+            if material_cost_paise is None:
+                material_cost_paise = cat_data.get("material_cost_paise")
+            if labour_hours is None:
+                labour_hours = labour.get("hours")
+            if skill_level is None:
+                skill_level = labour.get("skill_level")
+            if state_code is None:
+                state_code = labour.get("state_code")
 
-        if material_cost_paise is None or labour_hours is None:
-            # A generated catalogue leaves these null until the artisan states them.
+        missing = [
+            name for name, value in (
+                ("material cost", material_cost_paise),
+                ("labour hours", labour_hours),
+                ("skill level", skill_level),
+                ("state", state_code),
+            )
+            if value is None
+        ]
+        if missing:
             raise HTTPException(
                 status_code=422,
                 detail={
                     "code": "CATALOGUE_SCHEMA_INVALID",
-                    "message": "Labour hours and material cost have not been confirmed for this listing.",
+                    "message": "Not yet confirmed for this listing: " + ", ".join(missing) + ".",
                     "recoverable": True,
-                    "action": "Ask the artisan for the hours and the material cost, then price again.",
+                    "action": "Ask the artisan to confirm these details, then price again.",
                 },
             )
 
-        state_code = (state_code or "KA").upper()
+        state_code = str(state_code).upper()
 
         if config.use_deterministic_pricing():
             return AIService._deterministic_price(

@@ -7,10 +7,60 @@ import { useHeaderHeight } from '@react-navigation/elements';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
+import { apiErrorOf } from '../../services/api';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
-import type { CatalogueResult } from '../../types/contracts';
+import type { CatalogueDraft, CatalogueResult } from '../../types/contracts';
 import { ConfidenceDot, ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../../components';
+
+const SKILL_LEVELS = [
+  { id: 'unskilled', label: 'Unskilled' },
+  { id: 'semi_skilled', label: 'Semi-skilled' },
+  { id: 'skilled', label: 'Skilled' },
+  { id: 'highly_skilled', label: 'Highly skilled' },
+];
+
+// Catalogue values are taxonomy ids (handloom_weave); the artisan reads and types words.
+const toWords = (id: string) => id.replace(/_/g, ' ');
+const toId = (words: string) => words.trim().toLowerCase().replace(/[\s-]+/g, '_');
+const toIds = (words: string) => words.split(',').map(toId).filter(Boolean);
+
+type TextField = {
+  key: string;
+  label: string;
+  placeholder: string;
+  numeric?: boolean;
+  multiline?: boolean;
+  maxLength?: number;
+};
+
+const TEXT_FIELDS: TextField[] = [
+  { key: 'category', label: 'Category', placeholder: 'e.g., handloom saree, terracotta vessel' },
+  { key: 'materials', label: 'Materials', placeholder: 'e.g., silk, cotton' },
+  { key: 'techniques', label: 'Techniques', placeholder: 'e.g., handloom weave, extra weft' },
+  { key: 'labour.hours', label: 'Hours to make', placeholder: 'e.g., 12', numeric: true },
+  { key: 'material_cost_paise', label: 'Material cost (₹)', placeholder: 'e.g., 800', numeric: true },
+  { key: 'labour.state_code', label: 'State (2-letter code)', placeholder: 'e.g., KA', maxLength: 2 },
+  { key: 'title.en', label: 'Title (English)', placeholder: 'e.g., Handwoven silk saree with extra-weft border' },
+  { key: 'description.en', label: 'Description', placeholder: 'What the piece is and how it was made', multiline: true },
+];
+const SKILL_KEY = 'labour.skill_level';
+const KNOWN_KEYS = new Set([...TEXT_FIELDS.map((f) => f.key), SKILL_KEY]);
+
+const initialValues = (cat: CatalogueDraft): Record<string, string> => ({
+  category: toWords(cat.category || ''),
+  materials: (cat.materials || []).map(toWords).join(', '),
+  techniques: (cat.techniques || []).map(toWords).join(', '),
+  'labour.hours': cat.labour?.hours != null ? String(cat.labour.hours) : '',
+  material_cost_paise: cat.material_cost_paise != null ? String(cat.material_cost_paise / 100) : '',
+  'labour.state_code': cat.labour?.state_code ?? '',
+  [SKILL_KEY]: cat.labour?.skill_level ?? '',
+  'title.en': cat.title?.en ?? '',
+  'description.en': cat.description?.en ?? '',
+});
+
+type LoadError = { text: string; needsVoice?: boolean };
+type ClaimDecision = 'yes' | 'no';
 
 export default function ConfirmDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
@@ -22,15 +72,17 @@ export default function ConfirmDetailsScreen() {
   const listContainerOffsetY = useRef<number>(0);
   const fieldOffsets = useRef<Record<string, number>>({});
   const activeFieldRef = useRef<string | null>(null);
+  const initialRef = useRef<Record<string, string>>({});
   const [keyboardSpace, setKeyboardSpace] = useState(0);
 
   const [result, setResult] = useState<CatalogueResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<LoadError | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [editedFields, setEditedFields] = useState<Record<string, any>>({});
+  const [values, setValues] = useState<Record<string, string>>({});
   const [confirmedFields, setConfirmedFields] = useState<Set<string>>(new Set());
+  const [claimDecisions, setClaimDecisions] = useState<Record<string, ClaimDecision>>({});
 
   const scrollToField = (key: string | null) => {
     if (!key) return;
@@ -82,25 +134,51 @@ export default function ConfirmDetailsScreen() {
     setTimeout(() => scrollToField(key), 450);
   };
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setLoadError(null);
-      try {
-        const res = await service.requestCatalogueGeneration(draftId, {
-          transcript_id: transcriptId,
-          image_media_ids: [],
-          confirmed_facts: {},
-          taxonomy_version: '0.1.0',
-        });
-        setResult(res);
-      } catch (err) {
-        // Contract: CATALOGUE_SCHEMA_INVALID -> "Keep the draft, show retry."
-        setLoadError('Could not generate catalogue details. Your draft is safe — try again.');
-      } finally {
-        setLoading(false);
+  const loadCatalogue = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      // Opening this screen again reuses the stored catalogue for the same transcript.
+      // Generating again would discard confirmed edits and spend a model request.
+      const listing = await service.getListing(draftId).catch(() => null);
+      const stored = listing?.catalogue;
+      const res: CatalogueResult =
+        stored?.catalogue && (!transcriptId || stored.catalogue.source?.transcript_id === transcriptId)
+          ? stored
+          : await service.requestCatalogueGeneration(draftId, {
+              transcript_id: transcriptId,
+              image_media_ids: [],
+              confirmed_facts: {},
+              taxonomy_version: '0.1.0',
+            });
+      const normalised: CatalogueResult = {
+        ...res,
+        field_confidence: res.field_confidence ?? {},
+        needs_confirmation: res.needs_confirmation ?? [],
+      };
+      const start = initialValues(normalised.catalogue);
+      initialRef.current = start;
+      setValues(start);
+      setConfirmedFields(new Set());
+      setClaimDecisions({});
+      setResult(normalised);
+    } catch (err) {
+      // Contract: CATALOGUE_SCHEMA_INVALID -> "Keep the draft, show retry."
+      const code = apiErrorOf(err)?.code;
+      if (code === 'LISTING_STATE_INVALID') {
+        setLoadError({ text: 'We need your spoken description before the details can be filled in.', needsVoice: true });
+      } else if (code === 'PROVIDER_UNAVAILABLE') {
+        setLoadError({ text: 'The service is busy. Your draft is safe. Try again in a minute.' });
+      } else {
+        setLoadError({ text: 'Could not generate catalogue details. Your draft is safe. Try again.' });
       }
-    })();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalogue();
   }, [draftId, transcriptId]);
 
   if (loading) {
@@ -108,120 +186,83 @@ export default function ConfirmDetailsScreen() {
   }
 
   if (loadError || !result) {
+    const needsVoice = !!loadError?.needsVoice;
     return (
       <ErrorRetryCard
-        errorText={loadError ?? 'Something went wrong loading your draft.'}
-        onRetry={() => {
-          setLoading(true);
-          setLoadError(null);
-          service.requestCatalogueGeneration(draftId, {
-            transcript_id: transcriptId,
-            image_media_ids: [],
-            confirmed_facts: {},
-            taxonomy_version: '0.1.0',
-          }).then(setResult).catch(() => setLoadError('Could not generate catalogue details. Your draft is safe — try again.')).finally(() => setLoading(false));
-        }}
-        retryLabel="Retry"
+        errorText={loadError?.text ?? 'Something went wrong loading your draft.'}
+        onRetry={needsVoice ? () => navigation.navigate('Speak', { draftId }) : loadCatalogue}
+        retryLabel={needsVoice ? 'Record description' : 'Retry'}
       />
     );
   }
 
   const { catalogue, field_confidence, needs_confirmation } = result;
+  const claims = catalogue.provenance?.claims ?? [];
+  const claimNames = Array.from(
+    new Set([
+      ...claims.map((c) => c.claim),
+      ...needs_confirmation.filter((k) => k.startsWith('provenance.')).map((k) => k.slice('provenance.'.length)),
+    ])
+  );
+  // Anything the backend asks about that this screen has no field for still gets a card,
+  // so an unfamiliar key can never leave the Continue button disabled.
+  const otherKeys = needs_confirmation.filter((k) => !KNOWN_KEYS.has(k) && !k.startsWith('provenance.'));
+  const allNeedsConfirmationHandled = needs_confirmation.every((key) => confirmedFields.has(key));
 
-  // Flatten the fields we actually need to show for confirmation.
-  // Per contract: low confidence != wrong — always needs explicit user action, never auto-accept.
-  // If API couldn't extract or translate, fields show educational placeholders guiding the artisan.
-  const fieldsToConfirm = [
-    {
-      key: 'category',
-      label: 'Category',
-      value: catalogue.category || '',
-      placeholder: 'e.g., Handloom Saree, Bidriware, Terracotta Pottery, Wooden Toy',
-    },
-    {
-      key: 'materials',
-      label: 'Materials',
-      value: Array.isArray(catalogue.materials) ? catalogue.materials.filter(Boolean).join(', ') : (catalogue.materials || ''),
-      placeholder: 'e.g., Mulberry Silk, Pure Cotton, Natural Clay, Teak Wood',
-    },
-    {
-      key: 'techniques',
-      label: 'Techniques',
-      value: Array.isArray(catalogue.techniques) ? catalogue.techniques.filter(Boolean).join(', ') : (catalogue.techniques || ''),
-      placeholder: 'e.g., Handloom Weaving, Chisel Carving, Block Printing, Natural Dyeing',
-    },
-    {
-      key: 'labour.hours',
-      label: 'Hours to make',
-      value: catalogue.labour?.hours ? String(catalogue.labour.hours) : '',
-      placeholder: 'e.g., 12',
-    },
-    {
-      key: 'title.en',
-      label: 'Title (English)',
-      value: catalogue.title?.en || '',
-      placeholder: 'e.g., Handcrafted Mulberry Silk Saree with Zari Border',
-    },
-    {
-      key: 'description.en',
-      label: 'Description',
-      value: catalogue.description?.en || '',
-      placeholder: 'e.g., Traditional artisan crafted item with heritage motifs, regional craft technique, and natural finish...',
-    },
-  ];
+  const confirm = (key: string) => setConfirmedFields((prev) => new Set(prev).add(key));
 
   const handleFieldChange = (key: string, value: string) => {
-    setEditedFields((prev) => ({ ...prev, [key]: value }));
+    setValues((prev) => ({ ...prev, [key]: value }));
     if (value.trim().length > 0) {
-      setConfirmedFields((prev) => new Set(prev).add(key));
+      confirm(key);
     }
   };
 
-  const handleConfirmField = (key: string) => {
-    setConfirmedFields((prev) => new Set(prev).add(key));
+  const handleClaimDecision = (name: string, decision: ClaimDecision) => {
+    setClaimDecisions((prev) => ({ ...prev, [name]: decision }));
+    confirm(`provenance.${name}`);
   };
 
-  const allNeedsConfirmationHandled = needs_confirmation.every((key) => confirmedFields.has(key));
-
   const handleSubmit = async () => {
+    const hours = parseFloat(values['labour.hours']);
+    const rupees = parseFloat(values.material_cost_paise);
+    const stateCode = (values['labour.state_code'] || '').trim().toUpperCase();
+    const skill = values[SKILL_KEY];
+    // Pricing refuses without these, and the app must not fill them in for the artisan.
+    if (!(hours > 0) || !(rupees >= 0) || !skill || !/^[A-Z]{2}$/.test(stateCode)) {
+      setSubmitError('Add the hours, material cost, skill level and 2-letter state code before pricing.');
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
-    const corrections = Object.entries(editedFields).map(([field, new_value]) => ({
-      field,
-      old_value: (catalogue as any)[field],
-      new_value,
-      source: 'artisan',
-    }));
 
-    const finalCatalogue = {
+    const corrections = Object.keys(values)
+      .filter((field) => values[field] !== initialRef.current[field])
+      .map((field) => ({ field, old_value: initialRef.current[field], new_value: values[field], source: 'artisan' }));
+
+    // "Yes" is the artisan's own assertion; a coordinator still has to verify it.
+    // "No" removes the claim.
+    const finalClaims = claims
+      .filter((c) => claimDecisions[c.claim] !== 'no')
+      .map((c) => (claimDecisions[c.claim] === 'yes' ? { ...c, asserted_by_artisan: true } : c));
+
+    const finalCatalogue: CatalogueDraft = {
       ...catalogue,
-      category: editedFields['category'] !== undefined ? editedFields['category'] : (catalogue.category || ''),
-      materials: editedFields['materials'] !== undefined
-        ? editedFields['materials'].split(',').map((s: string) => s.trim()).filter(Boolean)
-        : (catalogue.materials || []),
-      techniques: editedFields['techniques'] !== undefined
-        ? editedFields['techniques'].split(',').map((s: string) => s.trim()).filter(Boolean)
-        : (catalogue.techniques || []),
-      labour: {
-        ...catalogue.labour,
-        hours: editedFields['labour.hours'] !== undefined
-          ? (parseFloat(editedFields['labour.hours']) || 0)
-          : (catalogue.labour?.hours || 0),
-      },
-      title: {
-        ...catalogue.title,
-        en: editedFields['title.en'] !== undefined ? editedFields['title.en'] : (catalogue.title?.en || ''),
-      },
-      description: {
-        ...catalogue.description,
-        en: editedFields['description.en'] !== undefined ? editedFields['description.en'] : (catalogue.description?.en || ''),
-      },
+      category: toId(values.category || ''),
+      materials: toIds(values.materials || ''),
+      techniques: toIds(values.techniques || ''),
+      labour: { hours, skill_level: skill, state_code: stateCode },
+      material_cost_paise: Math.round(rupees * 100),
+      title: { ...catalogue.title, en: values['title.en'] || '' },
+      description: { ...catalogue.description, en: values['description.en'] || '' },
+      provenance: { ...catalogue.provenance, claims: finalClaims },
     };
 
     try {
       await service.confirmListing(draftId, {
         catalogue: finalCatalogue,
-        confirmed_fields: fieldsToConfirm.map((f) => f.key),
+        confirmed_fields: Array.from(confirmedFields),
         corrections,
       });
 
@@ -235,6 +276,7 @@ export default function ConfirmDetailsScreen() {
           payload: {
             ...(existing?.payload ?? {}),
             catalogueConfirmed: true,
+            catalogue: finalCatalogue,
           },
         });
       } catch (dbErr) {
@@ -244,10 +286,28 @@ export default function ConfirmDetailsScreen() {
       navigation.navigate('Price', { draftId });
     } catch (err) {
       // Contract: CATALOGUE_SCHEMA_INVALID -> keep the draft, show retry. Never lose edits on failure.
-      setSubmitError('Could not save your confirmation. Your edits are kept — try again.');
+      setSubmitError('Could not save your confirmation. Your edits are kept. Try again.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const renderConfirmButton = (key: string) => {
+    if (!needs_confirmation.includes(key)) return null;
+    const isConfirmed = confirmedFields.has(key);
+    return (
+      <Button
+        mode={isConfirmed ? 'contained' : 'outlined'}
+        onPress={() => confirm(key)}
+        buttonColor={isConfirmed ? colors.secondary : undefined}
+        textColor={isConfirmed ? '#FFFFFF' : colors.text}
+        style={styles.confirmBtn}
+        labelStyle={{ fontSize: 12 }}
+        compact
+      >
+        {isConfirmed ? 'Confirmed' : 'Tap to confirm this field'}
+      </Button>
+    );
   };
 
   return (
@@ -269,7 +329,7 @@ export default function ConfirmDetailsScreen() {
           currentStep={4}
           totalSteps={5}
           title="Confirm Details"
-          subtitle="Review extracted details. Tap values to edit."
+          subtitle="Check every detail. Tap a value to change it."
         />
 
         <View
@@ -278,11 +338,8 @@ export default function ConfirmDetailsScreen() {
             listContainerOffsetY.current = e.nativeEvent.layout.y;
           }}
         >
-          {fieldsToConfirm.map((field) => {
+          {TEXT_FIELDS.map((field) => {
             const confidence = field_confidence[field.key];
-            const needsConfirmation = needs_confirmation.includes(field.key);
-            const isConfirmed = confirmedFields.has(field.key);
-
             return (
               <View
                 key={field.key}
@@ -291,14 +348,12 @@ export default function ConfirmDetailsScreen() {
               >
                 <View style={styles.fieldHeader}>
                   <Text style={styles.fieldLabel}>{field.label}</Text>
-                  {confidence !== undefined && (
-                    <ConfidenceDot confidence={confidence} />
-                  )}
+                  {confidence !== undefined && <ConfidenceDot confidence={confidence} />}
                 </View>
 
                 <TextInput
                   mode="outlined"
-                  value={editedFields[field.key] !== undefined ? editedFields[field.key] : field.value}
+                  value={values[field.key] ?? ''}
                   onChangeText={(text) => handleFieldChange(field.key, text)}
                   onFocus={() => handleFieldFocus(field.key)}
                   placeholder={field.placeholder}
@@ -306,26 +361,87 @@ export default function ConfirmDetailsScreen() {
                   style={styles.input}
                   outlineColor={colors.border}
                   activeOutlineColor={colors.primary}
-                  multiline={field.key === 'description.en'}
-                  numberOfLines={field.key === 'description.en' ? 3 : 1}
+                  keyboardType={field.numeric ? 'decimal-pad' : 'default'}
+                  autoCapitalize={field.maxLength === 2 ? 'characters' : 'sentences'}
+                  maxLength={field.maxLength}
+                  multiline={field.multiline}
+                  numberOfLines={field.multiline ? 3 : 1}
                 />
 
-                {needsConfirmation && (
-                  <Button
-                    mode={isConfirmed ? 'contained' : 'outlined'}
-                    onPress={() => handleConfirmField(field.key)}
-                    buttonColor={isConfirmed ? colors.secondary : undefined}
-                    textColor={isConfirmed ? '#FFFFFF' : colors.text}
-                    style={styles.confirmBtn}
-                    labelStyle={{ fontSize: 12 }}
-                    compact
-                  >
-                    {isConfirmed ? 'Confirmed' : 'Tap to confirm this field'}
-                  </Button>
-                )}
+                {renderConfirmButton(field.key)}
               </View>
             );
           })}
+
+          <View style={styles.fieldCard}>
+            <Text style={styles.fieldLabel}>Skill level</Text>
+            <View style={styles.chipRow}>
+              {SKILL_LEVELS.map((level) => {
+                const selected = values[SKILL_KEY] === level.id;
+                return (
+                  <Chip
+                    key={level.id}
+                    selected={selected}
+                    onPress={() => handleFieldChange(SKILL_KEY, level.id)}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    textStyle={selected ? styles.chipTextSelected : styles.chipText}
+                    compact
+                  >
+                    {level.label}
+                  </Chip>
+                );
+              })}
+            </View>
+            {renderConfirmButton(SKILL_KEY)}
+          </View>
+
+          {claimNames.length > 0 && (
+            <View style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>Claims about your craft</Text>
+              <Text style={styles.claimIntro}>
+                Is each of these true? A coordinator checks every claim before buyers see it.
+              </Text>
+              {claimNames.map((name) => {
+                const decision = claimDecisions[name];
+                return (
+                  <View key={name} style={styles.claimRow}>
+                    <Text style={styles.claimName}>{toWords(name)}</Text>
+                    <View style={styles.claimButtons}>
+                      <Button
+                        mode={decision === 'yes' ? 'contained' : 'outlined'}
+                        onPress={() => handleClaimDecision(name, 'yes')}
+                        buttonColor={decision === 'yes' ? colors.secondary : undefined}
+                        textColor={decision === 'yes' ? '#FFFFFF' : colors.text}
+                        style={styles.claimBtn}
+                        labelStyle={{ fontSize: 12 }}
+                        compact
+                      >
+                        Yes, this is true
+                      </Button>
+                      <Button
+                        mode={decision === 'no' ? 'contained' : 'outlined'}
+                        onPress={() => handleClaimDecision(name, 'no')}
+                        buttonColor={decision === 'no' ? colors.primary : undefined}
+                        textColor={decision === 'no' ? '#FFFFFF' : colors.text}
+                        style={styles.claimBtn}
+                        labelStyle={{ fontSize: 12 }}
+                        compact
+                      >
+                        No, remove it
+                      </Button>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {otherKeys.map((key) => (
+            <View key={key} style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>{toWords(key.replace(/\./g, ' '))}</Text>
+              {renderConfirmButton(key)}
+            </View>
+          ))}
         </View>
       </ScrollView>
 
@@ -380,6 +496,51 @@ const styles = StyleSheet.create({
   confirmBtn: {
     marginTop: spacing.sm,
     alignSelf: 'flex-start',
+    borderRadius: 6,
+    borderColor: colors.border,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  chip: {
+    backgroundColor: colors.badgeNeutral,
+    borderColor: colors.border,
+    borderWidth: 1,
+  },
+  chipSelected: {
+    backgroundColor: colors.indigoLight,
+    borderColor: colors.secondary,
+  },
+  chipText: { fontSize: 12, color: colors.text },
+  chipTextSelected: { fontSize: 12, color: colors.secondary, fontWeight: '700' },
+  claimIntro: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  claimRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingVertical: spacing.sm,
+  },
+  claimName: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  claimButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  claimBtn: {
     borderRadius: 6,
     borderColor: colors.border,
   },

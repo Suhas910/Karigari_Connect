@@ -18,6 +18,14 @@
     "continueBtn": "Continue to Confirmation",
     "micPermissionRequired": "Microphone permission is required to record. Please enable it in device settings.",
     "startRecordingError": "Could not start recording. Please try again.",
-    "processingError": "Could not process recording. Check connection and try again."
+    "processingError": "Could not process recording. Check connection and try again.",
+    "noSpeech": "We could not hear any speech. Please record again, closer to the phone.",
+    "unreadableRecording": "This recording could not be read. Please record again.",
+    "providerBusy": "The service is busy. Your recording is saved. Try again in a minute.",
+    "tryAgain": "Try again",
+    "uploading": "Sending your recording...",
+    "heardTitle": "What we heard",
+    "replayHint": "Listen to your recording and check the words. You can correct the details on the next screen.",
+    "playRecording": "Play recording"
   }
 }

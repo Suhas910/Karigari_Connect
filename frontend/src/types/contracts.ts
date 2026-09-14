@@ -79,18 +79,20 @@ export interface PriceResult {
   explanation: string;
 }
 
-// Strictly typed catalogue draft matching backend JSON contracts
+// Strictly typed catalogue draft matching backend JSON contracts.
+// Null means the artisan has not stated it yet. The backend never estimates these.
 export interface CatalogueDraft {
   listing_id: string;
   category: string;
   materials: string[];
   techniques: string[];
-  title: { en: string; local: string; local_language: string };
-  description: { en: string; local: string };
-  labour: { hours: number; skill_level: string; state_code: string };
-  material_cost_paise: number;
+  finish?: string | null;
+  title: { en: string; local: string | null; local_language: string };
+  description: { en: string; local: string | null };
+  labour: { hours: number | null; skill_level: string | null; state_code: string | null };
+  material_cost_paise: number | null;
   provenance: { claims: Claim[]; gi_tag: string | null };
-  source: { transcript_id: string; asr_confidence: number };
+  source: { transcript_id: string; asr_confidence: number | null };
 }
 
 export interface CatalogueResult {
@@ -143,6 +145,49 @@ export interface JobStatus {
   updated_at: string;
 }
 
+// A file on the phone, as React Native's FormData expects it.
+export interface LocalFile {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+export interface MediaUploadResult {
+  status: string;
+  media_id: string;
+  url: string | null;
+  kind?: 'image' | 'audio';
+  content_type?: string;
+  size_bytes?: number;
+  checksum?: string;
+  deduplicated: boolean;
+}
+
+// GET /jobs/{id}/result for a transcription job. A failed job carries `error` instead.
+export interface TranscriptJobResult {
+  job_id?: string;
+  status?: 'complete' | 'failed';
+  transcript_id?: string;
+  detected_language?: string;
+  original_text?: string;
+  english_translation?: string | null;
+  overall_confidence?: number | null;
+  needs_replay?: boolean;
+  adapter?: { provider: string; model: string | null; version: string | null; on_device: boolean };
+  // Legacy backend path (CRAFTLINK_ASR=legacy).
+  transcript?: string;
+  translated_text?: string;
+  error?: ApiError['error'];
+}
+
+export interface PriceRequest {
+  material_cost_paise: number;
+  labour_hours: number;
+  skill_level: string;
+  state_code: string;
+  comparables_paise?: number[];
+}
+
 // --- 6. EXPORT RESULT ---
 export interface ExportResult {
   export_id: string;
@@ -167,14 +212,15 @@ export interface ListingService {
   }>;
   listListings(): Promise<Listing[]>;
   getListing(listingId: string): Promise<Listing>;
-  completeMediaUpload(listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }): Promise<{ status: string; media_id: string }>;
+  uploadMedia(listingId: string, kind: 'image' | 'audio', file: LocalFile): Promise<MediaUploadResult>;
+  getJobResult(jobId: string): Promise<TranscriptJobResult>;
   requestImageAnalysis(listingId: string, payload: { media_id: string; photos?: string[] }): Promise<{ job_id: string }>;
   requestTranscription(listingId: string, payload: { audio_media_id: string; declared_language: string }): Promise<{ job_id: string }>;
   getJobStatus(jobId: string): Promise<JobStatus>;
   getImageJobResult(jobId: string): Promise<ImageJobResult>;
   requestCatalogueGeneration(listingId: string, payload: any): Promise<CatalogueResult>;
   confirmListing(listingId: string, payload: { catalogue: any; confirmed_fields: string[]; corrections: { field: string; old_value: any; new_value: any; source: string }[] }): Promise<{ status: string; listing_id: string }>;
-  requestPrice(listingId: string, payload: any): Promise<PriceResult>;
+  requestPrice(listingId: string, payload: PriceRequest): Promise<PriceResult>;
   requestPrice_unavailable?(): Promise<PriceResult>;
   reviewClaim(listingId: string, claim: string, payload: { decision: string; evidence_note: string; reason: string | null }): Promise<{ claim: string; coordinator_verified: boolean; evidence_note: string }>;
   submitForApproval(listingId: string): Promise<{ status: string }>;

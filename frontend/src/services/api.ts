@@ -12,7 +12,9 @@ import { useAuthStore } from '../store/authStore';
 // - iOS Simulator:    http://localhost:8000/api/v1
 // - Physical Device:  http://<your-machine-LAN-IP>:8000/api/v1
 const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiBaseUrl ?? 'http://LOCAL_DEV_BACKEND_URL/api/v1'; 
+  process.env.EXPO_PUBLIC_API_BASE_URL ??
+  Constants.expoConfig?.extra?.apiBaseUrl ??
+  'http://LOCAL_DEV_BACKEND_URL/api/v1'; 
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,6 +22,13 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Backend media URLs are paths ("/api/v1/media/{id}/content"); this is what they are relative to.
+export const API_ORIGIN = String(API_BASE_URL).replace(/\/api\/v1\/?\s*$/, '');
+
+// The contract error body ({ code, message, recoverable, action }) of a failed request, if any.
+export const apiErrorOf = (err: unknown): ApiError['error'] | undefined =>
+  (err as any)?.response?.data?.error;
 
 // --- REQUEST INTERCEPTOR ---
 api.interceptors.request.use(async (config) => {
@@ -32,7 +41,8 @@ api.interceptors.request.use(async (config) => {
   // 2. Attach Idempotency Key for Mutations
   // Generates a UUID for every non-GET request to ensure safe outbox retries.
   if (config.method && config.method.toLowerCase() !== 'get') {
-    config.headers['Idempotency-Key'] = crypto.randomUUID();
+    // expo-crypto: React Native has no global `crypto`, so the global call threw on every POST.
+    config.headers['Idempotency-Key'] = Crypto.randomUUID();
   }
   
   return config;
@@ -81,13 +91,18 @@ api.interceptors.response.use(
 
 // --- LIVE API IMPLEMENTATION OF LISTING SERVICE ---
 import type {
+  ApiError,
   ListingService,
   Listing,
   JobStatus,
   ImageJobResult,
   CatalogueResult,
+  LocalFile,
+  MediaUploadResult,
+  PriceRequest,
   PriceResult,
   ExportResult,
+  TranscriptJobResult,
   UserRole,
 } from '../types/contracts';
 
@@ -107,8 +122,15 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
-  completeMediaUpload: async (listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }) => {
-    const res = await api.post(`/listings/${listingId}/media`, payload);
+  uploadMedia: async (listingId: string, kind: 'image' | 'audio', file: LocalFile): Promise<MediaUploadResult> => {
+    const form = new FormData();
+    form.append('kind', kind);
+    // React Native reads the file from `uri`. The backend checks the bytes, not the name or type.
+    form.append('file', { uri: file.uri, name: file.name, type: file.type } as any);
+    const res = await api.post(`/listings/${listingId}/media/upload`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      transformRequest: (data) => data,
+    });
     return res.data;
   },
 
@@ -126,6 +148,11 @@ export const liveApi: ListingService = {
 
   getJobStatus: async (jobId: string): Promise<JobStatus> => {
     const res = await api.get(`/jobs/${jobId}`);
+    return res.data;
+  },
+
+  getJobResult: async (jobId: string): Promise<TranscriptJobResult> => {
+    const res = await api.get(`/jobs/${jobId}/result`);
     return res.data;
   },
 
@@ -154,7 +181,7 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
-  requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => {
+  requestPrice: async (listingId: string, payload: PriceRequest): Promise<PriceResult> => {
     const res = await api.post(`/listings/${listingId}/price`, payload);
     return res.data;
   },

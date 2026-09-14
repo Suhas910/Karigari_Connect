@@ -206,9 +206,26 @@ listListings: async (): Promise<Listing[]> => [
     };
   },
 
-  completeMediaUpload: async (listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }) => ({
-    status: 'success',
-    media_id: `media_${payload.kind}_123`,
+  uploadMedia: async (listingId, kind, file) => ({
+    status: 'complete',
+    media_id: `mock_media_${kind}_${Date.now()}`,
+    url: file.uri,
+    kind,
+    content_type: file.type,
+    deduplicated: false,
+  }),
+
+  // Offline mode sends nothing to a server, and the transcript says so.
+  getJobResult: async (jobId) => ({
+    job_id: jobId,
+    status: 'complete',
+    transcript_id: jobId,
+    detected_language: 'en',
+    original_text: 'Offline demo: the recording was not sent to a server. Enter the details on the next screen.',
+    english_translation: null,
+    overall_confidence: null,
+    needs_replay: true,
+    adapter: { provider: 'fixture', model: 'mockApi', version: null, on_device: true },
   }),
 
   requestImageAnalysis: async (listingId: string, payload: { media_id: string; photos?: string[] }) => {
@@ -288,33 +305,46 @@ listListings: async (): Promise<Listing[]> => [
       category: '',
       materials: [],
       techniques: [],
-      title: { en: '', local: '', local_language: 'kn' },
-      description: { en: '', local: '' },
-      labour: { hours: 0, skill_level: 'skilled', state_code: 'KA' },
-      material_cost_paise: 80000,
+      title: { en: '', local: null, local_language: 'kn' },
+      description: { en: '', local: null },
+      labour: { hours: null, skill_level: null, state_code: null },
+      material_cost_paise: null,
       provenance: { claims: [], gi_tag: null },
-      source: { transcript_id: 'transcript_uuid', asr_confidence: 0.86 },
+      source: { transcript_id: payload?.transcript_id ?? 'offline', asr_confidence: null },
     },
-    field_confidence: { category: 0.5, materials: 0.5, techniques: 0.5, 'labour.hours': 0.5 },
-    needs_confirmation: ['techniques', 'labour.hours'],
+    field_confidence: {},
+    needs_confirmation: [
+      'category', 'materials', 'techniques', 'title.en', 'description.en',
+      'labour.hours', 'labour.skill_level', 'labour.state_code', 'material_cost_paise',
+    ],
   }),
 
-  requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => ({
-    calculation_version: '1.0.0',
-    status: 'available',
-    currency: 'INR',
-    wage_source: {
-      state_code: 'KA',
-      notification_ref: 'official_ref_123',
-      effective_from: '2026-01-01',
-      source_url: 'https://official.example',
-    },
-    inputs: { material_cost_paise: 80000, labour_hours: 12, hourly_wage_paise: 5000, skill_level: 'skilled' },
-    floor_amount_paise: 140000,
-    recommended_low_paise: 150000,
-    recommended_high_paise: 200000,
-    explanation: 'The protected floor includes materials and the recorded skilled labour rate.',
-  }),
+  // Uses the artisan's confirmed inputs. The hourly rate is a placeholder and is labelled as one.
+  requestPrice: async (listingId, payload): Promise<PriceResult> => {
+    const hourlyWagePaise = 5000;
+    const floor = payload.material_cost_paise + Math.round(payload.labour_hours * hourlyWagePaise);
+    return {
+      calculation_version: 'mock',
+      status: 'available',
+      currency: 'INR',
+      wage_source: {
+        state_code: payload.state_code,
+        notification_ref: 'MOCK-FIXTURE-NOT-A-REAL-NOTIFICATION',
+        effective_from: '2026-01-01',
+        source_url: 'unsourced://mock-fixture',
+      },
+      inputs: {
+        material_cost_paise: payload.material_cost_paise,
+        labour_hours: payload.labour_hours,
+        hourly_wage_paise: hourlyWagePaise,
+        skill_level: payload.skill_level,
+      },
+      floor_amount_paise: floor,
+      recommended_low_paise: Math.round(floor * 1.1),
+      recommended_high_paise: Math.round(floor * 1.4),
+      explanation: 'Offline demo figures. The hourly rate is not from a wage notification.',
+    };
+  },
 
   // Unhappy-path fixture — wire a screen toggle to test this state deliberately
   requestPrice_unavailable: async (): Promise<PriceResult> => ({

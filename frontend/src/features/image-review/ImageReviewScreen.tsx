@@ -35,12 +35,7 @@ export default function ImageReviewScreen() {
             setCoverIndex(draft.payload.coverIndex);
           }
         } else {
-          // Fallback placeholders if launched directly without camera
-          setPhotos([
-            'https://placehold.co/400x400/EDE7DD/2B2320?text=Angle+1+(Front)',
-            'https://placehold.co/400x400/E8ECEF/2B2320?text=Angle+2+(Detail)',
-            'https://placehold.co/400x400/F2EDE4/2B2320?text=Angle+3+(Border)',
-          ]);
+          setPhotos([]);
         }
       } catch (err) {
         console.error('Failed to load photos in ImageReviewScreen', err);
@@ -54,11 +49,16 @@ export default function ImageReviewScreen() {
     (async () => {
       try {
         const draft = await getDraft(draftId);
-        const currentPhotos = draft?.payload?.photos || [];
-        const result = await service.requestImageAnalysis(draftId, {
-          media_id: 'media_photo_batch',
-          photos: currentPhotos.length > 0 ? currentPhotos : undefined,
-        });
+        const currentPhotos: string[] = draft?.payload?.photos || [];
+        const mediaIds: Record<string, string> = draft?.payload?.photoMediaIds || {};
+        const cover = typeof draft?.payload?.coverIndex === 'number' ? draft.payload.coverIndex : 0;
+        // The server analyses a photo it has received, so it needs that photo's media id.
+        const mediaId = mediaIds[currentPhotos[cover]] ?? currentPhotos.map((uri) => mediaIds[uri]).find(Boolean);
+        if (!mediaId) {
+          setKickoffError('Your photos have not uploaded yet. Go back to the camera and continue again.');
+          return;
+        }
+        const result = await service.requestImageAnalysis(draftId, { media_id: mediaId });
         setJobId(result.job_id);
       } catch (err) {
         setKickoffError('Could not start photo processing. Check connection and try again.');
@@ -269,7 +269,7 @@ export default function ImageReviewScreen() {
   if (isFailed) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.hint}>Something went wrong processing your photos.</Text>
+        <Text style={styles.hint}>{kickoffError || 'Something went wrong processing your photos.'}</Text>
         <Button mode="contained" onPress={handleRetake} style={styles.retakeBtn} buttonColor={colors.primary}>
           Retake Photos
         </Button>
@@ -282,9 +282,11 @@ export default function ImageReviewScreen() {
     ? jobResult.enhanced_urls
     : (jobResult?.enhanced_url ? [jobResult.enhanced_url] : []);
 
-  const activeOriginalUri = photos[selectedIndex] || 'https://placehold.co/400x400/EDE7DD/2B2320?text=Angle';
+  const activeOriginalUri = photos[selectedIndex] || '';
   const activeEnhancedUri = (enhancedPhotos[selectedIndex] || jobResult?.enhanced_url || '').trim();
-  const hasEnhancedPhoto = activeEnhancedUri.length > 0;
+  // Only a real image URL. The legacy image job returns strings built by appending query
+  // parameters to the original's path, which point at nothing.
+  const hasEnhancedPhoto = /^https?:\/\//.test(activeEnhancedUri);
   const isCurrentCover = selectedIndex === coverIndex;
 
   return (

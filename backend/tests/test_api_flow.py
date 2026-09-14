@@ -234,7 +234,12 @@ def test_invalid_state_wage_rate_error():
     res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers)
     listing_id = res_listing.json()["id"]
 
-    res_price = client.post(f"/api/v1/listings/{listing_id}/price", json={"state_code": "XX"}, headers=headers)
+    # Full inputs, so the refusal tested here is the missing wage rate and not missing details.
+    res_price = client.post(
+        f"/api/v1/listings/{listing_id}/price",
+        json={"state_code": "XX", "material_cost_paise": 45000, "labour_hours": 6, "skill_level": "skilled"},
+        headers=headers,
+    )
     assert res_price.status_code == 422
     err_body = res_price.json()
     assert "error" in err_body

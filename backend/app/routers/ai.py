@@ -108,8 +108,8 @@ def request_price_calculation(
 ):
     mat_cost = payload.material_cost_paise if payload else None
     hours = payload.labour_hours if payload else None
-    skill = payload.skill_level if payload else "skilled"
-    state = payload.state_code if payload else "KA"
+    skill = payload.skill_level if payload else None
+    state = payload.state_code if payload else None
     comparables = payload.comparables_paise if payload else None
 
     return ai_service.calculate_fair_price(

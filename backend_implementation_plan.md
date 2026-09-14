@@ -13,7 +13,7 @@
 Build and verify the complete backend and AI services for **Karigari Connect** locally on `backend_branch`. The platform acts as a 'virtual business manager' for marginalized micro-entrepreneurs and artisans, providing:
 1. **AI Image Enhancer & Studio**: Built-in camera photo audit, automatic clutter softening, studio lighting correction, and actionable framing tips.
 2. **Multilingual Auto-Cataloger**: Regional voice note transcription (Kannada, Hindi, English) with ASR confidence scoring, dual-language SEO descriptions, and structured craft metadata extraction with confidence scoring.
-3. **Dynamic Pricing Assistant & Fair Wage Protection Engine**: Statutory state craft wage floor lookup (e.g., Karnataka `KLS-2025-WAGE-44`, UP `UP-MINWAGE-89`) enforcing minimum selling prices in integer paise to protect marginalized weavers and artisans from price exploitation.
+3. **Dynamic Pricing Assistant & Fair Wage Protection Engine**: A price floor in integer paise from the state's official skilled wage. No notification has been transcribed yet, so pricing refuses with `WAGE_RATE_UNAVAILABLE` until one is.
 4. **Market Linkage & ONDC Export**: Coordinator provenance verification (`handloom_weave`, `gi_tag`, `natural_dye`) and cryptographically signed (SHA-256) ONDC-compliant export payloads.
 
 ---
@@ -21,8 +21,8 @@ Build and verify the complete backend and AI services for **Karigari Connect** l
 ## 2. Architecture & Design Principles
 
 > [!IMPORTANT]
-> **Gemini 2.5 Flash Multimodal Engine with Deterministic Fallback**
-> The backend integrates Google's official `google-genai` SDK targeting `gemini-2.5-flash` for multimodal image auditing and vernacular audio transcription.
+> **Gemini Engine**
+> The backend uses Google's `google-genai` SDK. `gemini-2.5-flash` returns 404 for new API keys (checked 2026-09-14); the working adapters use `gemini-3.5-flash` behind `CRAFTLINK_ASR=gemini` and `CRAFTLINK_CATALOGUE=gemini`.
 > - When `GEMINI_API_KEY` is provided in `.env`, live Google Gemini models execute.
 > - When offline or when the key is absent, the backend seamlessly falls back to high-fidelity deterministic fixtures conforming to strict API contracts, ensuring continuous local development and reliable demonstrations.
 
@@ -62,13 +62,13 @@ Build and verify the complete backend and AI services for **Karigari Connect** l
 
 ### Component 2: Backend AI Engine
 - **[backend/app/ai/gemini_client.py](file:///d:/IT/Karigari_Connect/backend/app/ai/gemini_client.py)**:
-  - Integration with `google-genai` targeting `gemini-2.5-flash`.
+  - Legacy integration with `google-genai` targeting `gemini-2.5-flash`, which no longer answers new keys, so it always returns fixed demo content.
   - Multimodal prompt generation for photo quality audits and regional voice note processing.
   - Deterministic high-fidelity fallback for offline demonstration and testing.
 - **[backend/app/ai/service.py](file:///d:/IT/Karigari_Connect/backend/app/ai/service.py)**:
   - **AI Image Studio**: Quality metrics audit (blur, lighting, framing), studio enhancement variations, and actionable artisan guidance.
   - **Multilingual Auto-Cataloger**: Regional speech transcription (Kannada `kn`, Hindi `hi`, English `en`), dual-language SEO descriptions, craft taxonomy extraction, and per-field confidence scoring (flags fields `< 0.85` into `needs_confirmation`).
-  - **Dynamic Pricing Assistant & Fair Wage Engine**: State statutory minimum craft wage lookup (KA: `KLS-2025-WAGE-44` ₹78.50/hr, UP: `UP-MINWAGE-89` ₹68.00/hr, RJ: `RJ-MINWAGE-102` ₹72.00/hr, TN: `TN-HANDLOOM-81` ₹82.00/hr, MP: `MP-WAGE-07` ₹66.00/hr, Central: `CENTRAL-FLOOR-WAGE-2025` ₹75.00/hr). Integer paise calculation: `floor = material_cost + (hours * hourly_wage)`. Recommends competitive market band (`1.25x` – `1.55x`). Returns `WAGE_RATE_UNAVAILABLE` on unsupported state.
+  - **Dynamic Pricing Assistant & Fair Wage Engine**: `floor = material_cost + (hours * hourly_wage)` in integer paise, with rates read only from `app/ai/pricing/wage_table.json`. That table ships empty until official state notifications are transcribed with source links, so pricing returns `WAGE_RATE_UNAVAILABLE`. `CRAFTLINK_WAGE_TABLE=demo` uses labelled demo rates.
 
 ---
 
@@ -128,7 +128,7 @@ tests/test_api_flow.py::test_invalid_state_wage_rate_error PASSED        [100%]
 4. **AI Image Enhancer & Studio**: Quality audit (blur, lighting, framing), studio enhancement variations, and artisan guidance tips.
 5. **Multilingual Speech Transcription**: Vernacular speech transcription (Kannada, Hindi, English) with ASR confidence scoring.
 6. **Smart Cataloging**: Category, materials, techniques, and dual-language SEO descriptions with confidence threshold detection (`needs_confirmation`).
-7. **Statutory Fair Wage Price Engine**: Dynamic minimum wage floor calculated in integer paise against official state notifications (e.g. Karnataka `KLS-2025-WAGE-44`).
+7. **Statutory Fair Wage Price Engine**: Minimum wage floor in integer paise against official state notifications, once they are transcribed; refuses until then.
 8. **Artisan Confirmation**: Artisan edits and confirmed fields applied to catalogue draft.
 9. **Coordinator Claim Verification**: Review and evidence notes for sensitive statutory claims (`handloom_weave`, `gi_tag`).
 10. **Coordinator Approval**: Final approval transitioning state to `approved`.

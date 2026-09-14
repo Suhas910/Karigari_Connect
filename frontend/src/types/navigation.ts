@@ -7,7 +7,8 @@ export type ArtisanStackParamList = {
   Capture: undefined;
   ImageReview: { draftId: string };
   Speak: { draftId: string };
-  ConfirmDetails: { draftId: string; transcriptId: string };
+  // No transcriptId: reuse the listing's stored catalogue instead of generating one.
+  ConfirmDetails: { draftId: string; transcriptId?: string };
   Price: { draftId: string };
   SubmitApproval: { draftId: string };
 };

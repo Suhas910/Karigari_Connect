@@ -182,8 +182,9 @@ class PriceResult(BaseModel):
 class PriceRequest(BaseModel):
     material_cost_paise: Optional[int] = None
     labour_hours: Optional[float] = None
-    skill_level: Optional[str] = "skilled"
-    state_code: Optional[str] = "KA"
+    # No defaults: anything omitted is read from the confirmed catalogue, or the request is refused.
+    skill_level: Optional[str] = None
+    state_code: Optional[str] = None
     # Observed market prices for comparable pieces. They may lift the recommended band
     # and can never lower the floor -- that asymmetry is the anti-exploitation
     # guarantee, so this is an input the engine deliberately treats as one-directional.
