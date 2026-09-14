@@ -158,7 +158,11 @@ class TranscriptResult(_Strict):
     original_text: str
     english_translation: str | None = None
     hindi_translation: str | None = None
-    overall_confidence: float = Field(ge=0.0, le=1.0)
+    overall_confidence: float | None = Field(
+        ge=0.0,
+        le=1.0,
+        description="None when the provider reports no confidence. Never estimated.",
+    )
     low_confidence_spans: list[LowConfidenceSpan] = Field(default_factory=list)
     adapter: AdapterInfo
 
@@ -168,9 +172,10 @@ class TranscriptResult(_Strict):
 
         Any low-confidence span is enough. A high average over a recording that
         mumbled the one word naming the material is exactly the failure this product
-        cannot afford, because that word becomes a published claim.
+        cannot afford, because that word becomes a published claim. An unknown
+        confidence is treated the same way: nothing says the transcript is right.
         """
-        return bool(self.low_confidence_spans)
+        return self.overall_confidence is None or bool(self.low_confidence_spans)
 
 
 # ---------------------------------------------------------------- catalogue

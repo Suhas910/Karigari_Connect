@@ -21,7 +21,7 @@ from PIL import Image
 
 from app import media_inspect
 from app.main import app
-from app.storage import LocalMediaStore, StorageUnavailable, SupabaseMediaStore
+from app.storage import LocalMediaStore, MediaNotFound, StorageUnavailable, SupabaseMediaStore
 
 client = TestClient(app)
 
@@ -342,6 +342,9 @@ class _FakeFileApi:
     def upload(self, path, data, options):
         self.uploads.append((path, data, options))
 
+    def download(self, path):
+        raise self.download_error
+
 
 class _FakeStorage:
     def __init__(self, public):
@@ -374,3 +377,25 @@ def test_supabase_store_uploads_to_a_private_bucket_without_overwriting():
     assert fake.storage.files.uploads == [
         ("listings/l1/image/m1.png", b"png-bytes", {"content-type": "image/png", "upsert": "false"})
     ]
+
+
+class _FakeApiError(Exception):
+    # Shape of storage3's StorageApiError, checked against the live project 2026-09-14.
+    def __init__(self, status, code):
+        super().__init__(code)
+        self.status = status
+        self.code = code
+
+
+def test_supabase_store_reports_a_missing_object_as_not_found():
+    fake = _FakeClient(public=False)
+    fake.storage.files.download_error = _FakeApiError(404, "not_found")
+    with pytest.raises(MediaNotFound):
+        SupabaseMediaStore(fake, "media").get("listings/l1/image/gone.png")
+
+
+def test_supabase_store_reports_other_failures_as_unavailable():
+    fake = _FakeClient(public=False)
+    fake.storage.files.download_error = _FakeApiError(500, "internal")
+    with pytest.raises(StorageUnavailable):
+        SupabaseMediaStore(fake, "media").get("listings/l1/image/m1.png")

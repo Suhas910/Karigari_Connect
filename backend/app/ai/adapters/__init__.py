@@ -15,15 +15,17 @@ the adapter lands, with no caller changing.
 
 from .base import ASRAdapter, AudioSource, CatalogueGeneratorAdapter, TranslationAdapter
 from .fixture import FixtureASRAdapter, UnavailableASRAdapter
+from .gemini_asr import GeminiASRAdapter
 from .local_asr import LocalWhisperASRAdapter
 from .registry import available_asr, get_asr, register_asr, resolve_asr
 
 # Bhashini first: public language infrastructure is the strategic claim, not a
-# convenience. Local next, so a portal outage cannot stop an artisan mid-listing.
-# Fixtures are never in the default order -- a caller that wants recorded output has to
-# ask for it by name.
-DEFAULT_ASR_PREFERENCE = ("bhashini", "local_whisper")
+# convenience. Gemini next, available today with a key. Local last, so an outage of both
+# cannot stop an artisan mid-listing. Fixtures are never in the default order -- a caller
+# that wants recorded output has to ask for it by name.
+DEFAULT_ASR_PREFERENCE = ("bhashini", "gemini", "local_whisper")
 
+register_asr("gemini", GeminiASRAdapter)
 register_asr("local_whisper", LocalWhisperASRAdapter)
 register_asr("fixture", FixtureASRAdapter)
 
@@ -33,6 +35,7 @@ __all__ = [
     "CatalogueGeneratorAdapter",
     "DEFAULT_ASR_PREFERENCE",
     "FixtureASRAdapter",
+    "GeminiASRAdapter",
     "LocalWhisperASRAdapter",
     "TranslationAdapter",
     "UnavailableASRAdapter",

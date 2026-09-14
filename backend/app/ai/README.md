@@ -18,12 +18,20 @@ python -m app.ai.linkage.contract_test        # ONDC conformance, printable in o
 | `pricing/` | Wage-anchored price engine | no |
 | `linkage/` | ONDC payload builder, schema fetcher, contract test | no |
 | `vision/` | Photo quality assessor, deterministic image studio | no |
-| `adapters/` | Provider Protocols, registry, fixture replay, local ASR | Bhashini only |
+| `adapters/` | Provider Protocols, registry, fixture replay, Gemini and local ASR | Gemini key; Bhashini |
 | `fixtures/` | Synthetic images and recorded transcripts | no |
 
-Nothing in this package reads a secret or calls a paid API today. The only planned
-credential is a Bhashini ULCA registration, and `adapters/local_asr.py` exists so the
-schedule does not depend on it arriving.
+`adapters/gemini_asr.py` reads `GEMINI_API_KEY` and calls the Gemini API when
+`CRAFTLINK_ASR=gemini`. Its transcripts carry no confidence, because Gemini reports none.
+A Bhashini ULCA registration is still planned, and `adapters/local_asr.py` exists so the
+schedule does not depend on either.
+
+Live Gemini check, off by default:
+
+```bash
+CRAFTLINK_LIVE_GEMINI=1 CRAFTLINK_LIVE_GEMINI_AUDIO=/path/to/recording.wav \
+  pytest app/ai/tests/test_gemini_asr.py -k live
+```
 
 ## The three claims, and the test that asserts each
 

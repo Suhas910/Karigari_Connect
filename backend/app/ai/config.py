@@ -10,7 +10,8 @@ Every flag is read from the environment at import time and has a documented defa
     CRAFTLINK_PRICE_ENGINE   deterministic | legacy   (default: deterministic)
     CRAFTLINK_WAGE_TABLE     <path> | demo            (default: the shipped empty table)
     CRAFTLINK_PROVENANCE     enforce | off            (default: enforce)
-    CRAFTLINK_ASR            local | legacy           (default: legacy)
+    CRAFTLINK_ASR            gemini | local | legacy  (default: legacy)
+    CRAFTLINK_GEMINI_MODEL   <model name>             (default: gemini-3.5-flash)
 
 ## Why the defaults are what they are
 
@@ -22,10 +23,11 @@ works is the right way round even though it is stricter.
 `CRAFTLINK_PROVENANCE=enforce` — an unverified GI identifier reaching a buyer is a
 legal exposure, not a cosmetic bug. This default fails closed.
 
-`CRAFTLINK_ASR=legacy` — the local speech path is real but transcribing needs the audio
-bytes, and media currently lives behind Supabase URLs the worker does not yet fetch.
-Switching this on before that plumbing exists would trade fabricated output for broken
-output. It stays off until the download path is built.
+`CRAFTLINK_ASR=legacy` — `gemini` and `local` transcribe the file uploaded through
+`POST /listings/{id}/media/upload`, and `gemini` walks `DEFAULT_ASR_PREFERENCE`, so the
+provider that answered is stamped on the result. The frontend still sends placeholder
+media ids instead of uploading, and with no uploaded file those modes refuse the job.
+The default flips once the app uploads real recordings.
 
 Image processing is deliberately absent from this file. `vision/` is not wired to any
 route and is on hold pending a different approach.
@@ -90,6 +92,11 @@ def use_local_asr() -> bool:
     return asr_mode() == "local"
 
 
+def gemini_model() -> str:
+    # Not lowercased through _flag: model names are passed to the API verbatim.
+    return (os.getenv("CRAFTLINK_GEMINI_MODEL") or "gemini-3.5-flash").strip()
+
+
 def summary() -> dict[str, str]:
     """Surfaced at `GET /api/v1/ai/config` so a demo can state its own configuration."""
     return {
@@ -97,5 +104,6 @@ def summary() -> dict[str, str]:
         "wage_table": wage_table_path().name,
         "provenance": provenance_mode(),
         "asr": asr_mode(),
+        "gemini_model": gemini_model(),
         "image_pipeline": "on_hold",
     }

@@ -111,7 +111,6 @@ def create_listing(
         state=listing.state,
         preferred_language=listing.preferred_language,
         upload_instructions={
-            "bucket": "media",
             "upload_path": f"/api/v1/listings/{listing.id}/media/upload",
             "max_image_bytes": media_inspect.MAX_IMAGE_BYTES,
             "max_audio_bytes": media_inspect.MAX_AUDIO_BYTES,

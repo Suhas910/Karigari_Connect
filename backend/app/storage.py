@@ -12,8 +12,10 @@ Both are private. Nothing here produces a public URL: media is read back through
 `GET /api/v1/media/{id}/content`, which checks who is asking. Voice notes and workshop
 photos are personal data, and a public URL cannot be revoked once it has been shared.
 
-The Supabase backend refuses a public bucket instead of using it. Checked 2026-09-13:
-the project's only bucket, `product_images`, is public, so it is not usable for this.
+The Supabase backend refuses a public bucket instead of using it. `product_images` is
+public on purpose (product photos are served by public URL from `routers/images.py`), so
+artisan media has its own private bucket, `media`, created 2026-09-14 with a 20 MB limit
+and the image and audio types from `media_inspect`.
 
 There is deliberately no fallback between backends. `supabase_client.DummySupabase`
 accepts an upload and stores nothing; a store that silently loses an artisan's
@@ -126,6 +128,10 @@ class SupabaseMediaStore:
         try:
             return self._bucket.download(key)
         except Exception as exc:
+            # A missing object is a 404 from the API, not an outage; the SDK reports it as
+            # StorageApiError(status=404, code="not_found").
+            if str(getattr(exc, "status", "")) == "404" or getattr(exc, "code", None) == "not_found":
+                raise MediaNotFound(key) from exc
             raise StorageUnavailable(f"Supabase download failed for {key!r}: {exc}") from exc
 
     def delete(self, key: str) -> None:

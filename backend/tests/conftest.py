@@ -31,3 +31,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///./test_karigari.db")
 # Same reasoning for uploaded files: a throwaway local directory, never a shared bucket.
 os.environ.setdefault("CRAFTLINK_MEDIA_STORAGE", "local")
 os.environ.setdefault("CRAFTLINK_MEDIA_DIR", tempfile.mkdtemp(prefix="craftlink-media-test-"))
+# The flow test asserts the legacy transcription shape. Set here so a developer's
+# CRAFTLINK_ASR in backend/.env (loaded by python-dotenv, which never overrides) cannot
+# change it. Tests of the adapter path set the mode themselves.
+os.environ.setdefault("CRAFTLINK_ASR", "legacy")

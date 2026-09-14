@@ -130,7 +130,7 @@ class ProvenanceInfo(BaseModel):
 
 class SourceInfo(BaseModel):
     transcript_id: str
-    asr_confidence: float
+    asr_confidence: Optional[float] = None  # None when the speech provider reports none
 
 class CatalogueDraft(BaseModel):
     listing_id: str

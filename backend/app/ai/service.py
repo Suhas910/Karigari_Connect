@@ -1,5 +1,6 @@
 # backend/app/ai/service.py
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
@@ -12,6 +13,17 @@ from .gemini_client import gemini_client
 from .provenance_gate import enforce_catalogue
 from .pricing import bridge as price_bridge
 from .pricing.engine import InvalidPricingInput, WageRateUnavailable
+from .adapters import DEFAULT_ASR_PREFERENCE, resolve_asr
+from .contracts import AIError, ErrorCode
+from ..storage import MediaNotFound, StorageUnavailable, get_media_store
+
+logger = logging.getLogger(__name__)
+
+# CRAFTLINK_ASR value -> adapters to try, in order. `legacy` is handled separately.
+_ASR_PREFERENCES = {
+    "gemini": DEFAULT_ASR_PREFERENCE,
+    "local": ("local_whisper",),
+}
 
 # LEGACY. Used only when CRAFTLINK_PRICE_ENGINE=legacy.
 #
@@ -164,6 +176,10 @@ class AIService:
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
+        if config.asr_mode() != "legacy":
+            return AIService._adapter_transcription_job(listing_id, audio_media_id, declared_language, db)
+
+        # LEGACY. Never sends the audio; see adapters/gemini_asr.py.
         audio_media = db.query(models.MediaAssetModel).filter(
             models.MediaAssetModel.id == audio_media_id,
             models.MediaAssetModel.listing_id == listing_id
@@ -186,6 +202,96 @@ class AIService:
         return job
 
     @staticmethod
+    def _adapter_transcription_job(
+        listing_id: str,
+        audio_media_id: str,
+        declared_language: str,
+        db: Session
+    ) -> models.JobModel:
+        """Transcribe the uploaded recording through the adapter registry.
+
+        Runs in the request, like the other jobs. A provider failure is a failed job with
+        a contract error in `error_data`, not an exception: the recording is stored, and
+        the app can offer a retry or a new recording.
+        """
+        mode = config.asr_mode()
+        preference = _ASR_PREFERENCES.get(mode)
+        if preference is None:
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "code": "PROVIDER_UNAVAILABLE",
+                    "message": f"Unknown CRAFTLINK_ASR={mode!r}; expected legacy, gemini or local.",
+                    "recoverable": False,
+                    "action": None,
+                },
+            )
+
+        media = db.query(models.MediaAssetModel).filter(
+            models.MediaAssetModel.id == audio_media_id,
+            models.MediaAssetModel.listing_id == listing_id
+        ).first()
+        if not media or media.kind != "audio" or not media.storage_path:
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "code": "LISTING_STATE_INVALID",
+                    "message": "This listing has no uploaded voice recording with that id.",
+                    "recoverable": True,
+                    "action": "Upload the recording with POST /listings/{listing_id}/media/upload and use the media_id it returns.",
+                },
+            )
+
+        job = models.JobModel(
+            job_id=str(uuid.uuid4()),
+            listing_id=listing_id,
+            type="transcription",
+            status="processing",
+            attempt=1,
+        )
+        error = None
+        try:
+            metadata = json.loads(media.metadata_json or "{}")
+            audio = get_media_store(metadata.get("storage_backend")).get(media.storage_path)
+            adapter = resolve_asr(preference)
+            result = adapter.transcribe(audio, declared_language=declared_language, transcript_id=job.job_id)
+        except MediaNotFound:
+            logger.error("Transcription: media %s points at missing object %s", media.id, media.storage_path)
+            error = AIError(
+                ErrorCode.LISTING_STATE_INVALID,
+                "The recording is missing from storage.",
+                recoverable=True,
+                action="record_again",
+            )
+        except StorageUnavailable as exc:
+            logger.error("Transcription: media store unavailable for %s: %s", media.id, exc)
+            error = AIError(
+                ErrorCode.PROVIDER_UNAVAILABLE,
+                "The recording could not be read from storage.",
+                recoverable=True,
+                action="retry_later",
+            )
+        except AIError as exc:
+            error = exc
+
+        if error is None:
+            job.status = "complete"
+            job.result_data = json.dumps({
+                "job_id": job.job_id,
+                "status": "complete",
+                **result.model_dump(),
+                "needs_replay": result.needs_replay,
+            })
+        else:
+            job.status = "failed"
+            job.error_data = json.dumps(error.as_dict())
+
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        return job
+
+    @staticmethod
     def generate_catalogue(
         listing_id: str,
         payload: Optional[Dict[str, Any]],
@@ -198,18 +304,24 @@ class AIService:
         # Check if there was a transcription job
         trans_job = db.query(models.JobModel).filter(
             models.JobModel.listing_id == listing_id,
-            models.JobModel.type == "transcription"
+            models.JobModel.type == "transcription",
+            models.JobModel.status == "complete"
         ).order_by(models.JobModel.created_at.desc()).first()
 
         declared_lang = listing.preferred_language or "kn"
         sample_text = ""
-        asr_conf = 0.95
+        asr_conf = None
         transcript_id = str(uuid.uuid4())
 
         if trans_job and trans_job.result_data:
             data = json.loads(trans_job.result_data)
-            sample_text = data.get("translated_text", "")
-            asr_conf = data.get("asr_confidence", 0.95)
+            if "original_text" in data:
+                # Adapter transcript (TranscriptResult). Confidence may be None.
+                sample_text = data.get("english_translation") or data["original_text"]
+                asr_conf = data.get("overall_confidence")
+            else:
+                sample_text = data.get("translated_text", "")
+                asr_conf = data.get("asr_confidence")
             transcript_id = trans_job.job_id
         elif payload and isinstance(payload, dict) and payload.get("transcript"):
             sample_text = payload.get("transcript")
