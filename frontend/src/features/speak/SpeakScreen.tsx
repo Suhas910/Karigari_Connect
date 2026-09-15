@@ -13,9 +13,9 @@ import { colors, spacing } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
 
 const LANGUAGES = [
-  { code: 'kn', native: 'ಕನ್ನಡ', label: 'Kannada (ಕನ್ನಡ)' },
-  { code: 'hi', native: 'हिन्दी', label: 'Hindi (हिन्दी)' },
   { code: 'en', native: 'English', label: 'English' },
+  { code: 'hi', native: 'हिन्दी', label: 'Hindi (हिन्दी)' },
+  { code: 'kn', native: 'ಕನ್ನಡ', label: 'Kannada (ಕನ್ನಡ)' },
 ];
 
 export default function SpeakScreen() {
@@ -39,8 +39,13 @@ export default function SpeakScreen() {
     (async () => {
       try {
         const draft = await getDraft(draftId);
-        if (draft?.preferred_language && draft.preferred_language !== i18n.language) {
-          await i18n.changeLanguage(draft.preferred_language);
+        const targetLang = draft?.payload?.userSelectedLanguage
+          ? draft.preferred_language
+          : (draft?.preferred_language && draft.preferred_language !== 'kn' ? draft.preferred_language : 'en');
+        if (targetLang && targetLang !== i18n.language) {
+          await i18n.changeLanguage(targetLang);
+        } else if (!targetLang && i18n.language !== 'en') {
+          await i18n.changeLanguage('en');
         }
         if (draft?.payload?.transcriptId) {
           setJobId(draft.payload.transcriptId);
@@ -121,7 +126,10 @@ export default function SpeakScreen() {
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
         preferred_language: code,
-        payload: existing?.payload ?? {},
+        payload: {
+          ...(existing?.payload ?? {}),
+          userSelectedLanguage: true,
+        },
       });
     } catch (err) {
       console.error('Failed to update draft preferred_language', err);

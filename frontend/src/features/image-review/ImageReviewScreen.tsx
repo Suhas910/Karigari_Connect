@@ -95,7 +95,7 @@ export default function ImageReviewScreen() {
             id: draftId,
             listing_id: existing?.listing_id ?? draftId,
             state: existing?.state ?? 'draft',
-            preferred_language: existing?.preferred_language ?? 'kn',
+            preferred_language: existing?.preferred_language ?? 'en',
             payload: {
               ...(existing?.payload ?? {}),
               photos,
@@ -137,7 +137,7 @@ export default function ImageReviewScreen() {
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
+        preferred_language: existing?.preferred_language ?? 'en',
         payload: {
           ...(existing?.payload ?? {}),
           photos: updated,
@@ -156,7 +156,7 @@ export default function ImageReviewScreen() {
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
+        preferred_language: existing?.preferred_language ?? 'en',
         payload: {
           ...(existing?.payload ?? {}),
           coverIndex: idx,
@@ -174,7 +174,7 @@ export default function ImageReviewScreen() {
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
+        preferred_language: existing?.preferred_language ?? 'en',
         payload: {
           ...(existing?.payload ?? {}),
           photos,
@@ -295,11 +295,11 @@ export default function ImageReviewScreen() {
         showsVerticalScrollIndicator={false}
       >
         <StepHeader
-        currentStep={2}
-        totalSteps={5}
-        title="Review Photos"
-        subtitle={`Review ${photos.length} captured angle${photos.length > 1 ? 's' : ''} & pick primary cover`}
-      />
+          currentStep={2}
+          totalSteps={5}
+          title="Review Photos"
+          subtitle={`Review ${photos.length} captured angle${photos.length > 1 ? 's' : ''} & pick primary cover`}
+        />
 
       {/* Multi-Photo Horizontal Selector Strip */}
       <View style={styles.selectorContainer}>
@@ -534,12 +534,12 @@ const styles = StyleSheet.create({
   processingContainer: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: spacing.lg,
   },
   processingCenterWrapper: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   processingCard: {
@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   processingNotice: {
-    backgroundColor: '#F7F5F0',
+    backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
@@ -742,13 +742,13 @@ const styles = StyleSheet.create({
   mainImage: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
   },
   emptyPlaceholder: {
     height: 280,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9F7F4',
+    backgroundColor: '#FFFFFF',
     padding: spacing.lg,
   },
   emptyPlaceholderTitle: {
@@ -779,7 +779,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sideHeader: {
-    backgroundColor: '#F9F7F4',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 5,
     alignItems: 'center',
     borderBottomWidth: 1,
@@ -793,13 +793,13 @@ const styles = StyleSheet.create({
   sideImage: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#FAF9F6',
+    backgroundColor: '#FFFFFF',
   },
   sideEmptyPlaceholder: {
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F9F7F4',
+    backgroundColor: '#FFFFFF',
     padding: spacing.xs,
   },
   sideEmptyText: {

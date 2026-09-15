@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme as NavigationDefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { ProcessingIndicator } from '../components';
+import { colors } from '../theme';
 
 // Screens & Stacks
 import SignInScreen from '../features/onboarding/SignInScreen';
@@ -13,6 +14,14 @@ import ArtisanStack from './ArtisanStack';
 import CoordinatorStack from './CoordinatorStack';
 
 const Stack = createNativeStackNavigator();
+
+const navTheme = {
+  ...NavigationDefaultTheme,
+  colors: {
+    ...NavigationDefaultTheme.colors,
+    background: colors.background, // #FFFFFF
+  },
+};
 
 export default function RootNavigator() {
   const { isAuthenticated, role, isHydrated } = useAuthStore();
@@ -22,7 +31,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           // Unauthenticated Flow

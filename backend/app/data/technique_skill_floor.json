@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "technique_skill_floor": {
+    "handloom_weave": "skilled",
+    "natural_dye": "semi_skilled",
+    "block_print": "semi_skilled",
+    "hand_embroidery": "skilled",
+    "basic_stitching": "unskilled",
+    "pottery_wheel": "semi_skilled",
+    "bamboo_weave": "semi_skilled"
+  }
+}

@@ -19,5 +19,35 @@
     "micPermissionRequired": "Microphone permission is required to record. Please enable it in device settings.",
     "startRecordingError": "Could not start recording. Please try again.",
     "processingError": "Could not process recording. Check connection and try again."
+  },
+  "onboarding": {
+    "skillQuestion": {
+      "title": "How long have you been doing this craft?",
+      "subtitle": "This helps us protect your fair price.",
+      "options": {
+        "beginner": {
+          "icon": "🌱",
+          "label": "Apprentice / Still learning"
+        },
+        "intermediate": {
+          "icon": "🧵",
+          "label": "Practicing Artisan (2–5 years, independent)"
+        },
+        "skilled": {
+          "icon": "🛠️",
+          "label": "Experienced Craftsman (5+ years mastery)"
+        },
+        "master": {
+          "icon": "🏆",
+          "label": "Master Artisan (10+ years / train others / awardee)"
+        }
+      },
+      "artisanCardPrompt": {
+        "question": "Do you have an artisan ID card? (PM Vishwakarma, ODOP, or SHG card)",
+        "yes": "Yes, I have one",
+        "no": "No / not sure",
+        "helperText": "If yes, your coordinator will confirm your skill grade from it later."
+      }
+    }
   }
 }

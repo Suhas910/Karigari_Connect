@@ -19,10 +19,21 @@ class User(Base):
 
     user_id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, nullable=False)
+    phone_number = Column(String(20), unique=True, nullable=True, index=True)
+    email = Column(String(100), unique=True, nullable=True)
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="artisan", nullable=False)  # 'artisan' | 'coordinator' | 'admin'
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    # Artisan Profile Fields
+    profile_status = Column(String(30), default="incomplete", nullable=False)  # "incomplete" | "pending_verification" | "verified" | "rejected"
+    declared_skill_level = Column(String(30), nullable=True)  # "unskilled" | "semi_skilled" | "skilled" | "highly_skilled"
+    declared_zone = Column(String(50), nullable=True)  # e.g. "KA/zone_2"
+    id_proof_type = Column(String(30), default="none", nullable=True)  # "pehchan_card" | "pm_vishwakarma" | "none"
+    id_proof_number = Column(String(100), nullable=True)
+    verified_skill_level = Column(String(30), nullable=True)
+    verified_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+    verified_at = Column(DateTime(timezone=True), nullable=True)
 
     products = relationship("Product", back_populates="owner")
     listings = relationship("ListingModel", back_populates="artisan")
@@ -62,10 +73,10 @@ class ListingModel(Base):
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     artisan = relationship("User", back_populates="listings")
-    media = relationship("MediaAssetModel", back_populates="listing", cascade="all, delete-orphan")
-    catalogue = relationship("CatalogueModel", back_populates="listing", uselist=False, cascade="all, delete-orphan")
-    price = relationship("PriceCalculationModel", back_populates="listing", uselist=False, cascade="all, delete-orphan")
-    claims = relationship("ClaimModel", back_populates="listing", cascade="all, delete-orphan")
+    media = relationship("MediaAssetModel", back_populates="listing", cascade="all, delete-orphan", lazy="selectin")
+    catalogue = relationship("CatalogueModel", back_populates="listing", uselist=False, cascade="all, delete-orphan", lazy="selectin")
+    price = relationship("PriceCalculationModel", back_populates="listing", uselist=False, cascade="all, delete-orphan", lazy="selectin")
+    claims = relationship("ClaimModel", back_populates="listing", cascade="all, delete-orphan", lazy="selectin")
     jobs = relationship("JobModel", back_populates="listing", cascade="all, delete-orphan")
     exports = relationship("ExportRecordModel", back_populates="listing", cascade="all, delete-orphan")
 
@@ -161,6 +172,18 @@ class ExportRecordModel(Base):
     payload_hash = Column(String, nullable=False)
     contract_validation = Column(Text, nullable=False)  # JSON string
     network_submission = Column(String, default="not_attempted", nullable=False)  # 'not_attempted' | 'pending' | 'success' | 'failed'
+    listing = relationship("ListingModel", back_populates="exports")
+
+class SupportMessageModel(Base):
+    __tablename__ = "support_messages"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    artisan_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=True)
+    message = Column(Text, nullable=False)
+    status = Column(String, default="open", nullable=False)  # 'open' | 'resolved' | 'closed'
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    listing = relationship("ListingModel", back_populates="exports")
+    artisan = relationship("User")
+    listing = relationship("ListingModel")
+

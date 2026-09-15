@@ -1,5 +1,21 @@
 // src/services/mockApi.ts
-import { Listing, JobStatus, CatalogueResult, PriceResult, ExportResult, ImageJobResult, ListingService, ListingState, UserRole, Claim } from '../types/contracts';
+import {
+  Listing,
+  JobStatus,
+  CatalogueResult,
+  PriceResult,
+  ExportResult,
+  ImageJobResult,
+  ListingService,
+  ListingState,
+  UserRole,
+  Claim,
+  ArtisanProfile,
+  ArtisanProfileSubmitRequest,
+  ArtisanProfileReviewRequest,
+  SupportMessage,
+  SupportMessageSubmitRequest,
+} from '../types/contracts';
 
 const now = () => new Date().toISOString();
 
@@ -17,166 +33,51 @@ interface MockListingOverride {
 
 const activeJobRegistry = new Map<string, MockJobRecord>();
 const mockListingRegistry = new Map<string, MockListingOverride>();
+const mockSupportMessages: SupportMessage[] = [];
+let mockListings: Listing[] = [];
+
+let mockCurrentProfile: ArtisanProfile = {
+  user_id: 1,
+  username: 'artisan_demo',
+  phone_number: '9876543210',
+  role: 'artisan',
+  profile_status: 'incomplete',
+  declared_skill_level: null,
+  declared_zone: null,
+  id_proof_type: 'none',
+  id_proof_number: null,
+  verified_skill_level: null,
+  verified_by: null,
+  verified_at: null,
+};
+
+let mockPendingProfiles: ArtisanProfile[] = [];
 
 export const mockApi: ListingService = {
-  createListing: async (payload: { preferred_language: string }) => ({
-    id: 'listing_uuid_123',
-    artisan_id: 'user_uuid_artisan',
-    state: 'draft' as ListingState,
-    preferred_language: payload.preferred_language,
-    upload_instructions: { token: 'opaque_upload_token' },
-  }),
+  createListing: async (payload: { preferred_language: string }) => {
+    const newListing: Listing = {
+      id: `listing_${Date.now()}`,
+      artisan_id: 'user_uuid_artisan',
+      state: 'draft' as ListingState,
+      preferred_language: payload.preferred_language,
+      media: [],
+      catalogue: null,
+      price: null,
+      claims: [],
+      created_at: now(),
+      updated_at: now(),
+    };
+    mockListings.unshift(newListing);
+    return {
+      id: newListing.id,
+      artisan_id: newListing.artisan_id,
+      state: 'draft' as ListingState,
+      preferred_language: payload.preferred_language,
+      upload_instructions: { token: 'opaque_upload_token' },
+    };
+  },
 
-listListings: async (): Promise<Listing[]> => [
-  {
-    id: 'listing_001',
-    artisan_id: 'user_uuid_artisan',
-    state: 'draft',
-    preferred_language: 'kn',
-    media: [],
-    catalogue: null,
-    price: null,
-    claims: [],
-    created_at: now(),
-    updated_at: now(),
-  },
-  {
-    id: 'listing_002',
-    artisan_id: 'user_uuid_artisan',
-    state: 'awaiting_confirmation',
-    preferred_language: 'kn',
-    media: [{ id: 'media_1', kind: 'image', variant: 'enhanced', status: 'complete' }],
-    catalogue: {
-      schema_version: '1.0.0',
-      catalogue: {
-        listing_id: 'listing_002',
-        category: 'handloom_saree',
-        materials: ['cotton'],
-        techniques: ['handloom_weave'],
-        title: { en: 'Cotton handloom saree', local: 'ಹತ್ತಿ ಕೈಮಗ್ಗ ಸೀರೆ', local_language: 'kn' },
-        description: { en: 'Beautiful woven saree.', local: 'ಸುಂದರವಾದ ಸೀರೆ.' },
-        labour: { hours: 12, skill_level: 'skilled', state_code: 'KA' },
-        material_cost_paise: 80000,
-        provenance: { claims: [], gi_tag: null },
-        source: { transcript_id: 't1', asr_confidence: 0.86 },
-      },
-      field_confidence: { category: 0.91, materials: 0.82, techniques: 0.61, 'labour.hours': 0.74 },
-      needs_confirmation: ['techniques', 'labour.hours'],
-    },
-    price: null,
-    claims: [],
-    created_at: now(),
-    updated_at: now(),
-  },
-  {
-    id: 'listing_003',
-    artisan_id: 'user_uuid_artisan',
-    state: 'awaiting_approval',
-    preferred_language: 'hi',
-    media: [{ id: 'media_2', kind: 'image', variant: 'enhanced', status: 'complete' }],
-    catalogue: {
-      schema_version: '1.0.0',
-      catalogue: {
-        listing_id: 'listing_003',
-        category: 'terracotta_pottery',
-        materials: ['clay'],
-        techniques: ['hand_thrown'],
-        title: { en: 'Terracotta water pot', local: 'मिट्टी का घड़ा', local_language: 'hi' },
-        description: { en: 'Hand-thrown clay pot.', local: 'हाथ से बना मिट्टी का घड़ा।' },
-        labour: { hours: 6, skill_level: 'skilled', state_code: 'RJ' },
-        material_cost_paise: 30000,
-        provenance: { claims: [], gi_tag: null },
-        source: { transcript_id: 't2', asr_confidence: 0.91 },
-      },
-      field_confidence: { category: 0.95, materials: 0.9, techniques: 0.88, 'labour.hours': 0.8 },
-      needs_confirmation: [],
-    },
-    price: {
-      calculation_version: '1.0.0',
-      status: 'available',
-      currency: 'INR',
-      wage_source: { state_code: 'RJ', notification_ref: 'ref_456', effective_from: '2026-01-01', source_url: 'https://official.example' },
-      inputs: { material_cost_paise: 30000, labour_hours: 6, hourly_wage_paise: 4500, skill_level: 'skilled' },
-      floor_amount_paise: 57000,
-      recommended_low_paise: 60000,
-      recommended_high_paise: 80000,
-      explanation: 'Floor includes material and skilled labour rate.',
-    },
-    claims: [],
-    created_at: now(),
-    updated_at: now(),
-  },
-  {
-    id: 'listing_004',
-    artisan_id: 'user_uuid_artisan',
-    state: 'approved',
-    preferred_language: 'kn',
-    media: [{ id: 'media_3', kind: 'image', variant: 'enhanced', status: 'complete' }],
-    catalogue: {
-      schema_version: '1.0.0',
-      catalogue: {
-        listing_id: 'listing_004',
-        category: 'bamboo_basket',
-        materials: ['bamboo'],
-        techniques: ['weaving'],
-        title: { en: 'Bamboo storage basket', local: 'ಬಿದಿರಿನ ಬುಟ್ಟಿ', local_language: 'kn' },
-        description: { en: 'Handwoven bamboo basket.', local: 'ಕೈಯಿಂದ ನೇಯ್ದ ಬುಟ್ಟಿ.' },
-        labour: { hours: 4, skill_level: 'skilled', state_code: 'KA' },
-        material_cost_paise: 15000,
-        provenance: { claims: [], gi_tag: null },
-        source: { transcript_id: 't3', asr_confidence: 0.93 },
-      },
-      field_confidence: { category: 0.96, materials: 0.94, techniques: 0.9, 'labour.hours': 0.85 },
-      needs_confirmation: [],
-    },
-    price: null,
-    claims: [],
-    created_at: now(),
-    updated_at: now(),
-  },
-  {
-    id: 'listing_005',
-    artisan_id: 'user_uuid_artisan',
-    state: 'rejected',
-    preferred_language: 'kn',
-    media: [],
-    catalogue: null,
-    price: null,
-    claims: [
-      { claim: 'handloom_weave', asserted_by_artisan: true, coordinator_verified: false, evidence_note: 'Needs proof of handloom technique.' },
-    ],
-    created_at: now(),
-    updated_at: now(),
-  },
-  {
-    id: 'listing_006',
-    artisan_id: 'user_uuid_artisan',
-    state: 'exported',
-    preferred_language: 'kn',
-    media: [{ id: 'media_4', kind: 'image', variant: 'enhanced', status: 'complete' }],
-    catalogue: {
-      schema_version: '1.0.0',
-      catalogue: {
-        listing_id: 'listing_006',
-        category: 'wooden_toy',
-        materials: ['wood'],
-        techniques: ['hand_carving'],
-        title: { en: 'Hand-carved wooden toy', local: 'ಕೈ ಕೆತ್ತನೆ ಆಟಿಕೆ', local_language: 'kn' },
-        description: { en: 'Traditional carved toy.', local: 'ಸಾಂಪ್ರದಾಯಿಕ ಆಟಿಕೆ.' },
-        labour: { hours: 8, skill_level: 'skilled', state_code: 'KA' },
-        material_cost_paise: 40000,
-        provenance: { claims: [], gi_tag: null },
-        source: { transcript_id: 't4', asr_confidence: 0.89 },
-      },
-      field_confidence: { category: 0.92, materials: 0.88, techniques: 0.85, 'labour.hours': 0.8 },
-      needs_confirmation: [],
-    },
-    price: null,
-    claims: [],
-    created_at: now(),
-    updated_at: now(),
-  },
-],
+  listListings: async (): Promise<Listing[]> => mockListings,
 
   confirmListing: async (
   listingId: string,
@@ -191,13 +92,21 @@ listListings: async (): Promise<Listing[]> => [
 }),
 
   getListing: async (listingId: string): Promise<Listing> => {
+    const existing = mockListings.find((l) => l.id === listingId);
     const override = mockListingRegistry.get(listingId);
+    if (existing) {
+      return {
+        ...existing,
+        state: override?.state ?? existing.state,
+        claims: override?.claims ?? existing.claims,
+      };
+    }
     return {
       id: listingId,
       artisan_id: 'user_uuid_artisan',
-      state: override?.state ?? (listingId === 'listing_004' ? 'approved' : 'awaiting_confirmation'),
-      preferred_language: 'kn',
-      media: [{ id: 'media_1', kind: 'image', variant: 'enhanced', status: 'complete' }],
+      state: override?.state ?? 'draft',
+      preferred_language: 'en',
+      media: [],
       catalogue: null,
       price: null,
       claims: override?.claims ?? [],
@@ -304,15 +213,24 @@ listListings: async (): Promise<Listing[]> => [
     status: 'available',
     currency: 'INR',
     wage_source: {
-      state_code: 'KA',
+      state_code: payload?.state_code || 'KA',
+      zone: payload?.zone || 'zone_1',
       notification_ref: 'official_ref_123',
       effective_from: '2026-01-01',
       source_url: 'https://official.example',
     },
-    inputs: { material_cost_paise: 80000, labour_hours: 12, hourly_wage_paise: 5000, skill_level: 'skilled' },
-    floor_amount_paise: 140000,
-    recommended_low_paise: 150000,
-    recommended_high_paise: 200000,
+    inputs: {
+      material_cost_paise: (payload?.material_cost_inr || 800) * 100,
+      labour_hours: payload?.labour_hours || 12,
+      hourly_wage_paise: 8704,
+      skill_level: payload?.skill_level || 'skilled',
+      skill_level_self_declared: payload?.skill_level,
+      skill_level_source: payload?.skill_level_source || 'self_declared',
+      zone: payload?.zone || 'zone_1',
+    },
+    floor_amount_paise: 184448,
+    recommended_low_paise: 202893,
+    recommended_high_paise: 295117,
     explanation: 'The protected floor includes materials and the recorded skilled labour rate.',
   }),
 
@@ -368,9 +286,122 @@ listListings: async (): Promise<Listing[]> => [
     network_submission: payload.simulate_network_submission ? 'success' : 'not_attempted',
   }),
 
+  getArtisanProfile: async (_userId?: number): Promise<ArtisanProfile> => ({
+    ...mockCurrentProfile,
+  }),
+
+  submitArtisanProfile: async (payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile> => {
+    mockCurrentProfile = {
+      ...mockCurrentProfile,
+      profile_status: 'pending_verification',
+      declared_skill_level: payload.declared_skill_level,
+      declared_zone: payload.declared_zone,
+      id_proof_type: payload.id_proof_type,
+      id_proof_number: payload.id_proof_number ?? null,
+      verified_skill_level: null,
+      verified_by: null,
+      verified_at: null,
+    };
+    const existingIndex = mockPendingProfiles.findIndex((p) => p.user_id === mockCurrentProfile.user_id);
+    if (existingIndex >= 0) {
+      mockPendingProfiles[existingIndex] = { ...mockCurrentProfile };
+    } else {
+      mockPendingProfiles.push({ ...mockCurrentProfile });
+    }
+    return { ...mockCurrentProfile };
+  },
+
+  getPendingArtisanProfiles: async (): Promise<ArtisanProfile[]> => [
+    ...mockPendingProfiles,
+  ],
+
+  reviewArtisanProfile: async (userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile> => {
+    const isVerified = payload.decision === 'verified';
+    const verifiedTier = isVerified ? (payload.verified_skill_level || mockCurrentProfile.declared_skill_level || null) : null;
+
+    if (mockCurrentProfile.user_id === userId) {
+      mockCurrentProfile = {
+        ...mockCurrentProfile,
+        profile_status: isVerified ? 'verified' : 'rejected',
+        verified_skill_level: verifiedTier,
+        verified_by: 2,
+        verified_at: now(),
+      };
+    }
+
+    mockPendingProfiles = mockPendingProfiles.filter((p) => p.user_id !== userId);
+
+    return {
+      user_id: userId,
+      username: 'artisan_demo',
+      phone_number: '9876543210',
+      role: 'artisan',
+      profile_status: isVerified ? 'verified' : 'rejected',
+      declared_skill_level: mockCurrentProfile.declared_skill_level || 'highly_skilled',
+      declared_zone: mockCurrentProfile.declared_zone || 'KA/zone_1',
+      id_proof_type: mockCurrentProfile.id_proof_type || 'pehchan_card',
+      id_proof_number: mockCurrentProfile.id_proof_number || 'PEHCHAN-8822-KA',
+      verified_skill_level: verifiedTier,
+      verified_by: 2,
+      verified_at: now(),
+    };
+  },
+
+  submitSupportMessage: async (payload: SupportMessageSubmitRequest): Promise<SupportMessage> => {
+    const newMsg: SupportMessage = {
+      id: `supp_msg_${Date.now()}`,
+      artisan_id: 1,
+      listing_id: payload.listing_id || null,
+      message: payload.message,
+      status: 'open',
+      created_at: now(),
+      artisan_name: 'artisan_demo',
+      listing_title: payload.listing_id ? 'Demo Craft Listing' : null,
+    };
+    mockSupportMessages.unshift(newMsg);
+    return newMsg;
+  },
+
+  getSupportMessages: async (): Promise<SupportMessage[]> => {
+    return [...mockSupportMessages];
+  },
+
+  // TODO: Send Voice Feedback stub for artisan profile/coordinator idea notes
+  // Backed by mockApi only until dedicated voice feedback / cluster audio messaging endpoint is implemented in backend.
+  submitVoiceFeedback: async (_audioUri?: string, _note?: string): Promise<{ success: boolean; message: string }> => {
+    return {
+      success: true,
+      message: 'Voice feedback received! Your cluster coordinator will review your voice memo.',
+    };
+  },
+
   login: async (role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }> => ({
     access_token: `demo_token_${role}_123`,
     role,
     user_id: `user_uuid_${role}`,
+  }),
+
+  loginWithCredentials: async (identifier: string, _password: string): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
+    const role: UserRole = identifier.toLowerCase().includes('coord') ? 'coordinator' : 'artisan';
+    return {
+      access_token: `mock_token_${role}_${Date.now()}`,
+      role,
+      user_id: `user_mock_${role}_1`,
+    };
+  },
+
+  loginWithPassword: async (identifier: string, _password: string): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
+    const role: UserRole = identifier.toLowerCase().includes('coord') ? 'coordinator' : 'artisan';
+    return {
+      access_token: `mock_token_${role}_${Date.now()}`,
+      role,
+      user_id: `user_mock_${role}_1`,
+    };
+  },
+
+  register: async (payload: { username: string; phone_number: string; password: string; role: UserRole }): Promise<{ access_token: string; role: UserRole; user_id: string }> => ({
+    access_token: `mock_token_${payload.role}_${Date.now()}`,
+    role: payload.role,
+    user_id: `user_mock_${payload.role}_${Date.now()}`,
   }),
 };

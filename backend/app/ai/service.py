@@ -273,6 +273,16 @@ class AIService:
             db.add(new_cat)
 
         # Sync claims into listing
+        new_claim_names = {c.claim for c in claims_list}
+        stale_claims = db.query(models.ClaimModel).filter(
+            models.ClaimModel.listing_id == listing_id,
+            models.ClaimModel.coordinator_verified == False,
+            models.ClaimModel.claim.in_(["natural_dye", "gi_tag", "handloom_weave"]),
+            ~models.ClaimModel.claim.in_(new_claim_names)
+        ).all()
+        for sc in stale_claims:
+            db.delete(sc)
+
         for c in claims_list:
             existing_claim = db.query(models.ClaimModel).filter(
                 models.ClaimModel.listing_id == listing_id,

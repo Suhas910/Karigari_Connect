@@ -56,6 +56,12 @@ export interface Claim {
   evidence_note: string | null;
 }
 
+export interface FallbackSuggestion {
+  used_tier: string;
+  hourly_wage_inr: number;
+  note: string;
+}
+
 // Standardized to integer paise
 export interface PriceResult {
   calculation_version: string;
@@ -63,6 +69,7 @@ export interface PriceResult {
   currency: 'INR';
   wage_source?: {
     state_code: string;
+    zone?: string;
     notification_ref: string;
     effective_from: string;
     source_url: string;
@@ -72,11 +79,16 @@ export interface PriceResult {
     labour_hours: number;
     hourly_wage_paise: number;
     skill_level: string;
+    skill_level_self_declared?: string;
+    skill_level_source?: 'self_declared' | 'technique_floor' | 'artisan_card_elevation' | 'coordinator_verified';
+    zone?: string;
   };
   floor_amount_paise: number;
   recommended_low_paise: number;
   recommended_high_paise: number;
   explanation: string;
+  error_code?: string;
+  fallback_suggestion?: FallbackSuggestion;
 }
 
 // Strictly typed catalogue draft matching backend JSON contracts
@@ -156,7 +168,56 @@ export interface ExportResult {
   network_submission: 'not_attempted' | 'pending' | 'success' | 'failed';
 }
 
-// --- 7. SERVICE INTERFACE ---
+// --- 7. ARTISAN PROFILE & VERIFICATION ---
+export type ProfileStatus = 'incomplete' | 'pending_verification' | 'verified' | 'rejected';
+export type IdProofType = 'pehchan_card' | 'pm_vishwakarma' | 'none';
+
+export interface ArtisanProfile {
+  user_id: number;
+  username: string;
+  phone_number: string | null;
+  role: string;
+  profile_status: ProfileStatus;
+  declared_skill_level: string | null;
+  declared_zone: string | null;
+  id_proof_type: IdProofType;
+  id_proof_number: string | null;
+  verified_skill_level: string | null;
+  verified_by: number | null;
+  verified_at: string | null;
+}
+
+export interface ArtisanProfileSubmitRequest {
+  declared_skill_level: string;
+  declared_zone: string;
+  id_proof_type: IdProofType;
+  id_proof_number?: string | null;
+}
+
+export interface ArtisanProfileReviewRequest {
+  decision: 'verified' | 'rejected';
+  verified_skill_level?: string | null;
+  reason?: string | null;
+}
+
+// --- 8. SUPPORT MESSAGES ---
+export interface SupportMessage {
+  id: string;
+  artisan_id: number;
+  listing_id: string | null;
+  message: string;
+  status: 'open' | 'resolved' | 'closed';
+  created_at: string;
+  artisan_name?: string | null;
+  listing_title?: string | null;
+}
+
+export interface SupportMessageSubmitRequest {
+  listing_id?: string | null;
+  message: string;
+}
+
+// --- 9. SERVICE INTERFACE ---
 export interface ListingService {
   createListing(payload: { preferred_language: string }): Promise<{
     id: string;
@@ -180,5 +241,15 @@ export interface ListingService {
   submitForApproval(listingId: string): Promise<{ status: string }>;
   decideApproval(listingId: string, payload: { decision: string; reason: string }): Promise<{ status: string; reason: string }>;
   requestExport(listingId: string, payload: { target: string; schema_version: string; simulate_network_submission?: boolean }): Promise<ExportResult>;
+  getArtisanProfile(userId?: number): Promise<ArtisanProfile>;
+  submitArtisanProfile(payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile>;
+  getPendingArtisanProfiles(): Promise<ArtisanProfile[]>;
+  reviewArtisanProfile(userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile>;
+  submitSupportMessage(payload: SupportMessageSubmitRequest): Promise<SupportMessage>;
+  getSupportMessages(): Promise<SupportMessage[]>;
+  submitVoiceFeedback?(audioUri?: string, note?: string): Promise<{ success: boolean; message: string }>;
   login(role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }>;
+  loginWithCredentials(identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }>;
+  loginWithPassword?(identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }>;
+  register(payload: { username: string; phone_number: string; password: string; role: UserRole }): Promise<{ access_token: string; role: UserRole; user_id: string }>;
 }

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "multipliers": {
+    "handloom_weave": 1.15,
+    "natural_dye": 1.1,
+    "block_print": 1.05,
+    "hand_embroidery": 1.1,
+    "basic_stitching": 1.0,
+    "pottery_wheel": 1.05,
+    "bamboo_weave": 1.05
+  }
+}

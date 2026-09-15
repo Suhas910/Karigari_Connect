@@ -73,6 +73,16 @@ def decide_approval(
 
     decision = payload.decision.lower()
     if decision in ["approve", "approved"]:
+        unverified_master = db.query(models.ClaimModel).filter(
+            models.ClaimModel.listing_id == listing_id,
+            models.ClaimModel.claim == "skill_level_master_self_declared",
+            models.ClaimModel.coordinator_verified == False,
+        ).first()
+        if unverified_master:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot approve listing with unverified self-declared Master Craftsman claim. Coordinator must verify claim before approval."
+            )
         listing.state = "approved"
     elif decision in ["reject", "rejected"]:
         listing.state = "rejected"

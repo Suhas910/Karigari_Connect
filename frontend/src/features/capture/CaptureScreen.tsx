@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Text, ActivityIndicator, IconButton, Button } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
@@ -13,6 +14,7 @@ import { useDraftStore } from '../../store/draftStore';
 import { colors, spacing } from '../../theme';
 
 export default function CaptureScreen() {
+  const { i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
@@ -57,14 +59,15 @@ export default function CaptureScreen() {
 
   const ensureDraft = async () => {
     if (activeDraftId) return activeDraftId;
-    const result = await service.createListing({ preferred_language: 'kn' });
+    const currentLang = i18n.language || 'en';
+    const result = await service.createListing({ preferred_language: currentLang });
     const newId = result.id;
     setActiveDraft(newId);
     await saveDraft({
       id: newId,
       listing_id: newId,
       state: 'draft',
-      preferred_language: 'kn',
+      preferred_language: currentLang,
       payload: {},
     });
     return newId;
@@ -88,7 +91,7 @@ export default function CaptureScreen() {
           id: draftId,
           listing_id: existing?.listing_id ?? draftId,
           state: existing?.state ?? 'draft',
-          preferred_language: existing?.preferred_language ?? 'kn',
+          preferred_language: existing?.preferred_language ?? (i18n.language || 'en'),
           payload: {
             ...(existing?.payload ?? {}),
             photos: updated,
@@ -124,7 +127,7 @@ export default function CaptureScreen() {
           id: activeDraftId,
           listing_id: existing?.listing_id ?? activeDraftId,
           state: existing?.state ?? 'draft',
-          preferred_language: existing?.preferred_language ?? 'kn',
+          preferred_language: existing?.preferred_language ?? (i18n.language || 'en'),
           payload: {
             ...(existing?.payload ?? {}),
             photos: updated,

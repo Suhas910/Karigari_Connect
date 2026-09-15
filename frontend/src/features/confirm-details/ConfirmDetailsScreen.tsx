@@ -157,6 +157,12 @@ export default function ConfirmDetailsScreen() {
       placeholder: 'e.g., 12',
     },
     {
+      key: 'material_cost_paise',
+      label: 'Raw Material Cost (₹)',
+      value: catalogue.material_cost_paise ? String(Math.round(catalogue.material_cost_paise / 100)) : '',
+      placeholder: 'e.g., 450',
+    },
+    {
       key: 'title.en',
       label: 'Title (English)',
       value: catalogue.title?.en || '',
@@ -181,7 +187,33 @@ export default function ConfirmDetailsScreen() {
     setConfirmedFields((prev) => new Set(prev).add(key));
   };
 
-  const allNeedsConfirmationHandled = needs_confirmation.every((key) => confirmedFields.has(key));
+  const getFieldConfidence = (key: string): number | undefined => {
+    if (field_confidence[key] !== undefined) return field_confidence[key];
+    if (key === 'title.en') return field_confidence['title'] ?? field_confidence['title.en'];
+    if (key === 'description.en') return field_confidence['description'] ?? field_confidence['description.en'];
+    if (key === 'labour.hours') return field_confidence['labour.hours'] ?? field_confidence['labour_hours'];
+    return undefined;
+  };
+
+  const isFieldInNeedsConfirmation = (key: string): boolean => {
+    if (needs_confirmation.includes(key)) return true;
+    if (key === 'title.en' && (needs_confirmation.includes('title') || needs_confirmation.includes('title.en'))) return true;
+    if (key === 'description.en' && (needs_confirmation.includes('description') || needs_confirmation.includes('description.en'))) return true;
+    if (key === 'labour.hours' && (needs_confirmation.includes('labour_hours') || needs_confirmation.includes('labour.hours'))) return true;
+    return false;
+  };
+
+  const isFieldConfirmed = (key: string): boolean => {
+    if (confirmedFields.has(key)) return true;
+    if (key === 'title.en' && (confirmedFields.has('title') || confirmedFields.has('title.en'))) return true;
+    if (key === 'description.en' && (confirmedFields.has('description') || confirmedFields.has('description.en'))) return true;
+    if (key === 'labour.hours' && (confirmedFields.has('labour_hours') || confirmedFields.has('labour.hours'))) return true;
+    return false;
+  };
+
+  const allNeedsConfirmationHandled = fieldsToConfirm
+    .filter((field) => isFieldInNeedsConfirmation(field.key))
+    .every((field) => isFieldConfirmed(field.key));
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -208,6 +240,9 @@ export default function ConfirmDetailsScreen() {
           ? (parseFloat(editedFields['labour.hours']) || 0)
           : (catalogue.labour?.hours || 0),
       },
+      material_cost_paise: editedFields['material_cost_paise'] !== undefined
+        ? Math.round((parseFloat(editedFields['material_cost_paise']) || 0) * 100)
+        : (catalogue.material_cost_paise || 45000),
       title: {
         ...catalogue.title,
         en: editedFields['title.en'] !== undefined ? editedFields['title.en'] : (catalogue.title?.en || ''),
@@ -231,9 +266,10 @@ export default function ConfirmDetailsScreen() {
           id: draftId,
           listing_id: existing?.listing_id ?? draftId,
           state: existing?.state ?? 'draft',
-          preferred_language: existing?.preferred_language ?? 'kn',
+          preferred_language: existing?.preferred_language ?? 'en',
           payload: {
             ...(existing?.payload ?? {}),
+            catalogue: finalCatalogue,
             catalogueConfirmed: true,
           },
         });
@@ -279,9 +315,9 @@ export default function ConfirmDetailsScreen() {
           }}
         >
           {fieldsToConfirm.map((field) => {
-            const confidence = field_confidence[field.key];
-            const needsConfirmation = needs_confirmation.includes(field.key);
-            const isConfirmed = confirmedFields.has(field.key);
+            const confidence = getFieldConfidence(field.key);
+            const needsConfirmation = isFieldInNeedsConfirmation(field.key);
+            const isConfirmed = isFieldConfirmed(field.key);
 
             return (
               <View
@@ -303,6 +339,7 @@ export default function ConfirmDetailsScreen() {
                   onFocus={() => handleFieldFocus(field.key)}
                   placeholder={field.placeholder}
                   placeholderTextColor={colors.textMuted}
+                  keyboardType={field.key === 'material_cost_paise' || field.key === 'labour.hours' ? 'numeric' : 'default'}
                   style={styles.input}
                   outlineColor={colors.border}
                   activeOutlineColor={colors.primary}
@@ -341,7 +378,7 @@ export default function ConfirmDetailsScreen() {
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {allNeedsConfirmationHandled ? 'Continue to Pricing' : 'Confirm Highlighted Details to Continue'}
+          {allNeedsConfirmationHandled ? 'Continue to Artisan Profile' : 'Confirm Highlighted Details to Continue'}
         </Button>
       </BottomDock>
     </KeyboardAvoidingView>

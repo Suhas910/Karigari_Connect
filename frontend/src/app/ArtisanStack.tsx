@@ -2,13 +2,14 @@
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import MyListingsScreen from '../features/my-listings/MyListingsScreen';
+import ArtisanTabs from './ArtisanTabs';
 import CaptureScreen from '../features/capture/CaptureScreen';
 import ImageReviewScreen from '../features/image-review/ImageReviewScreen';
 import SpeakScreen from '../features/speak/SpeakScreen';
 import ConfirmDetailsScreen from '../features/confirm-details/ConfirmDetailsScreen';
 import PriceScreen from '../features/price/PriceScreen';
 import SubmitApprovalScreen from '../features/submit-approval/SubmitApprovalScreen';
+import ArtisanProfileScreen from '../features/profile/ArtisanProfileScreen';
 
 import { colors } from '../theme';
 
@@ -19,25 +20,28 @@ export const APP_HEADER_TITLE = 'Karigari Connect';
 export default function ArtisanStack() {
   return (
     <Stack.Navigator
+      initialRouteName="HomeTabs"
       screenOptions={{
         headerTitle: APP_HEADER_TITLE,
         headerTintColor: colors.text,
         headerStyle: { backgroundColor: colors.surface },
         headerTitleStyle: {
-          fontWeight: '700',
-          fontSize: 18,
+          fontWeight: '800',
+          fontSize: 20,
           color: colors.text,
         },
         headerShadowVisible: false,
       }}
     >
       <Stack.Screen
+        name="HomeTabs"
+        component={ArtisanTabs}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="MyListings"
-        component={MyListingsScreen}
-        options={{
-          title: 'My Listings',
-          headerBackVisible: false,
-        }}
+        component={ArtisanTabs}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Capture"
@@ -68,6 +72,11 @@ export default function ArtisanStack() {
         name="SubmitApproval"
         component={SubmitApprovalScreen}
         options={{ title: APP_HEADER_TITLE }}
+      />
+      <Stack.Screen
+        name="ArtisanProfile"
+        component={ArtisanProfileScreen}
+        options={{ title: 'Artisan Profile' }}
       />
     </Stack.Navigator>
   );

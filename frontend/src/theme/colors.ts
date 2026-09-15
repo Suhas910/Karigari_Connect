@@ -1,7 +1,7 @@
 export const colors = {
   primary: '#B84A2A',        // Terracotta - Primary actions & focal points
   secondary: '#243354',      // Indigo - Coordinator roles & secondary accents
-  background: '#F9F7F4',     // Bone White - Warm neutral canvas
+  background: '#FFFFFF',     // Pure White - Clean white canvas
   surface: '#FFFFFF',        // Pure White - Elevated cards and sheets
   border: '#E2DDD5',         // Stone - 1px crisp borders
   text: '#1C1917',           // Deep Charcoal - High-contrast text

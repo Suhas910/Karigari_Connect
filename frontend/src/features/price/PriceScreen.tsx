@@ -8,6 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
+import { useDraftStore } from '../../store/draftStore';
 import { colors, spacing } from '../../theme';
 import type { PriceResult } from '../../types/contracts';
 import { ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../../components';
@@ -32,17 +33,75 @@ export default function PriceScreen() {
     try {
       const existing = await getDraft(draftId);
       const cat = existing?.payload?.catalogue;
+      const declaration = existing?.payload?.skillDeclaration || useDraftStore.getState().skillDeclaration;
+
+      // Read persistent artisan profile to retrieve coordinator-verified or declared skill tier & zone
+      let profileSkill: string | undefined;
+      let profileZone: string | undefined;
+      let profileState: string | undefined;
+      let profileSource: 'coordinator_verified' | 'artisan_card_elevation' | 'self_declared' | undefined;
+
+      try {
+        const profile = await service.getArtisanProfile();
+        if (profile) {
+          if (profile.verified_skill_level && profile.profile_status === 'verified') {
+            profileSkill = profile.verified_skill_level;
+            profileSource = 'coordinator_verified';
+          } else if (profile.declared_skill_level) {
+            profileSkill = profile.declared_skill_level;
+            profileSource =
+              profile.id_proof_type === 'pehchan_card' || profile.id_proof_type === 'pm_vishwakarma'
+                ? 'artisan_card_elevation'
+                : 'self_declared';
+          }
+
+          if (profile.declared_zone) {
+            const parts = profile.declared_zone.split('/');
+            if (parts.length === 2) {
+              profileState = parts[0];
+              profileZone = parts[1];
+            } else {
+              profileZone = profile.declared_zone;
+            }
+          }
+        }
+      } catch (err) {
+        // Fall back gracefully if offline or mock
+      }
+
       const materialCostInr = cat?.material_cost_paise ? Math.round(cat.material_cost_paise / 100) : 800;
       const labourHours = cat?.labour?.hours ?? 12;
-      const stateCode = cat?.labour?.state_code ?? 'KA';
-      const skillLevel = cat?.labour?.skill_level ?? 'skilled';
-      const techniques = cat?.techniques ?? ['handloom_weave'];
+      const stateCode =
+        useDraftStore.getState().selectedState ||
+        profileState ||
+        declaration?.stateCode ||
+        cat?.labour?.state_code ||
+        'KA';
+
+      const zoneCode =
+        useDraftStore.getState().selectedZone ||
+        profileZone ||
+        declaration?.zone ||
+        'zone_1';
+
+      let declaredSkill = declaration?.skillLevelSelfDeclared;
+      if (declaration?.hasArtisanCard && declaredSkill === 'skilled') {
+        declaredSkill = 'highly_skilled';
+      }
+      const skillLevel = profileSkill || declaredSkill || cat?.labour?.skill_level || 'skilled';
+      const techniques = cat?.techniques && cat.techniques.length > 0 ? cat.techniques : [];
+      const skillLevelSource =
+        profileSource ||
+        declaration?.source ||
+        (declaration?.hasArtisanCard ? 'artisan_card_elevation' : 'self_declared');
 
       const result = await service.requestPrice(draftId, {
         material_cost_inr: materialCostInr,
         labour_hours: labourHours,
         state_code: stateCode,
+        zone: zoneCode,
         skill_level: skillLevel,
+        skill_level_source: skillLevelSource,
         techniques,
         comparables: [],
       });
@@ -60,7 +119,7 @@ export default function PriceScreen() {
             id: draftId,
             listing_id: existing?.listing_id ?? draftId,
             state: existing?.state ?? 'draft',
-            preferred_language: existing?.preferred_language ?? 'kn',
+            preferred_language: existing?.preferred_language ?? 'en',
             payload: {
               ...(existing?.payload ?? {}),
               priceReviewed: true,
@@ -119,7 +178,7 @@ export default function PriceScreen() {
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
+        preferred_language: existing?.preferred_language ?? 'en',
         payload: {
           ...(existing?.payload ?? {}),
           priceReviewed: true,
@@ -172,6 +231,22 @@ export default function PriceScreen() {
                 </Text>
               </Card.Content>
             </Card>
+
+            {price.fallback_suggestion ? (
+              <Card style={styles.fallbackCard}>
+                <Card.Content>
+                  <Text style={styles.fallbackBadge}>
+                    REFERENCE ONLY · NOT AN APPROVED FLOOR
+                  </Text>
+                  <Text variant="titleMedium" style={styles.fallbackTitle}>
+                    {price.fallback_suggestion.used_tier === 'skilled' ? 'Skilled Tier Rate' : price.fallback_suggestion.used_tier}: ₹{price.fallback_suggestion.hourly_wage_inr.toFixed(2)}/hr
+                  </Text>
+                  <Text style={styles.fallbackNote}>
+                    {price.fallback_suggestion.note}
+                  </Text>
+                </Card.Content>
+              </Card>
+            ) : null}
           </View>
         </ScrollView>
 
@@ -246,6 +321,21 @@ export default function PriceScreen() {
               </Text>
             </Card.Content>
           </Card>
+
+          {/* Pending coordinator verification informational badge */}
+          {price.status === 'available' &&
+            price.inputs?.skill_level_source === 'self_declared' &&
+            price.inputs?.skill_level === 'highly_skilled' && (
+              <View style={styles.pendingVerificationCard}>
+                <View style={styles.pendingBadgeHeader}>
+                  <View style={styles.amberDot} />
+                  <Text style={styles.pendingBadgeTitle}>Pending coordinator verification</Text>
+                </View>
+                <Text style={styles.pendingBadgeCaption}>
+                  Floor calculated at your self-declared Master tier. A coordinator will verify your craft experience before final marketplace listing.
+                </Text>
+              </View>
+            )}
 
           <Card style={styles.statCard}>
             <Card.Content>
@@ -324,7 +414,10 @@ export default function PriceScreen() {
             <View style={styles.sourceBox}>
               <Text style={styles.sourceLabel}>STATUTORY WAGE SOURCE</Text>
               <Text style={styles.sourceText}>
-                {price.wage_source.state_code} · Effective {price.wage_source.effective_from}
+                {price.wage_source.state_code}
+                {price.wage_source.zone ? ` · ${price.wage_source.zone.replace('_', ' ').toUpperCase()}` : ''}
+                {price.inputs?.skill_level ? ` · ${price.inputs.skill_level.replace('_', ' ').toUpperCase()}` : ''}
+                {' · Effective '}{price.wage_source.effective_from}
               </Text>
               <Text style={styles.sourceRef}>{price.wage_source.notification_ref}</Text>
             </View>
@@ -495,5 +588,60 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: 12,
     lineHeight: 16,
+  },
+  fallbackCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#D4CEBF',
+    elevation: 0,
+    marginBottom: spacing.lg,
+  },
+  fallbackBadge: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  fallbackTitle: {
+    color: colors.text,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  fallbackNote: {
+    color: colors.textMuted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  pendingVerificationCard: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  pendingBadgeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  amberDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D97706',
+    marginRight: 6,
+  },
+  pendingBadgeTitle: {
+    color: '#B45309',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  pendingBadgeCaption: {
+    color: '#92400E',
+    fontSize: 12,
+    lineHeight: 17,
   },
 });
