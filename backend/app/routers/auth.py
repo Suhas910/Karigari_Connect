@@ -11,14 +11,23 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=schemas.TokenResponse)
 def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
+    clean_username = user_data.username.strip()
+    clean_phone = user_data.phone_number.strip() if user_data.phone_number else None
+
     # Check if username exists
-    if db.query(models.User).filter(models.User.username == user_data.username).first():
+    if db.query(models.User).filter(models.User.username == clean_username).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already registered",
         )
-    # Check if email exists
-    if db.query(models.User).filter(models.User.email == user_data.email).first():
+    # Check if phone number exists (if provided)
+    if clean_phone and db.query(models.User).filter(models.User.phone_number == clean_phone).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number already registered",
+        )
+    # Check if email exists (if provided)
+    if user_data.email and db.query(models.User).filter(models.User.email == user_data.email.strip()).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email address already registered",
@@ -30,8 +39,9 @@ def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
         else "artisan"
     )
     new_user = models.User(
-        username=user_data.username,
-        email=user_data.email,
+        username=clean_username,
+        phone_number=clean_phone,
+        email=user_data.email.strip() if user_data.email else None,
         hashed_password=auth.hash_password(user_data.password),
         role=role,
     )
@@ -48,20 +58,31 @@ def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
         role=new_user.role,
         user_id=new_user.user_id,
         username=new_user.username,
+        phone_number=new_user.phone_number,
     )
+
+
+@router.post("/signup", response_model=schemas.TokenResponse)
+def signup(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
+    """Convenience alias for /register endpoint."""
+    return register(user_data, db)
 
 
 @router.post("/login", response_model=schemas.TokenResponse)
 def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
+    clean_identifier = credentials.username.strip()
     user = (
         db.query(models.User)
-        .filter(models.User.username == credentials.username)
+        .filter(
+            (models.User.username == clean_identifier)
+            | (models.User.phone_number == clean_identifier)
+        )
         .first()
     )
     if not user or not auth.verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
+            detail="Invalid username/phone number or password",
         )
 
     token = auth.create_token(
@@ -73,6 +94,7 @@ def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
         role=user.role,
         user_id=user.user_id,
         username=user.username,
+        phone_number=user.phone_number,
     )
 
 
@@ -99,5 +121,6 @@ def get_me(current_user: models.User = Depends(auth.get_current_user)):
         user_id=current_user.user_id,
         username=current_user.username,
         email=current_user.email,
+        phone_number=current_user.phone_number,
         role=current_user.role,
     )

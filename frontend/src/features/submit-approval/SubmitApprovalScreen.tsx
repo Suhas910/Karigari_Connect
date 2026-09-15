@@ -31,6 +31,7 @@ export default function SubmitApprovalScreen() {
   const { draftId } = route.params;
 
   const [draftPayload, setDraftPayload] = useState<DraftPayload>({});
+  const [unverifiedClaims, setUnverifiedClaims] = useState<string[]>([]);
   const [checkedState, setCheckedState] = useState<Record<string, boolean>>({
     catalogue: false,
     image: false,
@@ -49,22 +50,24 @@ export default function SubmitApprovalScreen() {
         const payload = (draft?.payload ?? {}) as DraftPayload & { claimsConfirmed?: boolean };
         setDraftPayload(payload);
 
-        let claimsOk = true;
+        let unverified: string[] = [];
         try {
           const listing = await service.getListing(draftId);
           const claims = listing.claims ?? [];
-          claimsOk = claims.every(
-            (c) => !(c.asserted_by_artisan && !c.coordinator_verified)
-          );
+          unverified = claims
+            .filter((c) => c.asserted_by_artisan && !c.coordinator_verified)
+            .map((c) => c.claim);
         } catch (err) {
           console.error('Failed to load listing claims', err);
         }
+        setUnverifiedClaims(unverified);
+        const claimsOk = unverified.length === 0;
 
         setCheckedState({
           catalogue: Boolean(payload.catalogueConfirmed),
           image: Boolean(payload.imageAccepted),
           price: Boolean(payload.priceReviewed),
-          claims: payload.claimsConfirmed !== undefined ? Boolean(payload.claimsConfirmed) : claimsOk,
+          claims: claimsOk,
         });
       } catch (err) {
         console.error('Failed to load draft payload in SubmitApprovalScreen', err);
@@ -73,6 +76,11 @@ export default function SubmitApprovalScreen() {
   }, [draftId]);
 
   const handleToggle = async (key: string) => {
+    if (key === 'claims' && unverifiedClaims.length > 0) {
+      setSubmitError('Statutory claims (such as Master Craftsman tier) require coordinator verification before submission.');
+      return;
+    }
+    setSubmitError(null);
     const newVal = !checkedState[key];
     const updated = { ...checkedState, [key]: newVal };
     setCheckedState(updated);
@@ -89,7 +97,7 @@ export default function SubmitApprovalScreen() {
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
         state: existing?.state ?? 'draft',
-        preferred_language: existing?.preferred_language ?? 'kn',
+        preferred_language: existing?.preferred_language ?? 'en',
         payload,
       });
       setDraftPayload(payload);
@@ -186,6 +194,22 @@ export default function SubmitApprovalScreen() {
             </Card.Content>
           </Card>
 
+          {unverifiedClaims.length > 0 && (
+            <Card style={styles.claimWarningCard}>
+              <Card.Content>
+                <Text style={styles.claimWarningTitle}>STATUTORY CLAIMS PENDING REVIEW</Text>
+                <Text style={styles.claimWarningSubtitle}>
+                  The following claims require coordinator verification before this listing can be submitted:
+                </Text>
+                {unverifiedClaims.map((claim) => (
+                  <Text key={claim} style={styles.claimWarningItem}>
+                    • {claim === 'skill_level_master_self_declared' ? 'Master Craftsman Tier (Self-Declared)' : claim.replace(/_/g, ' ')}
+                  </Text>
+                ))}
+              </Card.Content>
+            </Card>
+          )}
+
           <View style={styles.noticeBox}>
             <Text style={styles.noticeText}>
               {allItemsChecked
@@ -264,4 +288,31 @@ const styles = StyleSheet.create({
   },
   submitBtn: { minHeight: spacing.tapTarget, justifyContent: 'center', borderRadius: 8 },
   errorText: { color: colors.error, textAlign: 'center', marginBottom: spacing.md, fontSize: 13 },
+  claimWarningCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#D4CEBF',
+    elevation: 0,
+    marginBottom: spacing.md,
+  },
+  claimWarningTitle: {
+    fontSize: 11,
+    letterSpacing: 0.6,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: spacing.xs,
+  },
+  claimWarningSubtitle: {
+    fontSize: 12,
+    color: colors.text,
+    lineHeight: 16,
+    marginBottom: spacing.xs,
+  },
+  claimWarningItem: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 16,
+    marginTop: 2,
+  },
 });

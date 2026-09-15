@@ -1,7 +1,7 @@
 // src/app/CoordinatorStack.tsx
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import CoordinatorReviewScreen from '../features/coordinator-review/CoordinatorReviewScreen';
+import CoordinatorTabs from './CoordinatorTabs';
 import PublishExportScreen from '../features/publish-export/PublishExportScreen';
 
 import { colors } from '../theme';
@@ -15,8 +15,8 @@ export default function CoordinatorStack() {
         headerTintColor: colors.text,
         headerStyle: { backgroundColor: colors.surface },
         headerTitleStyle: {
-          fontWeight: '700',
-          fontSize: 18,
+          fontWeight: '800',
+          fontSize: 20,
           color: colors.text,
         },
         headerShadowVisible: false,
@@ -24,8 +24,13 @@ export default function CoordinatorStack() {
     >
       <Stack.Screen 
         name="CoordinatorDashboard" 
-        component={CoordinatorReviewScreen} 
-        options={{ title: 'Review Queue' }} 
+        component={CoordinatorTabs} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="CoordinatorTabs" 
+        component={CoordinatorTabs} 
+        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="PublishExport" 

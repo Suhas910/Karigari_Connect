@@ -1,15 +1,19 @@
 # backend/app/main.py
 import uuid
+import logging
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 
-from .database import engine, Base
-from .routers import auth as auth_router, listings, ai, coordinator, products, images
+logger = logging.getLogger(__name__)
 
-# Initialize Database Schema
-Base.metadata.create_all(bind=engine)
+from .database import engine, Base, init_db
+from .routers import auth as auth_router, listings, ai, coordinator, products, images, price_router, profile, support
+from .validation_handler import register_validation_handler
+
+# Initialize Database Schema & Seed Demo Accounts (resilient on both primary and fallback)
+init_db()
 
 app = FastAPI(
     title="Karigari Connect API",
@@ -18,6 +22,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+register_validation_handler(app)
 
 # CORS Middleware for React Native / Web Clients
 app.add_middleware(
@@ -39,10 +45,18 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     action = "Retry the operation or contact support."
 
     if isinstance(detail, dict):
-        code = detail.get("code", "LISTING_STATE_INVALID")
-        message = detail.get("message", str(detail))
-        recoverable = detail.get("recoverable", True)
-        action = detail.get("action", "")
+        if "error" in detail and isinstance(detail["error"], dict):
+            code = detail["error"].get("code", "LISTING_STATE_INVALID")
+            message = detail["error"].get("message", str(detail))
+            recoverable = detail["error"].get("recoverable", True)
+            action = detail["error"].get("action", "")
+            if "request_id" in detail:
+                request_id = detail["request_id"]
+        else:
+            code = detail.get("code", "LISTING_STATE_INVALID")
+            message = detail.get("message", str(detail))
+            recoverable = detail.get("recoverable", True)
+            action = detail.get("action", "")
     elif exc.status_code == 401:
         code = "PROVIDER_UNAVAILABLE"
         message = str(detail)
@@ -71,18 +85,19 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         }
     )
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled exception processing %s %s: %s", request.method, request.url, exc, exc_info=True)
     request_id = str(uuid.uuid4())
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "request_id": request_id,
             "error": {
-                "code": "CATALOGUE_SCHEMA_INVALID",
+                "code": "INTERNAL_SERVER_ERROR",
                 "message": str(exc),
                 "recoverable": True,
-                "action": "Correct the payload fields to match schema specification."
+                "action": "Please retry shortly or contact support."
             }
         }
     )
@@ -109,11 +124,17 @@ app.include_router(auth_router.router, prefix="/api/v1")
 app.include_router(listings.router, prefix="/api/v1")
 app.include_router(ai.router, prefix="/api/v1")
 app.include_router(coordinator.router, prefix="/api/v1")
+app.include_router(price_router.router, prefix="/api/v1")
+app.include_router(profile.router, prefix="/api/v1")
+app.include_router(support.router, prefix="/api/v1")
 
 # --- ROOT & BACKWARDS COMPATIBILITY ROUTERS ---
 app.include_router(auth_router.router)
 app.include_router(listings.router)
 app.include_router(ai.router)
 app.include_router(coordinator.router)
+app.include_router(price_router.router)
+app.include_router(profile.router)
+app.include_router(support.router)
 app.include_router(products.router)
 app.include_router(images.router)

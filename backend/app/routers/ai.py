@@ -94,24 +94,3 @@ def request_catalogue_generation(
         db=db
     )
 
-# --- DYNAMIC FAIR PRICE ENGINE ENDPOINT ---
-@router.post("/listings/{listing_id}/price", response_model=schemas.PriceResult)
-def request_price_calculation(
-    listing_id: str,
-    payload: Optional[schemas.PriceRequest] = None,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
-):
-    mat_cost = payload.material_cost_paise if payload else None
-    hours = payload.labour_hours if payload else None
-    skill = payload.skill_level if payload else "skilled"
-    state = payload.state_code if payload else "KA"
-
-    return ai_service.calculate_fair_price(
-        listing_id=listing_id,
-        material_cost_paise=mat_cost,
-        labour_hours=hours,
-        skill_level=skill,
-        state_code=state,
-        db=db
-    )

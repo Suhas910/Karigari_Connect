@@ -1,20 +1,39 @@
 // src/types/navigation.ts
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+export type ArtisanTabParamList = {
+  MyListings: undefined;
+  InReview: undefined;
+  Help: undefined;
+  Profile: undefined;
+};
+
 export type ArtisanStackParamList = {
   SignIn: undefined;
+  HomeTabs: NavigatorScreenParams<ArtisanTabParamList> | undefined;
   MyListings: undefined;
   Capture: undefined;
   ImageReview: { draftId: string };
   Speak: { draftId: string };
   ConfirmDetails: { draftId: string; transcriptId: string };
+  ArtisanExperience?: { draftId: string };
   Price: { draftId: string };
   SubmitApproval: { draftId: string };
+  ArtisanProfile: undefined;
+};
+
+export type CoordinatorTabParamList = {
+  Queue: undefined;
+  Profiles: undefined;
+  History: undefined;
+  Account: undefined;
 };
 
 export type CoordinatorStackParamList = {
-  CoordinatorDashboard: undefined;
+  CoordinatorTabs: NavigatorScreenParams<CoordinatorTabParamList> | undefined;
+  CoordinatorDashboard?: NavigatorScreenParams<CoordinatorTabParamList> | undefined;
   PublishExport: { listingId: string };
+  ArtisanProfile?: { userId?: number };
 };
 
 export type RootStackParamList = {

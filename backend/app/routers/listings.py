@@ -3,7 +3,7 @@ import json
 import uuid
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from .. import models, schemas, auth
@@ -19,16 +19,37 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
             "status": m.status,
             "url": m.url
         }
-        for m in listing.media
+        for m in (listing.media or [])
     ]
 
     catalogue_data = None
     if listing.catalogue:
+        raw_cat = {}
+        if listing.catalogue.catalogue_data:
+            try:
+                raw_cat = json.loads(listing.catalogue.catalogue_data) if isinstance(listing.catalogue.catalogue_data, str) else listing.catalogue.catalogue_data
+            except Exception:
+                raw_cat = {}
+        
+        raw_conf = {}
+        if listing.catalogue.field_confidence:
+            try:
+                raw_conf = json.loads(listing.catalogue.field_confidence) if isinstance(listing.catalogue.field_confidence, str) else listing.catalogue.field_confidence
+            except Exception:
+                raw_conf = {}
+
+        raw_needs = []
+        if listing.catalogue.needs_confirmation:
+            try:
+                raw_needs = json.loads(listing.catalogue.needs_confirmation) if isinstance(listing.catalogue.needs_confirmation, str) else listing.catalogue.needs_confirmation
+            except Exception:
+                raw_needs = []
+
         catalogue_data = {
-            "schema_version": listing.catalogue.schema_version,
-            "catalogue": json.loads(listing.catalogue.catalogue_data),
-            "field_confidence": json.loads(listing.catalogue.field_confidence),
-            "needs_confirmation": json.loads(listing.catalogue.needs_confirmation)
+            "schema_version": listing.catalogue.schema_version or "1.0",
+            "catalogue": raw_cat or {},
+            "field_confidence": raw_conf or {},
+            "needs_confirmation": raw_needs or []
         }
 
     price_data = None
@@ -42,19 +63,19 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
                 "source_url": listing.price.source_url or ""
             }
         price_data = {
-            "calculation_version": listing.price.calculation_version,
-            "status": listing.price.status,
-            "currency": listing.price.currency,
+            "calculation_version": listing.price.calculation_version or "1.0",
+            "status": listing.price.status or "available",
+            "currency": listing.price.currency or "INR",
             "wage_source": wage_source,
             "inputs": {
-                "material_cost_paise": listing.price.material_cost_paise,
-                "labour_hours": listing.price.labour_hours,
-                "hourly_wage_paise": listing.price.hourly_wage_paise,
-                "skill_level": listing.price.skill_level
+                "material_cost_paise": listing.price.material_cost_paise or 0,
+                "labour_hours": listing.price.labour_hours or 0.0,
+                "hourly_wage_paise": listing.price.hourly_wage_paise or 0,
+                "skill_level": listing.price.skill_level or "skilled"
             },
-            "floor_amount_paise": listing.price.floor_amount_paise,
-            "recommended_low_paise": listing.price.recommended_low_paise,
-            "recommended_high_paise": listing.price.recommended_high_paise,
+            "floor_amount_paise": listing.price.floor_amount_paise or 0,
+            "recommended_low_paise": listing.price.recommended_low_paise or 0,
+            "recommended_high_paise": listing.price.recommended_high_paise or 0,
             "explanation": listing.price.explanation or ""
         }
 
@@ -65,14 +86,14 @@ def format_listing_response(listing: models.ListingModel) -> Dict[str, Any]:
             "coordinator_verified": c.coordinator_verified,
             "evidence_note": c.evidence_note
         }
-        for c in listing.claims
+        for c in (listing.claims or [])
     ]
 
     return {
         "id": listing.id,
         "artisan_id": str(listing.artisan_id),
         "state": listing.state,
-        "preferred_language": listing.preferred_language,
+        "preferred_language": listing.preferred_language or "en",
         "media": media_list,
         "catalogue": catalogue_data,
         "price": price_data,
@@ -112,16 +133,32 @@ def create_listing(
 
 @router.get("", response_model=List[schemas.ListingResponse])
 def list_listings(
+    state: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: Optional[int] = 0,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    if current_user.role in ["coordinator", "admin"]:
-        listings = db.query(models.ListingModel).order_by(models.ListingModel.created_at.desc()).all()
-    else:
-        listings = db.query(models.ListingModel).filter(
-            models.ListingModel.artisan_id == current_user.user_id
-        ).order_by(models.ListingModel.created_at.desc()).all()
+    query = db.query(models.ListingModel).options(
+        selectinload(models.ListingModel.media),
+        selectinload(models.ListingModel.catalogue),
+        selectinload(models.ListingModel.price),
+        selectinload(models.ListingModel.claims)
+    )
 
+    if current_user.role in ["coordinator", "admin"]:
+        if state:
+            query = query.filter(models.ListingModel.state == state)
+    else:
+        query = query.filter(models.ListingModel.artisan_id == current_user.user_id)
+        if state:
+            query = query.filter(models.ListingModel.state == state)
+
+    query = query.order_by(models.ListingModel.created_at.desc())
+    if limit is not None:
+        query = query.offset(offset or 0).limit(limit)
+
+    listings = query.all()
     return [format_listing_response(l) for l in listings]
 
 @router.get("/{listing_id}", response_model=schemas.ListingResponse)
@@ -130,7 +167,17 @@ def get_listing(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    listing = (
+        db.query(models.ListingModel)
+        .options(
+            selectinload(models.ListingModel.media),
+            selectinload(models.ListingModel.catalogue),
+            selectinload(models.ListingModel.price),
+            selectinload(models.ListingModel.claims)
+        )
+        .filter(models.ListingModel.id == listing_id)
+        .first()
+    )
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
     
@@ -238,6 +285,18 @@ def submit_for_approval(
 
     if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Not authorized to submit this listing")
+
+    # Phase 4 Gating: Unverified self-declared master craftsman claim blocks submission
+    unverified_master = db.query(models.ClaimModel).filter(
+        models.ClaimModel.listing_id == listing_id,
+        models.ClaimModel.claim == "skill_level_master_self_declared",
+        models.ClaimModel.coordinator_verified == False,
+    ).first()
+    if unverified_master:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot submit for approval: unverified self-declared Master Craftsman tier requires coordinator verification."
+        )
 
     listing.state = "awaiting_approval"
     db.commit()

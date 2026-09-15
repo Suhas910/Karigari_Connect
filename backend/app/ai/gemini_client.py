@@ -8,7 +8,53 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+NEGATION_WORDS = {"not", "no", "never", "without", "nahi", "nahin", "illa", "ಬೇಡ", "ಇಲ್ಲ", "ನಹೀ", "नहीं"}
+
+def _is_negated(text: str, keyword: str) -> bool:
+    idx = text.find(keyword)
+    if idx == -1:
+        return False
+    preceding = text[max(0, idx - 40):idx].lower()
+    words = preceding.replace(",", " ").replace(".", " ").split()
+    return any(w in NEGATION_WORDS for w in words)
+
+def derive_claims_from_text(description_text: str) -> tuple[list[dict], Optional[str]]:
+    """
+    Derive statutory provenance claims dynamically from actual artisan description.
+    Never inject unasserted provenance claims. Guards against negation ("not natural dye").
+    """
+    text_lower = (description_text or "").lower()
+    claims = []
+    gi_tag = None
+
+    # Check for natural dye
+    dye_keywords = ["natural dye", "natural dyes", "vegetable dye", "vegetable dyes", "vegetable lacquer", "ನೈಸರ್ಗಿಕ ಬಣ್ಣ", "प्राकृतिक रंग"]
+    matched_dye = next((k for k in dye_keywords if k in text_lower), None)
+    if matched_dye and not _is_negated(text_lower, matched_dye):
+        claims.append({"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None})
+
+    # Check for handloom / weave
+    weave_keywords = ["handloom", "hand-loom", "handwoven", "hand woven", "pit loom", "हथकरघा", "ಕೈಮಗ್ಗ"]
+    matched_weave = next((k for k in weave_keywords if k in text_lower), None)
+    if matched_weave and not _is_negated(text_lower, matched_weave):
+        claims.append({"claim": "handloom_weave", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None})
+
+    # Check for GI tag
+    gi_keywords = ["gi status", "gi tag", "gi-", "geographical indication", "channapatna", "ಚೆನ್ನಪಟ್ಟಣ", "banaras", "varanasi", "बनारसी", "bidriware", "ಬಿದ್ರಿ"]
+    matched_gi = next((k for k in gi_keywords if k in text_lower), None)
+    if matched_gi and not _is_negated(text_lower, matched_gi):
+        claims.append({"claim": "gi_tag", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None})
+        if "channapatna" in text_lower or "ಚೆನ್ನಪಟ್ಟಣ" in text_lower:
+            gi_tag = "Channapatna Toys & Dolls (GI-18)"
+        elif "banaras" in text_lower or "varanasi" in text_lower or "बनारसी" in text_lower:
+            gi_tag = "Banaras Brocades & Sarees (GI-99)"
+        elif "bidriware" in text_lower or "ಬಿದ್ರಿ" in text_lower:
+            gi_tag = "Bidriware (GI-19)"
+        else:
+            gi_tag = "Geographical Indication Registered"
+
+    return claims, gi_tag
+
 
 class GeminiClient:
     def __init__(self):
@@ -123,12 +169,18 @@ class GeminiClient:
         Extract structured catalogue schema with per-field confidence scores.
         Fields with confidence < 0.85 will be flagged for artisan review.
         """
+        derived_claims, derived_gi_tag = derive_claims_from_text(description_text)
+
         if self.client:
             try:
                 prompt = (
                     "Extract structured handicraft catalogue details from this artisan description:\n"
                     f"\"{description_text}\"\n"
-                    "Return ONLY JSON matching this structure:\n"
+                    "Instructions:\n"
+                    "- Return ONLY valid JSON matching the schema below.\n"
+                    "- 'claims': List of sensitive provenance claims asserted in the text. Allowed types: 'natural_dye', 'handloom_weave', 'gi_tag'. ONLY include a claim if the description explicitly asserts or mentions it (e.g. natural/vegetable dyes, handloom weaving, registered GI status). If none are mentioned, return [].\n"
+                    "- 'gi_tag': Registered GI name and number (e.g. 'Channapatna Toys & Dolls (GI-18)') ONLY if mentioned or known for this product, else null.\n"
+                    "Schema:\n"
                     "{\n"
                     '  "category": "Woodcraft & Toys",\n'
                     '  "materials": ["Ivory Wood (Aale Mara)", "Vegetable Lacquer Dye"],\n'
@@ -140,8 +192,8 @@ class GeminiClient:
                     '  "labour_hours": 6.0,\n'
                     '  "skill_level": "skilled",\n'
                     '  "material_cost_paise": 45000,\n'
-                    '  "claims": [{"claim": "natural_dye", "asserted_by_artisan": true, "coordinator_verified": false, "evidence_note": null}],\n'
-                    '  "gi_tag": "Channapatna Toys & Dolls (GI-18)",\n'
+                    '  "claims": [],\n'
+                    '  "gi_tag": null,\n'
                     '  "field_confidence": {"category": 0.96, "materials": 0.92, "techniques": 0.90, "title": 0.95, "description": 0.92, "labour.hours": 0.88, "material_cost_paise": 0.82}\n'
                     "}"
                 )
@@ -152,16 +204,22 @@ class GeminiClient:
                 text = response.text.strip()
                 if "```json" in text:
                     text = text.split("```json")[1].split("```")[0].strip()
-                return json.loads(text)
+                result = json.loads(text)
+                # If Gemini returned empty claims but text explicitly has them, or vice versa
+                if "claims" not in result or result.get("claims") is None:
+                    result["claims"] = derived_claims
+                if "gi_tag" not in result or result.get("gi_tag") is None:
+                    result["gi_tag"] = derived_gi_tag
+                return result
             except Exception as e:
                 logger.warning(f"Gemini catalogue extraction failed: {e}. Falling back to deterministic extraction.")
 
-        # Deterministic extraction
-        is_hi = declared_language == "hi"
+        # Deterministic extraction based on actual input text
+        is_hi = declared_language == "hi" or any("\u0900" <= ch <= "\u097f" for ch in description_text)
         if is_hi:
             return {
                 "category": "Handloom Textiles",
-                "materials": ["Pure Mulberry Silk", "Gold Zari Thread", "Natural Dyes"],
+                "materials": ["Pure Mulberry Silk", "Gold Zari Thread"] + (["Natural Dyes"] if any(c["claim"] == "natural_dye" for c in derived_claims) else ["Handloom Yarn"]),
                 "techniques": ["Kadhuwa Pit Loom Weaving", "Hand Jacquard Motif"],
                 "title_en": "Pure Handloom Banarasi Katan Silk Saree",
                 "title_local": "शुद्ध हथकरघा बनारसी कतान रेशम साड़ी",
@@ -170,11 +228,8 @@ class GeminiClient:
                 "labour_hours": 14.0,
                 "skill_level": "master_artisan",
                 "material_cost_paise": 320000,
-                "claims": [
-                    {"claim": "handloom_weave", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None},
-                    {"claim": "gi_tag", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
-                ],
-                "gi_tag": "Banaras Brocades & Sarees (GI-99)",
+                "claims": derived_claims,
+                "gi_tag": derived_gi_tag,
                 "field_confidence": {
                     "category": 0.98,
                     "materials": 0.94,
@@ -188,20 +243,17 @@ class GeminiClient:
         else:
             return {
                 "category": "Woodcraft & Toys",
-                "materials": ["Ivory Wood (Aale Mara)", "Vegetable Lacquer Dye"],
+                "materials": ["Ivory Wood (Aale Mara)"] + (["Vegetable Lacquer Dye"] if any(c["claim"] == "natural_dye" for c in derived_claims) else ["Seasoned Wood"]),
                 "techniques": ["Lathe Turning", "Natural Lacquer Polishing"],
                 "title_en": "Channapatna Handcrafted Natural Lacquer Toy",
                 "title_local": "ಚೆನ್ನಪಟ್ಟಣ ನೈಸರ್ಗಿಕ ಬಣ್ಣದ ಸಾಂಪ್ರದಾಯಿಕ ಮರದ ಆಟಿಕೆ",
-                "description_en": "Authentic Channapatna wooden toy handcrafted on a traditional lathe using seasoned ivory wood and non-toxic natural vegetable lacquers. Safe for children and eco-friendly.",
+                "description_en": "Authentic Channapatna wooden toy handcrafted on a traditional lathe using seasoned ivory wood. Safe for children and eco-friendly.",
                 "description_local": "ಸಾಂಪ್ರದಾಯಿಕ ಲೇತ್ ಯಂತ್ರದಲ್ಲಿ ನೈಸರ್ಗಿಕ ಬಣ್ಣಗಳನ್ನು ಬಳಸಿ ತಯಾರಿಸಿದ ಅಧಿಕೃತ ಚೆನ್ನಪಟ್ಟಣ ಮರದ ಆಟಿಕೆ. ಮಕ್ಕಳಿಗೆ ಸುರಕ್ಷಿತ ಮತ್ತು ಪರಿಸರ ಸ್ನೇಹಿ.",
                 "labour_hours": 6.0,
                 "skill_level": "skilled",
                 "material_cost_paise": 45000,
-                "claims": [
-                    {"claim": "natural_dye", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None},
-                    {"claim": "gi_tag", "asserted_by_artisan": True, "coordinator_verified": False, "evidence_note": None}
-                ],
-                "gi_tag": "Channapatna Toys & Dolls (GI-18)",
+                "claims": derived_claims,
+                "gi_tag": derived_gi_tag,
                 "field_confidence": {
                     "category": 0.97,
                     "materials": 0.93,

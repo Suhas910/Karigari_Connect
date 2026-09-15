@@ -3,19 +3,53 @@ import axios from 'axios';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
 import { useAuthStore } from '../store/authStore';
 
 // LOCAL DEV BACKEND URL CONFIGURATION:
-// To test with a local backend instance (uvicorn app.main:app --reload on port 8000),
-// substitute extra.apiBaseUrl in app.json with:
-// - Android Emulator: http://10.0.2.2:8000/api/v1
-// - iOS Simulator:    http://localhost:8000/api/v1
-// - Physical Device:  http://<your-machine-LAN-IP>:8000/api/v1
-const API_BASE_URL =
-  Constants.expoConfig?.extra?.apiBaseUrl ?? 'http://LOCAL_DEV_BACKEND_URL/api/v1'; 
+// Strict prioritized runtime resolution:
+// 1. Production / Staging HTTPS endpoint
+// 2. Android Emulator runtime detection (!Device.isDevice && Platform.OS === 'android') -> 10.0.2.2
+// 3. Physical Device runtime detection (Device.isDevice) -> Metro hostUri LAN IP
+// 4. Configured non-placeholder override
+// 5. iOS Simulator / Web fallback -> localhost
+const resolveBaseUrl = (): string => {
+  const configured = Constants.expoConfig?.extra?.apiBaseUrl;
+  // 1. Explicit production / remote HTTPS endpoint takes top priority
+  if (configured && configured.startsWith('https://')) {
+    return configured;
+  }
+
+  // 2. Android Emulator runtime detection:
+  // When running inside an Android Virtual Device (AVD), loopback to the host machine is ALWAYS 10.0.2.2.
+  if (Platform.OS === 'android' && !Device.isDevice) {
+    return 'http://10.0.2.2:8000/api/v1';
+  }
+
+  // 3. Physical device (Android or iOS): Metro bundler hostUri LAN IP takes precedence over localhost
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const lanIp = hostUri.split(':')[0];
+    if (lanIp && lanIp !== 'localhost' && lanIp !== '127.0.0.1') {
+      return `http://${lanIp}:8000/api/v1`;
+    }
+  }
+
+  // 4. Configured non-placeholder URL (e.g. custom staging or specific local IP override)
+  if (configured && !configured.includes('LOCAL_DEV_BACKEND_URL')) {
+    return configured;
+  }
+
+  // 5. iOS Simulator or Web development fallback
+  return 'http://localhost:8000/api/v1';
+};
+
+const API_BASE_URL = resolveBaseUrl();
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,13 +62,13 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   // 2. Attach Idempotency Key for Mutations
   // Generates a UUID for every non-GET request to ensure safe outbox retries.
   if (config.method && config.method.toLowerCase() !== 'get') {
-    config.headers['Idempotency-Key'] = crypto.randomUUID();
+    config.headers['Idempotency-Key'] = Crypto.randomUUID();
   }
-  
+
   return config;
 });
 
@@ -43,10 +77,18 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
-    // Log request_id on error states for debugging per strict contracts
+
+    // Log request_id and clear error detail on error states
     const requestId = error.response?.data?.request_id || 'unknown';
-    console.error(`[API Error] RequestID: ${requestId}`, error.response?.data?.error);
+    const errorDetail =
+      error.response?.data?.error ||
+      error.response?.data?.detail ||
+      error.message ||
+      'Network/Server Error';
+    const method = originalRequest?.method?.toUpperCase() || '';
+    const url = originalRequest?.url || '';
+    const formattedDetail = typeof errorDetail === 'object' ? JSON.stringify(errorDetail) : errorDetail;
+    console.error(`[API Error] ${method} ${url} (RequestID: ${requestId}) - ${formattedDetail}`, error);
 
     // Handle 401 Unauthorized with a silent refresh
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -60,11 +102,11 @@ api.interceptors.response.use(
           { headers: staleToken ? { Authorization: `Bearer ${staleToken}` } : {} }
         );
         const newToken = response.data.token;
-        
+
         // Save the new token and update the failed request
         await SecureStore.setItemAsync('userToken', newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        
+
         // Retry the original request with the new token
         return api(originalRequest);
       } catch (refreshError) {
@@ -74,7 +116,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -89,6 +131,11 @@ import type {
   PriceResult,
   ExportResult,
   UserRole,
+  ArtisanProfile,
+  ArtisanProfileSubmitRequest,
+  ArtisanProfileReviewRequest,
+  SupportMessage,
+  SupportMessageSubmitRequest,
 } from '../types/contracts';
 
 export const liveApi: ListingService = {
@@ -155,8 +202,33 @@ export const liveApi: ListingService = {
   },
 
   requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => {
-    const res = await api.post(`/listings/${listingId}/price`, payload);
-    return res.data;
+    try {
+      const res = await api.post(`/listings/${listingId}/price`, payload);
+      return res.data;
+    } catch (err: any) {
+      if (err?.response?.data?.error?.code === 'WAGE_RATE_UNAVAILABLE') {
+        return {
+          calculation_version: '1.0.0',
+          status: 'unavailable',
+          currency: 'INR',
+          inputs: {
+            material_cost_paise:
+              payload?.material_cost_paise ||
+              (payload?.material_cost_inr ? Math.round(payload.material_cost_inr * 100) : 0),
+            labour_hours: payload?.labour_hours || 0,
+            hourly_wage_paise: 0,
+            skill_level: payload?.skill_level || 'skilled',
+          },
+          floor_amount_paise: 0,
+          recommended_low_paise: 0,
+          recommended_high_paise: 0,
+          explanation: err.response.data.error.message || 'Wage rate is under verification.',
+          error_code: 'WAGE_RATE_UNAVAILABLE',
+          fallback_suggestion: err.response.data.error.fallback_suggestion,
+        };
+      }
+      throw err;
+    }
   },
 
   reviewClaim: async (listingId: string, claim: string, payload: { decision: string; evidence_note: string; reason: string | null }) => {
@@ -181,13 +253,44 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
+  getArtisanProfile: async (userId?: number): Promise<ArtisanProfile> => {
+    const endpoint = userId ? `/profile/artisan/${userId}` : '/profile/artisan/me';
+    const res = await api.get(endpoint);
+    return res.data;
+  },
+
+  submitArtisanProfile: async (payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan', payload);
+    return res.data;
+  },
+
+  getPendingArtisanProfiles: async (): Promise<ArtisanProfile[]> => {
+    const res = await api.get('/profile/artisan/pending');
+    return res.data;
+  },
+
+  reviewArtisanProfile: async (userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile> => {
+    const res = await api.post(`/profile/artisan/${userId}/review`, payload);
+    return res.data;
+  },
+
+  submitSupportMessage: async (payload: SupportMessageSubmitRequest): Promise<SupportMessage> => {
+    const res = await api.post('/support/messages', payload);
+    return res.data;
+  },
+
+  getSupportMessages: async (): Promise<SupportMessage[]> => {
+    const res = await api.get('/support/messages');
+    return res.data;
+  },
+
   login: async (role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
     // HACKATHON DEMO AUTH: Seeded demo credentials for rapid testing/presentation.
     // NOTE: This demo-account approach is for hackathon demo purposes only, not a real registration flow,
     // and should not be presented as the production auth pattern.
     const DEMO_PASSWORD = 'DemoPassword123!';
     const username = role === 'coordinator' ? 'coord_demo' : 'artisan_demo';
-    const email = `${username}@karigari.local`;
+    const phone_number = role === 'coordinator' ? '9876543211' : '9876543210';
 
     try {
       const res = await api.post('/auth/login', { username, password: DEMO_PASSWORD });
@@ -202,7 +305,7 @@ export const liveApi: ListingService = {
       if (err.response?.status === 401 || err.response?.status === 404) {
         await api.post('/auth/register', {
           username,
-          email,
+          phone_number,
           password: DEMO_PASSWORD,
           role,
         });
@@ -216,5 +319,40 @@ export const liveApi: ListingService = {
       }
       throw err;
     }
+  },
+
+  loginWithCredentials: async (identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
+    const res = await api.post('/auth/login', { username: identifier.trim(), password });
+    const token = res.data.access_token || res.data.token;
+    return {
+      access_token: token,
+      role: res.data.role as UserRole,
+      user_id: String(res.data.user_id),
+    };
+  },
+
+  loginWithPassword: async (identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
+    const res = await api.post('/auth/login', { username: identifier.trim(), password });
+    const token = res.data.access_token || res.data.token;
+    return {
+      access_token: token,
+      role: res.data.role as UserRole,
+      user_id: String(res.data.user_id),
+    };
+  },
+
+  register: async (payload: { username: string; phone_number: string; password: string; role: UserRole }): Promise<{ access_token: string; role: UserRole; user_id: string }> => {
+    const res = await api.post('/auth/register', {
+      username: payload.username.trim(),
+      phone_number: payload.phone_number.trim(),
+      password: payload.password,
+      role: payload.role,
+    });
+    const token = res.data.access_token || res.data.token;
+    return {
+      access_token: token,
+      role: res.data.role as UserRole,
+      user_id: String(res.data.user_id),
+    };
   },
 };
