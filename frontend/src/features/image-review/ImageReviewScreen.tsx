@@ -54,11 +54,11 @@ export default function ImageReviewScreen() {
     (async () => {
       try {
         const draft = await getDraft(draftId);
-        const currentPhotos = draft?.payload?.photos || [];
-        const result = await service.requestImageAnalysis(draftId, {
-          media_id: 'media_photo_batch',
-          photos: currentPhotos.length > 0 ? currentPhotos : undefined,
-        });
+        const currentPhotos: string[] = draft?.payload?.photos || [];
+        // Captured photos are uploaded and enhanced with BiRefNet; with none, there is nothing to upload.
+        const result = currentPhotos.length > 0
+          ? await service.requestImageEnhancement(draftId, currentPhotos)
+          : await service.requestImageAnalysis(draftId, { media_id: 'media_photo_batch' });
         setJobId(result.job_id);
       } catch (err) {
         setKickoffError('Could not start photo processing. Check connection and try again.');

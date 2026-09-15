@@ -5,10 +5,12 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
 from .database import engine, Base, init_db
+from .ai.service import MEDIA_ROOT
 from .routers import auth as auth_router, listings, ai, coordinator, products, images, price_router, profile, support
 from .validation_handler import register_validation_handler
 
@@ -138,3 +140,7 @@ app.include_router(profile.router)
 app.include_router(support.router)
 app.include_router(products.router)
 app.include_router(images.router)
+
+# Uploaded and BiRefNet-enhanced listing photos
+MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=MEDIA_ROOT), name="media")

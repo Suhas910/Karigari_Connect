@@ -11,6 +11,58 @@ def test_health_check():
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "service": "karigari-connect-backend"}
 
+def test_birefnet_image_enhancement_job(monkeypatch):
+    import io
+    from urllib.parse import urlparse
+    from PIL import Image
+    from app.ai import birefnet
+
+    # Stub the model: a full foreground mask keeps the test offline and independent of the weights.
+    monkeypatch.setattr(birefnet, "predict_mask", lambda image: Image.new("L", image.size, 255))
+
+    uid = uuid.uuid4().hex[:6]
+    res = client.post("/api/v1/auth/register", json={
+        "username": f"artisan_enh_{uid}",
+        "email": f"artisan_enh_{uid}@karigari.local",
+        "password": "ArtisanPassword123!",
+        "role": "artisan"
+    })
+    assert res.status_code == 200, res.text
+    headers = {"Authorization": f"Bearer {res.json()['access_token']}"}
+
+    res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers)
+    assert res_listing.status_code == 200, res_listing.text
+    listing_id = res_listing.json()["id"]
+
+    photo = io.BytesIO()
+    Image.new("RGB", (64, 48), (200, 120, 40)).save(photo, format="PNG")
+    res_job = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/image-enhancement",
+        files=[("files", ("front.png", photo.getvalue(), "image/png"))],
+        headers=headers
+    )
+    assert res_job.status_code == 200, res_job.text
+    job_id = res_job.json()["job_id"]
+
+    res_status = client.get(f"/api/v1/jobs/{job_id}", headers=headers)
+    assert res_status.json()["status"] == "complete"
+    assert res_status.json()["type"] == "image_studio"
+
+    result = client.get(f"/api/v1/jobs/{job_id}/result", headers=headers).json()
+    assert len(result["enhanced_urls"]) == 1
+    assert "BiRefNet" in result["transformations"][0]
+
+    res_image = client.get(urlparse(result["enhanced_url"]).path)
+    assert res_image.status_code == 200
+    assert Image.open(io.BytesIO(res_image.content)).format == "JPEG"
+
+    res_bad = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/image-enhancement",
+        files=[("files", ("note.txt", b"not a photo", "text/plain"))],
+        headers=headers
+    )
+    assert res_bad.status_code == 400
+
 def test_full_artisan_and_coordinator_lifecycle():
     uid = uuid.uuid4().hex[:6]
     artisan_username = f"artisan_{uid}"

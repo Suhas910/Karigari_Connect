@@ -165,6 +165,22 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
+  requestImageEnhancement: async (listingId: string, photoUris: string[]) => {
+    // Uploads the captured photos; the backend enhances them with BiRefNet in the background.
+    const form = new FormData();
+    photoUris.forEach((uri, idx) => {
+      const extension = (uri.split('?')[0].split('.').pop() || 'jpg').toLowerCase();
+      const type = extension === 'png' ? 'image/png' : extension === 'webp' ? 'image/webp' : 'image/jpeg';
+      form.append('files', { uri, name: `photo_${idx + 1}.${extension}`, type } as any);
+    });
+    const res = await api.post(`/listings/${listingId}/jobs/image-enhancement`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      transformRequest: (data) => data,
+      timeout: 120000,
+    });
+    return res.data;
+  },
+
   requestTranscription: async (listingId: string, payload: { audio_media_id: string; declared_language: string }) => {
     // Aligned to contract: POST /listings/{id}/jobs/transcription
     const res = await api.post(`/listings/${listingId}/jobs/transcription`, payload);
