@@ -12,6 +12,7 @@ export default function CoordinatorStack() {
   return (
     <Stack.Navigator
       screenOptions={{
+        statusBarStyle: 'dark',
         headerTintColor: colors.text,
         headerStyle: { backgroundColor: colors.surface },
         headerTitleStyle: {

@@ -50,7 +50,10 @@ def test_birefnet_image_enhancement_job(monkeypatch):
 
     result = client.get(f"/api/v1/jobs/{job_id}/result", headers=headers).json()
     assert len(result["enhanced_urls"]) == 1
-    assert "BiRefNet" in result["transformations"][0]
+    assert result["transformations"][0] == "background_neutralization"
+    assert "catalogue_background" in result["transformations"]
+    assert result["enhancements"][0]["engine"] == "processing"
+    assert result["enhancements"][0]["background"] == "studio"
 
     res_image = client.get(urlparse(result["enhanced_url"]).path)
     assert res_image.status_code == 200
@@ -62,6 +65,29 @@ def test_birefnet_image_enhancement_job(monkeypatch):
         headers=headers
     )
     assert res_bad.status_code == 400
+
+    # AI engine without a usable image model falls back to processing and says why.
+    from app.ai import gemini_client as gemini_module
+    monkeypatch.setattr(gemini_module.gemini_client, "client", None)
+    res_ai = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/image-enhancement",
+        files=[("files", ("front.png", photo.getvalue(), "image/png"))],
+        data={"engine": "ai", "background": "white"},
+        headers=headers
+    )
+    assert res_ai.status_code == 200, res_ai.text
+    ai_result = client.get(f"/api/v1/jobs/{res_ai.json()['job_id']}/result", headers=headers).json()
+    assert ai_result["requested_engine"] == "ai"
+    assert ai_result["enhancements"][0]["engine"] == "processing"
+    assert "GEMINI_API_KEY" in ai_result["enhancements"][0]["ai_fallback_reason"]
+
+    res_bad_engine = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/image-enhancement",
+        files=[("files", ("front.png", photo.getvalue(), "image/png"))],
+        data={"engine": "magic"},
+        headers=headers
+    )
+    assert res_bad_engine.status_code == 400
 
 def test_full_artisan_and_coordinator_lifecycle():
     uid = uuid.uuid4().hex[:6]
@@ -207,20 +233,26 @@ def test_full_artisan_and_coordinator_lifecycle():
     assert res_confirm.status_code == 200
     assert res_confirm.json()["status"] == "confirmed"
 
-    # 11. Submit for Approval
+    # 11. Attempt Submit for Approval -> blocked due to unverified claims (gi_tag, natural_dye)
     res_submit = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
-    assert res_submit.status_code == 200
-    assert res_submit.json()["state"] == "awaiting_approval"
+    assert res_submit.status_code == 400
+    assert res_submit.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
 
-    # 12. Coordinator Reviews Statutory Claim (e.g. natural_dye / gi_tag)
-    claim_review_req = {
-        "decision": "verified",
-        "evidence_note": "Verified master artisan registration card and cluster sample under Shilp Samagam.",
-        "reason": None
-    }
-    res_claim = client.post(f"/api/v1/listings/{listing_id}/claims/gi_tag/review", json=claim_review_req, headers=coord_headers)
-    assert res_claim.status_code == 200
-    assert res_claim.json()["coordinator_verified"] is True
+    # 12. Coordinator Reviews Statutory Claims (gi_tag and natural_dye)
+    for claim_name in ["gi_tag", "natural_dye"]:
+        claim_review_req = {
+            "decision": "verified",
+            "evidence_note": f"Verified {claim_name} artisan documentation.",
+            "reason": None
+        }
+        res_claim = client.post(f"/api/v1/listings/{listing_id}/claims/{claim_name}/review", json=claim_review_req, headers=coord_headers)
+        assert res_claim.status_code == 200
+        assert res_claim.json()["coordinator_verified"] is True
+
+    # 12b. Submit for Approval now succeeds
+    res_submit_ok = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
+    assert res_submit_ok.status_code == 200
+    assert res_submit_ok.json()["state"] == "awaiting_approval"
 
     # 13. Coordinator Approves Listing
     approval_req = {
@@ -240,16 +272,16 @@ def test_full_artisan_and_coordinator_lifecycle():
     res_export = client.post(f"/api/v1/listings/{listing_id}/exports", json=export_req, headers=artisan_headers)
     assert res_export.status_code == 200, res_export.text
     export_res = res_export.json()
-    assert export_res["status"] == "exported"
+    assert export_res["status"] == "validated"
     assert export_res["payload_hash"].startswith("sha256:")
     assert export_res["contract_validation"]["passed"] is True
-    assert export_res["network_submission"] == "success"
+    assert export_res["network_submission"] == "not_attempted"
 
     # 15. Verify Final Listing State and Full Nested Structure
     res_final = client.get(f"/api/v1/listings/{listing_id}", headers=artisan_headers)
     assert res_final.status_code == 200
     final_data = res_final.json()
-    assert final_data["state"] == "exported"
+    assert final_data["state"] == "export_queued"
     assert len(final_data["media"]) >= 2
     assert final_data["catalogue"] is not None
     assert final_data["price"] is not None
@@ -333,12 +365,14 @@ def test_master_craftsman_self_declared_claim_gating():
     # 3. Attempt submit for approval -> must be blocked (HTTP 400)
     res_submit = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
     assert res_submit.status_code == 400
-    assert "Master Craftsman" in res_submit.json()["error"]["message"]
+    assert res_submit.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
+    assert "skill_level_master_self_declared" in res_submit.json()["error"]["message"]
 
     # 4. Attempt coordinator approval -> must be blocked (HTTP 400)
     res_approve = client.post(f"/api/v1/listings/{listing_id}/approval", json={"decision": "approve"}, headers=coord_headers)
     assert res_approve.status_code == 400
-    assert "Master Craftsman" in res_approve.json()["error"]["message"]
+    assert res_approve.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
+    assert "skill_level_master_self_declared" in res_approve.json()["error"]["message"]
 
     # 5. Coordinator verifies the master craftsman claim
     review_req = {
@@ -643,6 +677,93 @@ def test_support_messages_lifecycle():
     art_msg_ids = [m["id"] for m in res_art_list.json()]
     assert gen_data["id"] in art_msg_ids
     assert att_data["id"] in art_msg_ids
+
+
+def test_generic_provenance_gate_blocks_natural_dye_and_gi_tag():
+    """Verify get_unverified_claims catches non-master claims (natural_dye, gi_tag) across submission, approval, and export."""
+    suffix = uuid.uuid4().hex[:6]
+    artisan_headers = {
+        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'art_prov_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()['access_token']}"
+    }
+    coord_headers = {
+        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_prov_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+    }
+
+    # Create listing
+    res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=artisan_headers)
+    listing_id = res_listing.json()["id"]
+
+    # Price it (skilled level, no master claim)
+    price_req = {
+        "material_cost_paise": 30000,
+        "labour_hours": 4.0,
+        "skill_level": "skilled",
+        "state_code": "KA"
+    }
+    client.post(f"/api/v1/listings/{listing_id}/price", json=price_req, headers=artisan_headers)
+
+    # Directly add an unverified natural_dye claim to the listing
+    from app.database import SessionLocal
+    from app.models import ClaimModel
+    db = SessionLocal()
+    try:
+        db.add(ClaimModel(
+            listing_id=listing_id,
+            claim="natural_dye",
+            asserted_by_artisan=True,
+            coordinator_verified=False
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    # 1. Submit for approval -> must be blocked
+    res_sub = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
+    assert res_sub.status_code == 400
+    assert res_sub.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
+    assert "natural_dye" in res_sub.json()["error"]["message"]
+
+    # 2. Coordinator approval -> must be blocked
+    res_app = client.post(f"/api/v1/listings/{listing_id}/approval", json={"decision": "approve"}, headers=coord_headers)
+    assert res_app.status_code == 400
+    assert res_app.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
+    assert "natural_dye" in res_app.json()["error"]["message"]
+
+    # 3. Export listing -> must be blocked immediately before export
+    res_exp = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
+    assert res_exp.status_code == 400
+    assert res_exp.json()["error"]["code"] == "PROVENANCE_VERIFICATION_REQUIRED"
+    assert "natural_dye" in res_exp.json()["error"]["message"]
+
+    # 4. Now verify claim
+    res_review = client.post(
+        f"/api/v1/listings/{listing_id}/claims/natural_dye/review",
+        json={"decision": "verified", "evidence_note": "Lab test verified"},
+        headers=coord_headers
+    )
+    assert res_review.status_code == 200
+
+    # 5. Now submit and approve succeed
+    assert client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers).status_code == 200
+    assert client.post(f"/api/v1/listings/{listing_id}/approval", json={"decision": "approve"}, headers=coord_headers).status_code == 200
+
+
+def test_export_contract_invalid_on_missing_fields():
+    """Verify export_listing validates required structural keys (images, price) and returns EXPORT_CONTRACT_INVALID."""
+    suffix = uuid.uuid4().hex[:6]
+    artisan_headers = {
+        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'art_inv_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()['access_token']}"
+    }
+
+    # Create bare listing without media or price
+    res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=artisan_headers)
+    listing_id = res_listing.json()["id"]
+
+    res_exp = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
+    assert res_exp.status_code == 400
+    err = res_exp.json()["error"]
+    assert err["code"] == "EXPORT_CONTRACT_INVALID"
+
 
 
 

@@ -1,12 +1,13 @@
 # backend/app/routers/ai.py
 import json
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models, schemas, auth
 from ..ai.service import ai_service
+from ..ai import studio
 
 router = APIRouter(tags=["AI Pipeline"])
 
@@ -20,10 +21,24 @@ def request_image_enhancement(
     request: Request,
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
+    engine: str = Form("processing"),
+    background: str = Form("studio"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    """Upload the listing's photos; BiRefNet enhances them in the background. Poll GET /jobs/{job_id}."""
+    """
+    Upload the listing's photos; they are levelled, relit and placed on a catalogue background in the
+    background. Poll GET /jobs/{job_id}.
+
+    engine: "processing" (BiRefNet + image processing, default) or "ai" (Gemini image edit, verified
+    against the original and falling back to processing). background: "studio" (soft sweep with a
+    contact shadow, default) or "white" (pure white, for marketplaces that require it).
+    """
+    if engine not in studio.ENGINES:
+        raise HTTPException(status_code=400, detail=f"engine must be one of: {', '.join(studio.ENGINES)}")
+    if background not in studio.BACKGROUNDS:
+        raise HTTPException(status_code=400, detail=f"background must be one of: {', '.join(studio.BACKGROUNDS)}")
+
     listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
@@ -47,7 +62,9 @@ def request_image_enhancement(
         base_url=base_url,
         db=db
     )
-    background_tasks.add_task(ai_service.run_birefnet_image_job, job.job_id, original_media_ids, base_url)
+    background_tasks.add_task(
+        ai_service.run_birefnet_image_job, job.job_id, original_media_ids, base_url, engine, background
+    )
     return {"job_id": job.job_id}
 
 # --- IMAGE STUDIO ENDPOINTS ---

@@ -49,5 +49,19 @@
         "helperText": "If yes, your coordinator will confirm your skill grade from it later."
       }
     }
+  },
+  "auth": {
+    "signupTitle": "Create your account",
+    "password": "Password",
+    "passwordHint": "At least 6 characters.",
+    "iAmA": "I am a",
+    "artisan": "Artisan",
+    "coordinator": "Coordinator",
+    "signUp": "Sign up",
+    "signupFailed": "Sign up failed. Check your details and try again.",
+    "haveAccount": "Already have an account? Sign in"
+  },
+  "common": {
+    "continue": "Proceed to Price Protection"
   }
 }

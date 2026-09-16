@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from .. import models, schemas
-from . import birefnet
+from . import birefnet, studio
 from .gemini_client import gemini_client
 
 logger = logging.getLogger(__name__)
@@ -188,8 +188,17 @@ class AIService:
         return job, original_media_ids
 
     @staticmethod
-    def run_birefnet_image_job(job_id: str, original_media_ids: List[str], base_url: str) -> None:
-        """Background task: enhance each stored photo with BiRefNet, then complete or fail the job."""
+    def run_birefnet_image_job(
+        job_id: str,
+        original_media_ids: List[str],
+        base_url: str,
+        engine: str = "processing",
+        background: str = "studio"
+    ) -> None:
+        """
+        Background task: turn each stored photo into a catalogue photo (angle, background, studio light)
+        with the requested studio engine, then complete or fail the job.
+        """
         from ..database import SessionLocal
 
         db = SessionLocal()
@@ -204,9 +213,12 @@ class AIService:
             ]
 
             try:
-                enhanced = []
+                enhanced, studio_results = [], []
                 for original in originals:
-                    content = birefnet.enhance_product_photo((MEDIA_ROOT / original.storage_path).read_bytes())
+                    studio_result = studio.enhance(
+                        (MEDIA_ROOT / original.storage_path).read_bytes(), engine=engine, background=background
+                    )
+                    content = studio_result.image_bytes
                     media_id = str(uuid.uuid4())
                     filename = f"{media_id}.jpg"
                     (MEDIA_ROOT / original.listing_id / filename).write_bytes(content)
@@ -218,10 +230,18 @@ class AIService:
                         status="complete",
                         url=f"{base_url}/media/{original.listing_id}/{filename}",
                         storage_path=f"{original.listing_id}/{filename}",
-                        metadata_json=json.dumps({"source_media_id": original.id, "model": birefnet.MODEL_ID})
+                        metadata_json=json.dumps({
+                            "source_media_id": original.id,
+                            "model": birefnet.MODEL_ID,
+                            "engine": studio_result.engine,
+                            "ai_generated": studio_result.engine == "ai",
+                            "transformations": studio_result.transformations,
+                            "details": studio_result.details
+                        })
                     )
                     db.add(media)
                     enhanced.append(media)
+                    studio_results.append(studio_result)
             except Exception as exc:
                 logger.error("BiRefNet enhancement failed for job %s: %s", job_id, exc, exc_info=True)
                 db.rollback()
@@ -240,11 +260,23 @@ class AIService:
                 "enhanced_media_id": enhanced[0].id,
                 "enhanced_url": enhanced[0].url,
                 "enhanced_urls": [media.url for media in enhanced],
-                "transformations": [
-                    f"Background removed with BiRefNet ({birefnet.MODEL_ID})",
-                    "Product placed on a plain white background"
+                "transformations": list(dict.fromkeys(t for r in studio_results for t in r.transformations)),
+                "requested_engine": engine,
+                "background": background,
+                "enhancements": [
+                    {
+                        "media_id": media.id,
+                        "engine": result.engine,
+                        "transformations": result.transformations,
+                        "human_review_required": result.human_review_required,
+                        **result.details
+                    }
+                    for media, result in zip(enhanced, studio_results)
                 ],
-                "human_review_required": audit.get("overall") == "needs_review"
+                "human_review_required": (
+                    audit.get("overall") == "needs_review"
+                    or any(r.human_review_required for r in studio_results)
+                )
             })
             db.commit()
         finally:

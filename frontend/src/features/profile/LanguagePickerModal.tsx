@@ -5,6 +5,7 @@ import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../../theme';
+import { setAppLanguage } from '../../i18n';
 
 export const LANGUAGES = [
   { code: 'en', native: 'English', label: 'English', shortCode: 'EN' },
@@ -25,7 +26,7 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
 
   const handleSelectLanguage = async (code: string) => {
     try {
-      await i18n.changeLanguage(code);
+      await setAppLanguage(code);
     } catch (err) {
       console.error('Failed to change language', err);
     }

@@ -66,16 +66,15 @@ export default function PublishExportScreen() {
     }, [listingId, exportResult])
   );
 
-  const handleExport = async (overrideSimulation?: boolean) => {
+  const handleExport = async () => {
     if (staleError) return;
-    const isSimulating = overrideSimulation !== undefined ? overrideSimulation : simulateBroadcast;
     setLoading(true);
     setExportError(null);
     try {
       const res = await service.requestExport(listingId, {
         target: 'ondc_retail',
         schema_version: '1.0.0',
-        simulate_network_submission: isSimulating,
+        simulate_network_submission: false,
       });
       setExportResult(res);
     } catch (err) {
@@ -110,33 +109,12 @@ export default function PublishExportScreen() {
 
         {/* Pre-Export Initiation Card */}
         {!exportResult && !exportError && !staleError && (
-          <>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>Ready for Local Gateway Staging</Text>
-              <Text style={styles.cardText}>
-                This listing has been verified by the craft coordinator. Proceeding will validate schema conformity against ONDC standards, seal the record with a cryptographic signature, and stage it on the local gateway.
-              </Text>
-            </View>
-
-            {/* Explicit Demo Simulation Switch Card */}
-            <View style={styles.demoControlCard}>
-              <View style={styles.demoControlRow}>
-                <View style={{ flex: 1, marginRight: spacing.sm }}>
-                  <Text style={styles.demoControlTitle}>DEMO BROADCAST SIMULATION</Text>
-                  <Text style={styles.demoControlSubtitle}>
-                    {simulateBroadcast
-                      ? 'Demo Simulation Active: Simulating live ONDC registry broadcast for presentation.'
-                      : 'MVP Default: Local gateway staging only. Live ONDC production broadcast is not claimed.'}
-                  </Text>
-                </View>
-                <Switch
-                  value={simulateBroadcast}
-                  onValueChange={setSimulateBroadcast}
-                  color={colors.secondary}
-                />
-              </View>
-            </View>
-          </>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Ready for Local Gateway Staging</Text>
+            <Text style={styles.cardText}>
+              This listing has been verified by the craft coordinator. Proceeding will validate schema conformity against ONDC standards, seal the record with a cryptographic signature, and stage it on the local gateway.
+            </Text>
+          </View>
         )}
 
         {/* Stale State / Provenance Guard Error */}
@@ -204,37 +182,50 @@ export default function PublishExportScreen() {
               <View style={styles.stepContent}>
                 <Text style={styles.stepTitle}>3. ONDC Network Submission</Text>
                 <Text style={styles.stepMeta}>
-                  {exportResult.network_submission === 'success'
-                    ? 'Confirmed · Published to ONDC Retail Registry (Simulated Demo)'
+                  {exportResult.network_submission === 'not_attempted'
+                    ? 'Not submitted · Local gateway validation only. Live ONDC network submission is not built in this MVP.'
                     : exportResult.network_submission === 'pending'
                     ? 'In Progress · Awaiting confirmation'
-                    : 'Not Transmitted (Local Gateway Validated · Staged for Export)'}
+                    : exportResult.network_submission === 'failed'
+                    ? 'Failed · Payload did not validate'
+                    : 'Confirmed · Submitted to ONDC Retail Registry'}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Explicit Demo Simulation Switch on Result */}
+          {/* Future Network Integration Preview Toggle */}
           <View style={styles.demoControlCard}>
             <View style={styles.demoControlRow}>
               <View style={{ flex: 1, marginRight: spacing.sm }}>
-                <Text style={styles.demoControlTitle}>DEMO BROADCAST SIMULATION</Text>
+                <Text style={styles.demoControlTitle}>FUTURE NETWORK INTEGRATION PREVIEW</Text>
                 <Text style={styles.demoControlSubtitle}>
                   {simulateBroadcast
-                    ? 'Showing simulated live ONDC registry broadcast.'
-                    : 'MVP Default: Staged locally. Switch on to simulate live registry broadcast.'}
+                    ? 'Preview active: Illustrates future live ONDC registry broadcast state.'
+                    : 'Switch on to preview what the post-submission screen will look like once live ONDC network integration is deployed.'}
                 </Text>
               </View>
               <Switch
                 value={simulateBroadcast}
-                onValueChange={(val) => {
-                  setSimulateBroadcast(val);
-                  handleExport(val);
-                }}
+                onValueChange={setSimulateBroadcast}
                 color={colors.secondary}
               />
             </View>
           </View>
+
+          {/* PREVIEW — not real Card */}
+          {simulateBroadcast && (
+            <View style={styles.previewCard}>
+              <Text style={styles.previewCardHeader}>PREVIEW — NOT REAL SUBMISSION</Text>
+              <Text style={styles.previewCardText}>
+                Future State: When live ONDC registry broadcast is enabled in production, the local gateway will transmit this cryptographically signed payload to the ONDC BAP/BPP network. This card is an interface preview for evaluation and pitch demonstration only.
+              </Text>
+              <View style={styles.previewRow}>
+                <Text style={styles.previewLabel}>Simulated Network Status:</Text>
+                <Text style={styles.previewValue}>Confirmed · Submitted to ONDC Retail Registry</Text>
+              </View>
+            </View>
+          )}
 
           {/* Verifiable Provenance QR Code */}
           <View style={styles.qrCard}>
@@ -316,7 +307,7 @@ export default function PublishExportScreen() {
           style={styles.primaryBtn}
           contentStyle={{ height: 48 }}
         >
-          {simulateBroadcast ? 'Simulate ONDC Broadcast (Demo)' : 'Validate & Stage for Export'}
+          Validate & Stage for Export
         </Button>
       </BottomDock>
     )}
@@ -555,6 +546,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     lineHeight: 16,
+  },
+  previewCard: {
+    backgroundColor: colors.indigoLight,
+    borderWidth: 1,
+    borderColor: colors.indigoBorder,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  previewCardHeader: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    color: colors.secondary,
+    marginBottom: 4,
+  },
+  previewCardText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 16,
+    marginBottom: spacing.sm,
+  },
+  previewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  previewLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
+    marginRight: 6,
+  },
+  previewValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.secondary,
   },
   bottomSpacer: {
     height: 40,

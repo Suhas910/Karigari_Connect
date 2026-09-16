@@ -56,6 +56,17 @@ def review_claim(
     return {"claim": claim, "coordinator_verified": is_verified, "evidence_note": note}
 
 
+def get_unverified_claims(db: Session, listing_id: str) -> list[models.ClaimModel]:
+    """Any claim on this listing not yet coordinator-verified.
+    Generic on purpose — catches every current claim type
+    (natural_dye, gi_tag, handloom_weave, skill_level_master_self_declared)
+    and any future claim type without needing a hardcoded list."""
+    return db.query(models.ClaimModel).filter(
+        models.ClaimModel.listing_id == listing_id,
+        models.ClaimModel.coordinator_verified == False,
+    ).all()
+
+
 @router.post("/listings/{listing_id}/approval")
 def decide_approval(
     listing_id: str,
@@ -73,15 +84,20 @@ def decide_approval(
 
     decision = payload.decision.lower()
     if decision in ["approve", "approved"]:
-        unverified_master = db.query(models.ClaimModel).filter(
-            models.ClaimModel.listing_id == listing_id,
-            models.ClaimModel.claim == "skill_level_master_self_declared",
-            models.ClaimModel.coordinator_verified == False,
-        ).first()
-        if unverified_master:
+        unverified = get_unverified_claims(db, listing_id)
+        if unverified:
             raise HTTPException(
                 status_code=400,
-                detail="Cannot approve listing with unverified self-declared Master Craftsman claim. Coordinator must verify claim before approval."
+                detail={
+                    "error": {
+                        "code": "PROVENANCE_VERIFICATION_REQUIRED",
+                        "message": f"Cannot proceed: {len(unverified)} claim(s) "
+                                    f"[{', '.join(c.claim for c in unverified)}] "
+                                    "require coordinator verification.",
+                        "recoverable": True,
+                        "action": "contact_coordinator",
+                    }
+                },
             )
         listing.state = "approved"
     elif decision in ["reject", "rejected"]:
@@ -116,6 +132,23 @@ def export_listing(
     )
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    # The provenance guard must run again immediately before any export
+    unverified = get_unverified_claims(db, listing_id)
+    if unverified:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "PROVENANCE_VERIFICATION_REQUIRED",
+                    "message": f"Cannot proceed: {len(unverified)} claim(s) "
+                                f"[{', '.join(c.claim for c in unverified)}] "
+                                "require coordinator verification.",
+                    "recoverable": True,
+                    "action": "contact_coordinator",
+                }
+            },
+        )
 
     # Construct verifiable ONDC/GeM contract payload
     cat_data = json.loads(listing.catalogue.catalogue_data) if listing.catalogue else {}
@@ -181,19 +214,82 @@ def export_listing(
         },
     }
 
+    # Verify structural keys in ondc_item_payload
+    validation_errors = []
+    context_obj = ondc_item_payload.get("context", {})
+    if not context_obj.get("domain"):
+        validation_errors.append("context.domain missing or empty")
+    if not context_obj.get("action"):
+        validation_errors.append("context.action missing or empty")
+
+    msg_obj = ondc_item_payload.get("message", {})
+    catalog_obj = msg_obj.get("catalog", {}) if isinstance(msg_obj, dict) else {}
+    providers = catalog_obj.get("bpp/providers", []) if isinstance(catalog_obj, dict) else []
+    if not isinstance(providers, list) or len(providers) == 0:
+        validation_errors.append("message.catalog.bpp/providers missing or empty")
+    else:
+        provider_items = providers[0].get("items", []) if isinstance(providers[0], dict) else []
+        if not isinstance(provider_items, list) or len(provider_items) == 0:
+            validation_errors.append("message.catalog.bpp/providers[0].items missing or empty")
+        else:
+            target_item = provider_items[0]
+            item_price = target_item.get("price", {}) if isinstance(target_item, dict) else {}
+            if not isinstance(item_price, dict):
+                validation_errors.append("price object missing")
+            else:
+                if not item_price.get("currency"):
+                    validation_errors.append("price.currency missing or empty")
+                if not item_price.get("floor_amount_paise") or item_price.get("floor_amount_paise", 0) <= 0:
+                    validation_errors.append("price.floor_amount_paise missing or zero")
+                if not item_price.get("recommended_low_paise") or item_price.get("recommended_low_paise", 0) <= 0:
+                    validation_errors.append("price.recommended_low_paise missing or zero")
+                if not item_price.get("recommended_high_paise") or item_price.get("recommended_high_paise", 0) <= 0:
+                    validation_errors.append("price.recommended_high_paise missing or zero")
+
+            item_descriptor = target_item.get("descriptor", {}) if isinstance(target_item, dict) else {}
+            item_images = item_descriptor.get("images", []) if isinstance(item_descriptor, dict) else []
+            if not isinstance(item_images, list) or len(item_images) == 0:
+                validation_errors.append("descriptor.images missing or empty")
+
+    passed = len(validation_errors) == 0
     payload_json = json.dumps(ondc_item_payload, sort_keys=True)
     payload_hash = f"sha256:{hashlib.sha256(payload_json.encode('utf-8')).hexdigest()}"
-
     export_id = str(uuid.uuid4())
+
     validation_info = {
-        "passed": True,
+        "passed": passed,
         "schema_source": f"https://ondc.org/protocol/v{payload.schema_version}/retail/catalog.json",
     }
 
-    network_submission = (
-        "success" if payload.simulate_network_submission else "not_attempted"
-    )
-    status = "exported" if network_submission == "success" else "validated"
+    if not passed:
+        validation_info["errors"] = validation_errors
+        export_record = models.ExportRecordModel(
+            export_id=export_id,
+            listing_id=listing_id,
+            target=payload.target,
+            status="failed",
+            payload_hash=payload_hash,
+            contract_validation=json.dumps(validation_info),
+            network_submission="not_attempted",
+        )
+        db.add(export_record)
+        db.commit()
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "EXPORT_CONTRACT_INVALID",
+                    "message": f"Export contract invalid: {', '.join(validation_errors)}",
+                    "recoverable": True,
+                    "action": "check_coordinator_review",
+                }
+            },
+        )
+
+    # simulate_network_submission is silently ignored per Bug #1 fix:
+    # MVP has no live ONDC network integration; network_submission is strictly "not_attempted".
+    network_submission = "not_attempted"
+    status = "validated"
 
     export_record = models.ExportRecordModel(
         export_id=export_id,
@@ -205,7 +301,7 @@ def export_listing(
         network_submission=network_submission,
     )
     db.add(export_record)
-    listing.state = "exported" if network_submission == "success" else "approved"
+    listing.state = "export_queued"
     db.commit()
 
     return schemas.ExportResult(
