@@ -169,6 +169,31 @@ class GeminiClient:
         Extract structured catalogue schema with per-field confidence scores.
         Fields with confidence < 0.85 will be flagged for artisan review.
         """
+        if not description_text or not description_text.strip():
+            return {
+                "category": "",
+                "materials": [],
+                "techniques": [],
+                "title_en": "",
+                "title_local": "",
+                "description_en": "",
+                "description_local": "",
+                "labour_hours": 0.0,
+                "skill_level": "skilled",
+                "material_cost_paise": 0,
+                "claims": [],
+                "gi_tag": None,
+                "field_confidence": {
+                    "category": 0.0,
+                    "materials": 0.0,
+                    "techniques": 0.0,
+                    "title": 0.0,
+                    "description": 0.0,
+                    "labour.hours": 0.0,
+                    "material_cost_paise": 0.0,
+                },
+            }
+
         derived_claims, derived_gi_tag = derive_claims_from_text(description_text)
 
         if self.client:

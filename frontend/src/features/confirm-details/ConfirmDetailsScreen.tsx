@@ -9,8 +9,13 @@ import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
-import type { CatalogueResult } from '../../types/contracts';
+import type { CatalogueResult, MarketplaceInfo, DimensionSet } from '../../types/contracts';
 import { ConfidenceDot, ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../../components';
+
+type TabKey = 'product' | 'marketplace' | 'dimensions';
+const UNIT_OPTIONS: MarketplaceInfo['unit'][] = ['piece', 'pair', 'set', 'meter', 'kg', 'dozen'];
+
+const EMPTY_DIMS: DimensionSet = { length_cm: 0, width_cm: 0, height_cm: 0, weight_g: 0 };
 
 export default function ConfirmDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
@@ -31,6 +36,24 @@ export default function ConfirmDetailsScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [editedFields, setEditedFields] = useState<Record<string, any>>({});
   const [confirmedFields, setConfirmedFields] = useState<Set<string>>(new Set());
+
+  // --- tabs + marketplace/dimensions local state ---
+  const [activeTab, setActiveTab] = useState<TabKey>('product');
+  const [marketplace, setMarketplace] = useState<MarketplaceInfo>({
+    quantity_available: 0,
+    unit: 'piece',
+    min_order_qty: 1,
+    max_order_qty: null,
+    cod_available: false,
+    returnable: false,
+    cancellable: false,
+  });
+  const [productDims, setProductDims] = useState<DimensionSet>(EMPTY_DIMS);
+  const [hasBox, setHasBox] = useState(false);
+  const [boxDims, setBoxDims] = useState<DimensionSet>(EMPTY_DIMS);
+
+  // hydrate marketplace/dimensions from an existing draft, once catalogue loads
+  const hydratedRef = useRef(false);
 
   const scrollToField = (key: string | null) => {
     if (!key) return;
@@ -128,57 +151,85 @@ export default function ConfirmDetailsScreen() {
 
   const { catalogue, field_confidence, needs_confirmation } = result;
 
-  // Flatten the fields we actually need to show for confirmation.
-  // Per contract: low confidence != wrong — always needs explicit user action, never auto-accept.
-  // If API couldn't extract or translate, fields show educational placeholders guiding the artisan.
+  // hydrate marketplace/dimensions once, from whatever the backend already has
+  if (!hydratedRef.current) {
+    hydratedRef.current = true;
+    if (catalogue.marketplace) {
+      setMarketplace((prev) => ({ ...prev, ...catalogue.marketplace }));
+    }
+    if (catalogue.dimensions?.product) {
+      setProductDims((prev) => ({ ...prev, ...catalogue.dimensions!.product }));
+    }
+    if (catalogue.dimensions?.packaging) {
+      setHasBox(true);
+      setBoxDims((prev) => ({ ...prev, ...catalogue.dimensions!.packaging! }));
+    }
+  }
+
+  // Detect if catalogue contains fake mock fixture data when no genuine transcript was provided
+  const isMockFixture =
+    (!transcriptId || transcriptId === 'transcript_uuid') &&
+    (catalogue.category === 'Woodcraft & Toys' ||
+      catalogue.title?.en === 'Channapatna Handcrafted Natural Lacquer Toy' ||
+      catalogue.title?.en === 'Channapatna Handcrafted Wooden Toy');
+
+  // Input fields: show placeholders when no speech-to-text data was extracted, rather than fake mock data
   const fieldsToConfirm = [
     {
       key: 'category',
       label: 'Category',
-      value: catalogue.category || '',
+      value: isMockFixture ? '' : (catalogue.category || ''),
       placeholder: 'e.g., Handloom Saree, Bidriware, Terracotta Pottery, Wooden Toy',
     },
     {
       key: 'materials',
       label: 'Materials',
-      value: Array.isArray(catalogue.materials) ? catalogue.materials.filter(Boolean).join(', ') : (catalogue.materials || ''),
+      value: isMockFixture
+        ? ''
+        : (Array.isArray(catalogue.materials) ? catalogue.materials.filter(Boolean).join(', ') : (catalogue.materials || '')),
       placeholder: 'e.g., Mulberry Silk, Pure Cotton, Natural Clay, Teak Wood',
     },
     {
       key: 'techniques',
       label: 'Techniques',
-      value: Array.isArray(catalogue.techniques) ? catalogue.techniques.filter(Boolean).join(', ') : (catalogue.techniques || ''),
+      value: isMockFixture
+        ? ''
+        : (Array.isArray(catalogue.techniques) ? catalogue.techniques.filter(Boolean).join(', ') : (catalogue.techniques || '')),
       placeholder: 'e.g., Handloom Weaving, Chisel Carving, Block Printing, Natural Dyeing',
     },
     {
       key: 'labour.hours',
       label: 'Hours to make',
-      value: catalogue.labour?.hours ? String(catalogue.labour.hours) : '',
+      value: isMockFixture
+        ? ''
+        : (catalogue.labour?.hours && catalogue.labour.hours > 0 ? String(catalogue.labour.hours) : ''),
       placeholder: 'e.g., 12',
     },
     {
       key: 'material_cost_paise',
-      label: 'Raw Material Cost (₹)',
-      value: catalogue.material_cost_paise ? String(Math.round(catalogue.material_cost_paise / 100)) : '',
+      label: 'Raw material cost (₹)',
+      value: isMockFixture
+        ? ''
+        : (catalogue.material_cost_paise && catalogue.material_cost_paise > 0 ? String(Math.round(catalogue.material_cost_paise / 100)) : ''),
       placeholder: 'e.g., 450',
     },
     {
       key: 'title.en',
       label: 'Title (English)',
-      value: catalogue.title?.en || '',
+      value: isMockFixture ? '' : (catalogue.title?.en || ''),
       placeholder: 'e.g., Handcrafted Mulberry Silk Saree with Zari Border',
     },
     {
       key: 'description.en',
       label: 'Description',
-      value: catalogue.description?.en || '',
-      placeholder: 'e.g., Traditional artisan crafted item with heritage motifs, regional craft technique, and natural finish...',
+      value: isMockFixture ? '' : (catalogue.description?.en || ''),
+      placeholder: 'A short, honest description of the product and how it was made.',
     },
   ];
 
-  const handleFieldChange = (key: string, value: string) => {
-    setEditedFields((prev) => ({ ...prev, [key]: value }));
-    if (value.trim().length > 0) {
+  const handleFieldChange = (key: string, text: string) => {
+    setEditedFields((prev) => ({ ...prev, [key]: text }));
+    if (text.trim().length > 0) {
       setConfirmedFields((prev) => new Set(prev).add(key));
     }
   };
@@ -188,18 +239,23 @@ export default function ConfirmDetailsScreen() {
   };
 
   const getFieldConfidence = (key: string): number | undefined => {
-    if (field_confidence[key] !== undefined) return field_confidence[key];
-    if (key === 'title.en') return field_confidence['title'] ?? field_confidence['title.en'];
-    if (key === 'description.en') return field_confidence['description'] ?? field_confidence['description.en'];
-    if (key === 'labour.hours') return field_confidence['labour.hours'] ?? field_confidence['labour_hours'];
+    if (isMockFixture) return undefined;
+    if (field_confidence && field_confidence[key] !== undefined) return field_confidence[key];
+    if (key === 'title.en' && field_confidence?.title !== undefined) return field_confidence.title;
+    if (key === 'description.en' && field_confidence?.description !== undefined) return field_confidence.description;
+    if (key === 'labour.hours' && (field_confidence?.labour_hours !== undefined || field_confidence?.['labour.hours'] !== undefined)) {
+      return field_confidence['labour.hours'] ?? field_confidence.labour_hours;
+    }
     return undefined;
   };
 
+  // Requirement 4: Ensure labour.hours ("Hours to make") always has the tap-to-confirm button
   const isFieldInNeedsConfirmation = (key: string): boolean => {
+    if (key === 'labour.hours') return true;
+    if (key === 'material_cost_paise') return true;
     if (needs_confirmation.includes(key)) return true;
     if (key === 'title.en' && (needs_confirmation.includes('title') || needs_confirmation.includes('title.en'))) return true;
     if (key === 'description.en' && (needs_confirmation.includes('description') || needs_confirmation.includes('description.en'))) return true;
-    if (key === 'labour.hours' && (needs_confirmation.includes('labour_hours') || needs_confirmation.includes('labour.hours'))) return true;
     return false;
   };
 
@@ -214,6 +270,46 @@ export default function ConfirmDetailsScreen() {
   const allNeedsConfirmationHandled = fieldsToConfirm
     .filter((field) => isFieldInNeedsConfirmation(field.key))
     .every((field) => isFieldConfirmed(field.key));
+
+  // --- marketplace tab required-field gate ---
+  const marketplaceValid =
+    marketplace.quantity_available > 0 &&
+    !!marketplace.unit &&
+    marketplace.min_order_qty >= 1;
+
+  // Requirement 1: Product dimensions are required fields
+  const dimensionsValid =
+    productDims.length_cm > 0 &&
+    productDims.width_cm > 0 &&
+    productDims.height_cm > 0 &&
+    productDims.weight_g > 0 &&
+    (!hasBox || (boxDims.length_cm > 0 && boxDims.width_cm > 0 && boxDims.height_cm > 0 && boxDims.weight_g > 0));
+
+  const productTabIncomplete = !allNeedsConfirmationHandled;
+  const marketplaceTabIncomplete = !marketplaceValid;
+  const dimensionsTabIncomplete = !dimensionsValid;
+
+  const canContinue = allNeedsConfirmationHandled && marketplaceValid && dimensionsValid;
+
+  const updateProductDim = (field: keyof DimensionSet, text: string) => {
+    setProductDims((prev) => ({ ...prev, [field]: parseFloat(text) || 0 }));
+  };
+  const updateBoxDim = (field: keyof DimensionSet, text: string) => {
+    setBoxDims((prev) => ({ ...prev, [field]: parseFloat(text) || 0 }));
+  };
+
+  const stepQuantity = (delta: number) => {
+    setMarketplace((prev) => ({ ...prev, quantity_available: Math.max(0, prev.quantity_available + delta) }));
+  };
+  const stepMinOrder = (delta: number) => {
+    setMarketplace((prev) => ({ ...prev, min_order_qty: Math.max(1, prev.min_order_qty + delta) }));
+  };
+  const stepMaxOrder = (delta: number) => {
+    setMarketplace((prev) => ({
+      ...prev,
+      max_order_qty: Math.max(0, (prev.max_order_qty ?? 0) + delta),
+    }));
+  };
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -242,7 +338,7 @@ export default function ConfirmDetailsScreen() {
       },
       material_cost_paise: editedFields['material_cost_paise'] !== undefined
         ? Math.round((parseFloat(editedFields['material_cost_paise']) || 0) * 100)
-        : (catalogue.material_cost_paise || 45000),
+        : (catalogue.material_cost_paise || 0),
       title: {
         ...catalogue.title,
         en: editedFields['title.en'] !== undefined ? editedFields['title.en'] : (catalogue.title?.en || ''),
@@ -250,6 +346,11 @@ export default function ConfirmDetailsScreen() {
       description: {
         ...catalogue.description,
         en: editedFields['description.en'] !== undefined ? editedFields['description.en'] : (catalogue.description?.en || ''),
+      },
+      marketplace,
+      dimensions: {
+        product: productDims,
+        packaging: hasBox ? boxDims : null,
       },
     };
 
@@ -286,6 +387,114 @@ export default function ConfirmDetailsScreen() {
     }
   };
 
+  // Requirement 2: Yes / No button selector for boolean choices
+  const renderYesNoField = (
+    label: string,
+    value: boolean,
+    onChange: (val: boolean) => void
+  ) => (
+    <View style={styles.fieldCard}>
+      <View style={styles.toggleRow}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        <View style={styles.yesNoRow}>
+          <Button
+            mode={value ? 'contained' : 'outlined'}
+            onPress={() => onChange(true)}
+            buttonColor={value ? colors.secondary : undefined}
+            textColor={value ? '#FFFFFF' : colors.textMuted}
+            style={[styles.yesNoBtn, value && styles.yesNoBtnActive]}
+            labelStyle={styles.yesNoLabel}
+            compact
+          >
+            Yes
+          </Button>
+          <Button
+            mode={!value ? 'contained' : 'outlined'}
+            onPress={() => onChange(false)}
+            buttonColor={!value ? colors.secondary : undefined}
+            textColor={!value ? '#FFFFFF' : colors.textMuted}
+            style={[styles.yesNoBtn, !value && styles.yesNoBtnActive]}
+            labelStyle={styles.yesNoLabel}
+            compact
+          >
+            No
+          </Button>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderDimGroup = (
+    label: string,
+    dims: DimensionSet,
+    onChange: (field: keyof DimensionSet, text: string) => void,
+    isRequired: boolean = true
+  ) => (
+    <View style={styles.dimGroup}>
+      <Text style={styles.dimGroupTitle}>{label} {isRequired && '*'}</Text>
+      <View style={styles.dimRow}>
+        <View style={styles.dimInputWrap}>
+          <Text style={styles.dimInputLabel}>Length (cm) {isRequired && '*'}</Text>
+          <TextInput
+            mode="outlined"
+            value={dims.length_cm ? String(dims.length_cm) : ''}
+            onChangeText={(t) => onChange('length_cm', t)}
+            keyboardType="numeric"
+            placeholder="e.g., 20"
+            placeholderTextColor={colors.textMuted}
+            style={styles.dimInput}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+          />
+        </View>
+        <View style={styles.dimInputWrap}>
+          <Text style={styles.dimInputLabel}>Width (cm) {isRequired && '*'}</Text>
+          <TextInput
+            mode="outlined"
+            value={dims.width_cm ? String(dims.width_cm) : ''}
+            onChangeText={(t) => onChange('width_cm', t)}
+            keyboardType="numeric"
+            placeholder="e.g., 15"
+            placeholderTextColor={colors.textMuted}
+            style={styles.dimInput}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+          />
+        </View>
+      </View>
+      <View style={styles.dimRow}>
+        <View style={styles.dimInputWrap}>
+          <Text style={styles.dimInputLabel}>Height (cm) {isRequired && '*'}</Text>
+          <TextInput
+            mode="outlined"
+            value={dims.height_cm ? String(dims.height_cm) : ''}
+            onChangeText={(t) => onChange('height_cm', t)}
+            keyboardType="numeric"
+            placeholder="e.g., 10"
+            placeholderTextColor={colors.textMuted}
+            style={styles.dimInput}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+          />
+        </View>
+        <View style={styles.dimInputWrap}>
+          <Text style={styles.dimInputLabel}>Weight (g) {isRequired && '*'}</Text>
+          <TextInput
+            mode="outlined"
+            value={dims.weight_g ? String(dims.weight_g) : ''}
+            onChangeText={(t) => onChange('weight_g', t)}
+            keyboardType="numeric"
+            placeholder="e.g., 500"
+            placeholderTextColor={colors.textMuted}
+            style={styles.dimInput}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+          />
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.keyboardAvoid}
@@ -308,62 +517,195 @@ export default function ConfirmDetailsScreen() {
           subtitle="Review extracted details. Tap values to edit."
         />
 
-        <View
-          style={styles.listContainer}
-          onLayout={(e) => {
-            listContainerOffsetY.current = e.nativeEvent.layout.y;
-          }}
-        >
-          {fieldsToConfirm.map((field) => {
-            const confidence = getFieldConfidence(field.key);
-            const needsConfirmation = isFieldInNeedsConfirmation(field.key);
-            const isConfirmed = isFieldConfirmed(field.key);
+        {/* Tab bar */}
+        <View style={styles.tabBar}>
+          {([
+            { key: 'product' as TabKey, label: 'Product Details', incomplete: productTabIncomplete },
+            { key: 'marketplace' as TabKey, label: 'Marketplace', incomplete: marketplaceTabIncomplete },
+            { key: 'dimensions' as TabKey, label: 'Dimensions', incomplete: dimensionsTabIncomplete },
+          ]).map((tab) => (
+            <Button
+              key={tab.key}
+              mode={activeTab === tab.key ? 'contained' : 'outlined'}
+              onPress={() => setActiveTab(tab.key)}
+              buttonColor={activeTab === tab.key ? colors.primary : undefined}
+              textColor={activeTab === tab.key ? '#FFFFFF' : colors.text}
+              style={styles.tabButton}
+              labelStyle={{ fontSize: 12 }}
+              compact
+            >
+              {tab.label}
+              {tab.incomplete ? ' •' : ''}
+            </Button>
+          ))}
+        </View>
 
-            return (
-              <View
-                key={field.key}
-                style={styles.fieldCard}
-                onLayout={(e) => handleFieldLayout(field.key, e)}
-              >
-                <View style={styles.fieldHeader}>
-                  <Text style={styles.fieldLabel}>{field.label}</Text>
-                  {confidence !== undefined && (
-                    <ConfidenceDot confidence={confidence} />
+        {/* --- Tab: Product Details --- */}
+        {activeTab === 'product' && (
+          <View
+            style={styles.listContainer}
+            onLayout={(e) => {
+              listContainerOffsetY.current = e.nativeEvent.layout.y;
+            }}
+          >
+            {fieldsToConfirm.map((field) => {
+              const confidence = getFieldConfidence(field.key);
+              const needsConfirmation = isFieldInNeedsConfirmation(field.key);
+              const isConfirmed = isFieldConfirmed(field.key);
+
+              return (
+                <View
+                  key={field.key}
+                  style={styles.fieldCard}
+                  onLayout={(e) => handleFieldLayout(field.key, e)}
+                >
+                  <View style={styles.fieldHeader}>
+                    <Text style={styles.fieldLabel}>{field.label}</Text>
+                    {confidence !== undefined && (
+                      <ConfidenceDot confidence={confidence} />
+                    )}
+                  </View>
+
+                  <TextInput
+                    mode="outlined"
+                    value={editedFields[field.key] !== undefined ? editedFields[field.key] : field.value}
+                    onChangeText={(text) => handleFieldChange(field.key, text)}
+                    onFocus={() => handleFieldFocus(field.key)}
+                    placeholder={field.placeholder}
+                    placeholderTextColor={colors.textMuted}
+                    keyboardType={field.key === 'material_cost_paise' || field.key === 'labour.hours' ? 'numeric' : 'default'}
+                    style={styles.input}
+                    outlineColor={colors.border}
+                    activeOutlineColor={colors.primary}
+                    multiline={field.key === 'description.en'}
+                    numberOfLines={field.key === 'description.en' ? 3 : 1}
+                  />
+
+                  {needsConfirmation && (
+                    <Button
+                      mode={isConfirmed ? 'contained' : 'outlined'}
+                      onPress={() => handleConfirmField(field.key)}
+                      buttonColor={isConfirmed ? colors.secondary : undefined}
+                      textColor={isConfirmed ? '#FFFFFF' : colors.text}
+                      style={styles.confirmBtn}
+                      labelStyle={{ fontSize: 12 }}
+                      compact
+                    >
+                      {isConfirmed ? 'Confirmed' : 'Tap to confirm this field'}
+                    </Button>
                   )}
                 </View>
+              );
+            })}
+          </View>
+        )}
 
-                <TextInput
-                  mode="outlined"
-                  value={editedFields[field.key] !== undefined ? editedFields[field.key] : field.value}
-                  onChangeText={(text) => handleFieldChange(field.key, text)}
-                  onFocus={() => handleFieldFocus(field.key)}
-                  placeholder={field.placeholder}
-                  placeholderTextColor={colors.textMuted}
-                  keyboardType={field.key === 'material_cost_paise' || field.key === 'labour.hours' ? 'numeric' : 'default'}
-                  style={styles.input}
-                  outlineColor={colors.border}
-                  activeOutlineColor={colors.primary}
-                  multiline={field.key === 'description.en'}
-                  numberOfLines={field.key === 'description.en' ? 3 : 1}
-                />
+        {/* --- Tab: Marketplace --- */}
+        {activeTab === 'marketplace' && (
+          <View style={styles.listContainer}>
+            <View style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>Quantity Available *</Text>
+              <View style={styles.stepperRow}>
+                <Button mode="outlined" onPress={() => stepQuantity(-1)} compact style={styles.stepperBtn}>−</Button>
+                <Text style={styles.stepperValue}>{marketplace.quantity_available}</Text>
+                <Button mode="outlined" onPress={() => stepQuantity(1)} compact style={styles.stepperBtn}>+</Button>
+              </View>
+            </View>
 
-                {needsConfirmation && (
+            {/* Requirement 3: Unit pill background color in deep indigo (#243354) */}
+            <View style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>Unit *</Text>
+              <View style={styles.chipRow}>
+                {UNIT_OPTIONS.map((u) => {
+                  const isSelected = marketplace.unit === u;
+                  return (
+                    <Chip
+                      key={u}
+                      selected={isSelected}
+                      onPress={() => setMarketplace((prev) => ({ ...prev, unit: u }))}
+                      style={[styles.chip, isSelected && styles.chipSelected]}
+                      textStyle={isSelected ? styles.chipTextSelected : styles.chipText}
+                      showSelectedOverlay={false}
+                    >
+                      {u}
+                    </Chip>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>Minimum Order Quantity *</Text>
+              <View style={styles.stepperRow}>
+                <Button mode="outlined" onPress={() => stepMinOrder(-1)} compact style={styles.stepperBtn}>−</Button>
+                <Text style={styles.stepperValue}>{marketplace.min_order_qty}</Text>
+                <Button mode="outlined" onPress={() => stepMinOrder(1)} compact style={styles.stepperBtn}>+</Button>
+              </View>
+            </View>
+
+            <View style={styles.fieldCard}>
+              <Text style={styles.fieldLabel}>Maximum Order Quantity (optional)</Text>
+              <View style={styles.stepperRow}>
+                <Button mode="outlined" onPress={() => stepMaxOrder(-1)} compact style={styles.stepperBtn}>−</Button>
+                <Text style={styles.stepperValue}>{marketplace.max_order_qty ?? 'No limit'}</Text>
+                <Button mode="outlined" onPress={() => stepMaxOrder(1)} compact style={styles.stepperBtn}>+</Button>
+              </View>
+            </View>
+
+            {/* Requirement 2: Yes / No buttons for Cash on Delivery, Returnable, Cancellable */}
+            {renderYesNoField('Cash on Delivery Available', marketplace.cod_available, (v) =>
+              setMarketplace((prev) => ({ ...prev, cod_available: v }))
+            )}
+
+            {renderYesNoField('Returnable', marketplace.returnable, (v) =>
+              setMarketplace((prev) => ({ ...prev, returnable: v }))
+            )}
+
+            {renderYesNoField('Cancellable', marketplace.cancellable, (v) =>
+              setMarketplace((prev) => ({ ...prev, cancellable: v }))
+            )}
+          </View>
+        )}
+
+        {/* --- Tab: Dimensions --- */}
+        {activeTab === 'dimensions' && (
+          <View style={styles.listContainer}>
+            <View style={styles.fieldCard}>
+              {renderDimGroup('Product Dimensions', productDims, updateProductDim, true)}
+            </View>
+
+            <View style={styles.fieldCard}>
+              <View style={styles.toggleRow}>
+                <Text style={styles.fieldLabel}>Ships in a box?</Text>
+                <View style={styles.yesNoRow}>
                   <Button
-                    mode={isConfirmed ? 'contained' : 'outlined'}
-                    onPress={() => handleConfirmField(field.key)}
-                    buttonColor={isConfirmed ? colors.secondary : undefined}
-                    textColor={isConfirmed ? '#FFFFFF' : colors.text}
-                    style={styles.confirmBtn}
-                    labelStyle={{ fontSize: 12 }}
+                    mode={hasBox ? 'contained' : 'outlined'}
+                    onPress={() => setHasBox(true)}
+                    buttonColor={hasBox ? colors.secondary : undefined}
+                    textColor={hasBox ? '#FFFFFF' : colors.textMuted}
+                    style={[styles.yesNoBtn, hasBox && styles.yesNoBtnActive]}
+                    labelStyle={styles.yesNoLabel}
                     compact
                   >
-                    {isConfirmed ? 'Confirmed' : 'Tap to confirm this field'}
+                    Yes
                   </Button>
-                )}
+                  <Button
+                    mode={!hasBox ? 'contained' : 'outlined'}
+                    onPress={() => setHasBox(false)}
+                    buttonColor={!hasBox ? colors.secondary : undefined}
+                    textColor={!hasBox ? '#FFFFFF' : colors.textMuted}
+                    style={[styles.yesNoBtn, !hasBox && styles.yesNoBtnActive]}
+                    labelStyle={styles.yesNoLabel}
+                    compact
+                  >
+                    No
+                  </Button>
+                </View>
               </View>
-            );
-          })}
-        </View>
+              {hasBox && renderDimGroup('Packaging Box Dimensions', boxDims, updateBoxDim, true)}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {/* Docked Action Button */}
@@ -372,13 +714,13 @@ export default function ConfirmDetailsScreen() {
         <Button
           mode="contained"
           onPress={handleSubmit}
-          disabled={!allNeedsConfirmationHandled || submitting}
+          disabled={!canContinue || submitting}
           loading={submitting}
           buttonColor={colors.primary}
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {allNeedsConfirmationHandled ? 'Continue to Artisan Profile' : 'Confirm Highlighted Details to Continue'}
+          {canContinue ? 'Continue to Artisan Profile' : 'Complete Highlighted Details to Continue'}
         </Button>
       </BottomDock>
     </KeyboardAvoidingView>
@@ -389,6 +731,16 @@ const styles = StyleSheet.create({
   keyboardAvoid: { flex: 1, backgroundColor: colors.background },
   container: { backgroundColor: colors.background, flexGrow: 1, paddingBottom: spacing.xxl + 48 },
   listContainer: { paddingHorizontal: spacing.lg },
+  tabBar: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    gap: spacing.xs,
+  },
+  tabButton: {
+    flex: 1,
+    borderRadius: 8,
+  },
   fieldCard: {
     backgroundColor: colors.surface,
     borderRadius: 10,
@@ -427,4 +779,98 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   errorText: { color: colors.error, marginTop: spacing.sm, textAlign: 'center' },
+  stepperRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    marginTop: spacing.xs,
+  },
+  stepperBtn: {
+    minWidth: spacing.tapTarget,
+    borderRadius: 8,
+  },
+  stepperValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+    minWidth: 72,
+    textAlign: 'center',
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  chip: {
+    marginRight: spacing.xs,
+    marginBottom: spacing.xs,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  chipSelected: {
+    backgroundColor: colors.secondary, // Deep indigo (#243354) as in confirmed box
+    borderColor: colors.secondary,
+  },
+  chipText: {
+    color: colors.text,
+    fontSize: 12,
+  },
+  chipTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  yesNoRow: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  yesNoBtn: {
+    borderRadius: 6,
+    borderColor: colors.border,
+    minWidth: 54,
+  },
+  yesNoBtnActive: {
+    borderColor: colors.secondary,
+  },
+  yesNoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginHorizontal: 8,
+    marginVertical: 4,
+  },
+  dimGroup: {
+    marginTop: spacing.sm,
+  },
+  dimGroupTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  dimRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  dimInputWrap: {
+    flex: 1,
+  },
+  dimInputLabel: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  dimInput: {
+    backgroundColor: colors.surface,
+    fontSize: 14,
+  },
 });

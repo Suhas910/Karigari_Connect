@@ -91,6 +91,28 @@ export interface PriceResult {
   fallback_suggestion?: FallbackSuggestion;
 }
 
+export interface MarketplaceInfo {
+  quantity_available: number;
+  unit: 'piece' | 'pair' | 'set' | 'meter' | 'kg' | 'dozen';
+  min_order_qty: number;
+  max_order_qty: number | null;
+  cod_available: boolean;
+  returnable: boolean;
+  cancellable: boolean;
+}
+
+export interface DimensionSet {
+  length_cm: number;
+  width_cm: number;
+  height_cm: number;
+  weight_g: number;
+}
+
+export interface ProductDimensions {
+  product: DimensionSet;
+  packaging: DimensionSet | null; // null = "ships without a box"
+}
+
 // Strictly typed catalogue draft matching backend JSON contracts
 export interface CatalogueDraft {
   listing_id: string;
@@ -103,6 +125,8 @@ export interface CatalogueDraft {
   material_cost_paise: number;
   provenance: { claims: Claim[]; gi_tag: string | null };
   source: { transcript_id: string; asr_confidence: number };
+  marketplace?: MarketplaceInfo;
+  dimensions?: ProductDimensions;
 }
 
 export interface CatalogueResult {

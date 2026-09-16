@@ -200,12 +200,12 @@ export const mockApi: ListingService = {
       title: { en: '', local: '', local_language: 'kn' },
       description: { en: '', local: '' },
       labour: { hours: 0, skill_level: 'skilled', state_code: 'KA' },
-      material_cost_paise: 80000,
+      material_cost_paise: 0,
       provenance: { claims: [], gi_tag: null },
       source: { transcript_id: 'transcript_uuid', asr_confidence: 0.86 },
     },
-    field_confidence: { category: 0.5, materials: 0.5, techniques: 0.5, 'labour.hours': 0.5 },
-    needs_confirmation: ['techniques', 'labour.hours'],
+    field_confidence: { category: 0.5, materials: 0.5, techniques: 0.5, 'labour.hours': 0.5, material_cost_paise: 0.5 },
+    needs_confirmation: ['techniques', 'labour.hours', 'material_cost_paise'],
   }),
 
   requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => ({
