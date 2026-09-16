@@ -110,7 +110,10 @@ export default function SpeakScreen() {
     queryKey: ['job', jobId],
     queryFn: () => service.getJobStatus(jobId!),
     enabled: !!jobId,
-    refetchInterval: (query) => (query.state.data?.status === 'complete' ? false : 1500),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      return status === 'complete' || status === 'failed' ? false : 2000;
+    },
   });
   const isProcessing = !!jobId && (!job || job.status === 'processing' || job.status === 'queued');
   const isFailed = job?.status === 'failed';
