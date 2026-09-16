@@ -1,6 +1,6 @@
 // src/components/GlassTabBar.tsx
 import React, { useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -127,26 +127,25 @@ export default function GlassTabBar({
               <View style={styles.iconWrap}>
                 <MaterialCommunityIcons
                   name={iconName as any}
-                  size={22}
+                  size={21}
                   color={isFocused ? activeColor : colors.textMuted}
                 />
                 {badge != null && (
                   <View style={styles.badge}>
-                    <Animated.Text style={styles.badgeText}>{badge}</Animated.Text>
+                    <Text style={styles.badgeText}>{badge}</Text>
                   </View>
                 )}
               </View>
-              <Animated.Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
+              <Text
+                numberOfLines={2}
+                maxFontSizeMultiplier={1.15}
                 style={[
                   styles.label,
                   { color: isFocused ? activeColor : colors.textMuted },
                 ]}
               >
                 {label}
-              </Animated.Text>
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -159,15 +158,15 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 24 : 16,
-    left: 16,
-    right: 16,
+    left: 8,
+    right: 8,
     alignItems: 'center',
   },
   pillContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 68,
-    borderRadius: 34,
+    height: 70,
+    borderRadius: 35,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
@@ -183,9 +182,9 @@ const styles = StyleSheet.create({
   },
   highlightInner: {
     flex: 1,
-    marginHorizontal: 6,
-    marginVertical: 6,
-    borderRadius: 28,
+    marginHorizontal: 3,
+    marginVertical: 5,
+    borderRadius: 30,
     overflow: 'hidden',
   },
   highlightTint: {
@@ -193,29 +192,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(193,80,46,0.16)', // colors.primary translucent
     borderWidth: 1,
     borderColor: 'rgba(193,80,46,0.25)',
-    borderRadius: 28,
+    borderRadius: 30,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 2,
-    gap: 2,
+    paddingVertical: 3,
+    paddingHorizontal: 1,
   },
   iconWrap: {
     position: 'relative',
-    height: 24,
+    height: 22,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 2,
   },
   label: {
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 14,
-    includeFontPadding: true,
-    paddingHorizontal: 1,
+    lineHeight: 12.5,
+    includeFontPadding: false,
+    paddingHorizontal: 0,
   },
   badge: {
     position: 'absolute',
