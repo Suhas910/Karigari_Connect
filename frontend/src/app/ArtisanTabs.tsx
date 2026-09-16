@@ -1,6 +1,7 @@
 // src/app/ArtisanTabs.tsx
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 import LiveListingsScreen from '../features/my-listings/LiveListingsScreen';
 import InReviewListingsScreen from '../features/my-listings/InReviewListingsScreen';
 import HelpScreen from '../features/help/HelpScreen';
@@ -12,6 +13,7 @@ import type { ArtisanTabParamList } from '../types/navigation';
 const Tab = createBottomTabNavigator<ArtisanTabParamList>();
 
 export default function ArtisanTabs() {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       initialRouteName="MyListings"
@@ -33,7 +35,7 @@ export default function ArtisanTabs() {
         component={LiveListingsScreen}
         options={{
           headerTitle: 'Karigari Connect',
-          tabBarLabel: 'My Listings',
+          tabBarLabel: t('tabs.myListings'),
         }}
       />
       <Tab.Screen
@@ -41,7 +43,7 @@ export default function ArtisanTabs() {
         component={InReviewListingsScreen}
         options={{
           headerTitle: 'Karigari Connect',
-          tabBarLabel: 'In Review',
+          tabBarLabel: t('tabs.inReview'),
         }}
       />
       <Tab.Screen
@@ -49,7 +51,7 @@ export default function ArtisanTabs() {
         component={HelpScreen}
         options={{
           headerTitle: 'Karigari Connect',
-          tabBarLabel: 'Help',
+          tabBarLabel: t('tabs.help'),
         }}
       />
       <Tab.Screen
@@ -57,7 +59,7 @@ export default function ArtisanTabs() {
         component={ArtisanProfileScreen}
         options={{
           headerTitle: 'Karigari Connect',
-          tabBarLabel: 'Profile',
+          tabBarLabel: t('tabs.profile'),
         }}
       />
     </Tab.Navigator>

@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../theme';
 
 interface StepHeaderProps {
@@ -17,6 +18,7 @@ export default function StepHeader({
   title,
   subtitle,
 }: StepHeaderProps) {
+  const { t } = useTranslation();
   const progressPercent = Math.min(100, Math.max(0, (currentStep / totalSteps) * 100));
 
   return (
@@ -24,7 +26,7 @@ export default function StepHeader({
       <View style={styles.textRow}>
         <View style={styles.pillRow}>
           <View style={styles.stepPill}>
-            <Text style={styles.stepPillText}>STEP {currentStep} OF {totalSteps}</Text>
+            <Text style={styles.stepPillText}>{t('common.stepOf', { current: currentStep, total: totalSteps })}</Text>
           </View>
         </View>
         <Text variant="titleMedium" style={styles.title}>{title}</Text>

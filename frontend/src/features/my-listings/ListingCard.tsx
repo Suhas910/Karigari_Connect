@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../../theme';
 import type { Listing, ListingState } from '../../types/contracts';
 
@@ -23,6 +24,7 @@ interface ListingCardProps {
 }
 
 export const ListingCard: React.FC<ListingCardProps> = ({ item, onPress }) => {
+  const { t } = useTranslation();
   const meta = STATE_META[item.state] || { label: item.state, color: colors.text, bg: colors.badgeNeutral };
   const titleEn = item.catalogue?.catalogue?.title?.en;
   const titleLocal = item.catalogue?.catalogue?.title?.local;
@@ -37,7 +39,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ item, onPress }) => {
       onPress={() => onPress(item)}
       activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={`Listing: ${titleEn || 'Untitled craft draft'}`}
+      accessibilityLabel={t('listings.listingA11y', { title: titleEn || t('listings.untitledDraft') })}
     >
       <View style={styles.cardMainRow}>
         {/* Craft Thumbnail or Category Icon */}
@@ -60,11 +62,11 @@ export const ListingCard: React.FC<ListingCardProps> = ({ item, onPress }) => {
         <View style={styles.cardDetails}>
           <View style={styles.cardHeaderRow}>
             <Text style={styles.cardTitle} numberOfLines={1}>
-              {titleEn || 'Untitled craft draft'}
+              {titleEn || t('listings.untitledDraft')}
             </Text>
             <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
               <Text style={[styles.statusBadgeText, { color: meta.color }]}>
-                {meta.label}
+                {t(`listingState.${item.state}`, { defaultValue: meta.label })}
               </Text>
             </View>
           </View>
@@ -85,11 +87,13 @@ export const ListingCard: React.FC<ListingCardProps> = ({ item, onPress }) => {
             )}
             {priceFloor ? (
               <Text style={styles.priceHighlight}>
-                ₹{priceFloor} {priceHigh ? `- ₹${priceHigh}` : 'floor'}
+                ₹{priceFloor} {priceHigh ? `- ₹${priceHigh}` : t('listings.floor')}
               </Text>
             ) : (
               <Text style={styles.metaText}>
-                Updated {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'recently'}
+                {item.updated_at
+                  ? t('listings.updatedOn', { date: new Date(item.updated_at).toLocaleDateString() })
+                  : t('listings.updatedRecently')}
               </Text>
             )}
           </View>

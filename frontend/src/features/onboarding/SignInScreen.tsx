@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Text, Button, Card, TextInput, ActivityIndicator } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
 import { UserRole } from '../../types/contracts';
 import { colors, spacing } from '../../theme';
@@ -17,6 +18,7 @@ import { service } from '../../services';
 import { login as authLogin, signup as authSignup } from '../../services/authApi';
 
 export default function SignInScreen() {
+  const { t } = useTranslation();
   const setAuth = useAuthStore((state) => state.setAuth);
 
   // Active Role Selection ('artisan' | 'coordinator')
@@ -39,7 +41,7 @@ export default function SignInScreen() {
 
   const isArtisan = selectedRole === 'artisan';
   const roleThemeColor = isArtisan ? colors.primary : colors.secondary;
-  const roleLabel = isArtisan ? 'Artisan' : 'Coordinator';
+  const roleLabel = isArtisan ? t('signIn.artisan') : t('signIn.coordinator');
 
   const canSubmitSignIn = identifier.trim().length > 0 && password.length > 0 && !loading;
   const canSubmitSignUp =
@@ -58,9 +60,9 @@ export default function SignInScreen() {
     } catch (error: any) {
       const status = error?.response?.status;
       if (status === 401) {
-        setErrorMsg('Invalid username/phone number or password.');
+        setErrorMsg(t('signIn.invalidCredentials'));
       } else {
-        const msg = error?.response?.data?.detail || error?.response?.data?.error?.message || error?.message || 'Sign in failed.';
+        const msg = error?.response?.data?.detail || error?.response?.data?.error?.message || error?.message || t('signIn.signInFailed');
         setErrorMsg(msg);
       }
       console.error('[SignInScreen] sign-in error:', error);
@@ -86,7 +88,7 @@ export default function SignInScreen() {
       if (status === 400 && detail) {
         setErrorMsg(detail);
       } else {
-        const msg = error?.response?.data?.error?.message || error?.message || 'Registration failed. Check details.';
+        const msg = error?.response?.data?.error?.message || error?.message || t('signIn.registrationFailed');
         setErrorMsg(msg);
       }
       console.error('[SignInScreen] sign-up error:', error);
@@ -104,7 +106,7 @@ export default function SignInScreen() {
       await setAuth(result.access_token, result.role, result.user_id);
     } catch (error: any) {
       console.error('[SignInScreen] demo login error:', error);
-      const msg = error?.response?.data?.error?.message || error?.message || 'Demo sign in failed.';
+      const msg = error?.response?.data?.error?.message || error?.message || t('signIn.demoFailed');
       setErrorMsg(msg);
     } finally {
       setDemoLoading(false);
@@ -133,7 +135,7 @@ export default function SignInScreen() {
             Karigari Connect
           </Text>
           <Text style={styles.subtitle}>
-            Smart Cataloging & Market Linkage
+            {t('signIn.tagline')}
           </Text>
         </View>
 
@@ -158,7 +160,7 @@ export default function SignInScreen() {
                 isArtisan && styles.pillTextActive,
               ]}
             >
-              Artisan
+              {t('signIn.artisan')}
             </Text>
           </TouchableOpacity>
 
@@ -181,7 +183,7 @@ export default function SignInScreen() {
                 !isArtisan && styles.pillTextActive,
               ]}
             >
-              Coordinator
+              {t('signIn.coordinator')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -197,12 +199,12 @@ export default function SignInScreen() {
         <Card style={styles.authCard}>
           <Card.Content>
             <Text variant="titleMedium" style={[styles.cardTitle, { color: roleThemeColor }]}>
-              {isSignUp ? `Create ${roleLabel} Account` : `Sign In as ${roleLabel}`}
+              {isSignUp ? t('signIn.createAccountAs', { role: roleLabel }) : t('signIn.signInAs', { role: roleLabel })}
             </Text>
             <Text style={styles.cardSubtitle}>
               {isSignUp
-                ? 'Join Karigari Connect with your phone number'
-                : 'Enter your phone number or username to continue'}
+                ? t('signIn.signUpSubtitle')
+                : t('signIn.signInSubtitle')}
             </Text>
 
             {isSignUp ? (
@@ -210,8 +212,8 @@ export default function SignInScreen() {
               <>
                 <TextInput
                   mode="outlined"
-                  label="Username"
-                  placeholder="e.g. anita_potter"
+                  label={t('signIn.username')}
+                  placeholder={t('signIn.usernamePlaceholder')}
                   autoCapitalize="none"
                   value={username}
                   onChangeText={setUsername}
@@ -221,8 +223,8 @@ export default function SignInScreen() {
                 />
                 <TextInput
                   mode="outlined"
-                  label="Phone Number"
-                  placeholder="10-digit mobile number"
+                  label={t('signIn.phoneNumber')}
+                  placeholder={t('signIn.phonePlaceholder')}
                   keyboardType="phone-pad"
                   value={phoneNumber}
                   onChangeText={setPhoneNumber}
@@ -232,8 +234,8 @@ export default function SignInScreen() {
                 />
                 <TextInput
                   mode="outlined"
-                  label="Password"
-                  placeholder="At least 6 characters"
+                  label={t('auth.password')}
+                  placeholder={t('auth.passwordHint')}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -256,7 +258,7 @@ export default function SignInScreen() {
                   style={styles.primaryActionBtn}
                   labelStyle={styles.btnLabel}
                 >
-                  Create {roleLabel} Account
+                  {t('signIn.createAccountAs', { role: roleLabel })}
                 </Button>
               </>
             ) : (
@@ -264,8 +266,8 @@ export default function SignInScreen() {
               <>
                 <TextInput
                   mode="outlined"
-                  label="Username or Phone Number"
-                  placeholder="e.g. 9876543210 or artisan_demo"
+                  label={t('signIn.identifier')}
+                  placeholder={t('signIn.identifierPlaceholder')}
                   autoCapitalize="none"
                   value={identifier}
                   onChangeText={setIdentifier}
@@ -275,7 +277,7 @@ export default function SignInScreen() {
                 />
                 <TextInput
                   mode="outlined"
-                  label="Password"
+                  label={t('auth.password')}
                   secureTextEntry={!showPassword}
                   value={password}
                   onChangeText={setPassword}
@@ -298,7 +300,7 @@ export default function SignInScreen() {
                   style={styles.primaryActionBtn}
                   labelStyle={styles.btnLabel}
                 >
-                  Sign In as {roleLabel}
+                  {t('signIn.signInAs', { role: roleLabel })}
                 </Button>
               </>
             )}
@@ -312,9 +314,9 @@ export default function SignInScreen() {
               style={styles.toggleRow}
             >
               <Text style={styles.toggleText}>
-                {isSignUp ? 'Already have an account? ' : 'New user? '}
+                {isSignUp ? t('signIn.haveAccountPrompt') : t('signIn.newUserPrompt')}{' '}
                 <Text style={[styles.toggleHighlight, { color: roleThemeColor }]}>
-                  {isSignUp ? 'Sign in' : 'Sign up'}
+                  {isSignUp ? t('signIn.signInLink') : t('signIn.signUpLink')}
                 </Text>
               </Text>
             </TouchableOpacity>
@@ -325,7 +327,7 @@ export default function SignInScreen() {
         <View style={styles.demoSection}>
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or evaluate instantly</Text>
+            <Text style={styles.dividerText}>{t('signIn.orEvaluate')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -338,7 +340,7 @@ export default function SignInScreen() {
             style={[styles.demoBtn, { borderColor: roleThemeColor }]}
             icon="lightning-bolt"
           >
-            One-Tap Demo Login ({roleLabel})
+            {t('signIn.demoLogin', { role: roleLabel })}
           </Button>
         </View>
       </ScrollView>

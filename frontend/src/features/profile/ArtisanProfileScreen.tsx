@@ -29,21 +29,22 @@ import { StatusExplanationModal } from './StatusExplanationModal';
 import { SkillTierEditModal } from './SkillTierEditModal';
 import { LanguagePickerModal, LANGUAGES } from './LanguagePickerModal';
 
+// Translation keys under profile.skillShort / profile.idProofShort.
 const SKILL_LABEL_MAP: Record<SkillOption, string> = {
-  beginner: 'Apprentice Artisan',
-  intermediate: 'Practicing Artisan (2-5 yrs)',
-  skilled: 'Skilled Artisan',
-  master: 'Master Craftsman',
+  beginner: 'profile.skillShort.beginner',
+  intermediate: 'profile.skillShort.intermediate',
+  skilled: 'profile.skillShort.skilled',
+  master: 'profile.skillShort.master',
 };
 
 const ID_PROOF_LABEL_MAP: Record<IdProofType, string> = {
-  pehchan_card: 'Pehchan Card',
-  pm_vishwakarma: 'Vishwakarma Cert',
-  none: 'Self-declared ID',
+  pehchan_card: 'profile.idProofShort.pehchan_card',
+  pm_vishwakarma: 'profile.idProofShort.pm_vishwakarma',
+  none: 'profile.idProofShort.none',
 };
 
 export default function ArtisanProfileScreen() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -112,15 +113,15 @@ export default function ArtisanProfileScreen() {
 
   const handleSubmit = async () => {
     if (!selectedSkill) {
-      setMessage({ type: 'error', text: 'Please select your skill tier.' });
+      setMessage({ type: 'error', text: t('profile.selectSkill') });
       return;
     }
     if (!selectedZone) {
-      setMessage({ type: 'error', text: 'Please select your wage zone.' });
+      setMessage({ type: 'error', text: t('profile.selectZone') });
       return;
     }
     if (idProofType !== 'none' && !idProofNumber.trim()) {
-      setMessage({ type: 'error', text: 'Please enter your ID registration number.' });
+      setMessage({ type: 'error', text: t('profile.enterIdNumber') });
       return;
     }
 
@@ -136,7 +137,7 @@ export default function ArtisanProfileScreen() {
       setProfile(updated);
       setMessage({
         type: 'success',
-        text: 'Profile submitted for coordinator verification! Once approved, this skill tier applies automatically to all your listings.',
+        text: t('profile.submitted'),
       });
       // Close edit modal after brief delay or keep banner visible
       setTimeout(() => {
@@ -146,7 +147,7 @@ export default function ArtisanProfileScreen() {
     } catch (err: any) {
       setMessage({
         type: 'error',
-        text: err?.response?.data?.error?.message || 'Failed to submit profile. Please try again.',
+        text: err?.response?.data?.error?.message || t('profile.submitFailed'),
       });
     } finally {
       setSubmitting(false);
@@ -162,13 +163,13 @@ export default function ArtisanProfileScreen() {
   }
 
   // Row 1 subtitle: Declared Tier + Credential
-  const tierName = selectedSkill ? SKILL_LABEL_MAP[selectedSkill] : 'Declared Skill Tier';
-  const idProofName = ID_PROOF_LABEL_MAP[idProofType];
+  const tierName = selectedSkill ? t(SKILL_LABEL_MAP[selectedSkill]) : t('profile.declaredTier');
+  const idProofName = t(ID_PROOF_LABEL_MAP[idProofType]);
   const skillSubtitle = `${tierName} • ${idProofName}`;
 
   // Row 2 subtitle: Current active language
   const currentLang = LANGUAGES.find((l) => l.code === i18n.language) || LANGUAGES[0];
-  const langSubtitle = `${currentLang.label} (Selected)`;
+  const langSubtitle = t('profile.languageSelected', { language: currentLang.label });
 
   const username = profile?.username || 'artisan';
 
@@ -187,15 +188,15 @@ export default function ArtisanProfileScreen() {
         {/* 2. Location Card */}
         <LocationCard
           stateName={currentStateObj.name}
-          zoneName={currentZoneObj?.name || 'Zone 1'}
-          zoneNote={currentZoneObj?.note || 'Statutory minimum wage jurisdiction'}
+          zoneName={currentZoneObj?.name || t('listings.zone1')}
+          zoneNote={currentZoneObj?.note || t('profile.jurisdictionNote')}
           isConfigured={Boolean(selectedState && selectedZone)}
           onPress={() => setEditModalVisible(true)}
         />
 
         {/* 3. Section Header: "WORKSHOP & ID SERVICES" + count */}
         <View style={styles.sectionHeaderRow}>
-          <Text style={styles.sectionHeaderTitle}>WORKSHOP & ID SERVICES</Text>
+          <Text style={styles.sectionHeaderTitle}>{t('profile.servicesHeader')}</Text>
         </View>
 
         {/* 4. Icon-Row List Container */}
@@ -205,7 +206,7 @@ export default function ArtisanProfileScreen() {
             icon="certificate-outline"
             iconBgColor="#FEF3C7"
             iconColor="#D97706"
-            title="Skill Tier & Official ID"
+            title={t('profile.skillTierTitle')}
             subtitle={skillSubtitle}
             showDivider={true}
             onPress={() => setEditModalVisible(true)}
@@ -216,7 +217,7 @@ export default function ArtisanProfileScreen() {
             icon="translate"
             iconBgColor={colors.indigoLight}
             iconColor={colors.secondary}
-            title="App Language"
+            title={t('profile.appLanguage')}
             subtitle={langSubtitle}
             badgeText={currentLang.shortCode}
             showDivider={false}
@@ -230,11 +231,11 @@ export default function ArtisanProfileScreen() {
           onPress={handleSwitchRole}
           activeOpacity={0.75}
           accessibilityRole="button"
-          accessibilityLabel={`Log Out or Switch Role, signed in as ${username}`}
+          accessibilityLabel={t('profile.logoutA11y', { username })}
         >
           <View style={styles.logoutLeft}>
             <MaterialCommunityIcons name="logout-variant" size={18} color={colors.primary} />
-            <Text style={styles.logoutText}>Log Out / Switch Role</Text>
+            <Text style={styles.logoutText}>{t('profile.logout')}</Text>
           </View>
         </TouchableOpacity>
       </ScrollView>
