@@ -137,8 +137,6 @@ export default function MyListingsScreen() {
   const handleCardPress = (listing: Listing) => {
     switch (listing.state) {
       case 'draft':
-      case 'rejected':
-      case 'failed':
         useDraftStore.getState().setActiveDraft(listing.id);
         navigation.navigate('Capture');
         break;
@@ -159,7 +157,7 @@ export default function MyListingsScreen() {
           listingId: listing.id,
           state: listing.state,
         });
-        break;  
+        break;
     }
   };
 
