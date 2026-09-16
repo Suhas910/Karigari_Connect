@@ -137,8 +137,10 @@ export default function GlassTabBar({
                 )}
               </View>
               <Text
-                numberOfLines={2}
-                maxFontSizeMultiplier={1.15}
+                numberOfLines={1}
+                adjustsFontSizeToFit={Platform.OS === 'ios'}
+                minimumFontScale={0.8}
+                maxFontSizeMultiplier={1.12}
                 style={[
                   styles.label,
                   { color: isFocused ? activeColor : colors.textMuted },
@@ -160,13 +162,12 @@ const styles = StyleSheet.create({
     bottom: Platform.OS === 'ios' ? 24 : 16,
     left: 8,
     right: 8,
-    alignItems: 'center',
   },
   pillContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 70,
-    borderRadius: 35,
+    height: 66,
+    borderRadius: 33,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 3,
     marginVertical: 5,
-    borderRadius: 30,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   highlightTint: {
@@ -192,14 +193,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(193,80,46,0.16)', // colors.primary translucent
     borderWidth: 1,
     borderColor: 'rgba(193,80,46,0.25)',
-    borderRadius: 30,
+    borderRadius: 28,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 3,
-    paddingHorizontal: 1,
+    paddingHorizontal: 0,
   },
   iconWrap: {
     position: 'relative',
@@ -209,11 +210,11 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   label: {
-    fontSize: 9.5,
+    fontSize: 8.8,
     fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 12.5,
-    includeFontPadding: false,
+    letterSpacing: -0.2,
+    includeFontPadding: true,
     paddingHorizontal: 0,
   },
   badge: {
