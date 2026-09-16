@@ -18,7 +18,9 @@
     "continueBtn": "Continue to Confirmation",
     "micPermissionRequired": "Microphone permission is required to record. Please enable it in device settings.",
     "startRecordingError": "Could not start recording. Please try again.",
-    "processingError": "Could not process recording. Check connection and try again."
+    "processingError": "Could not process recording. Check connection and try again.",
+    "selectVoiceLanguage": "Select Voice Language",
+    "chooseDialect": "Choose the regional dialect you will record in"
   },
   "onboarding": {
     "skillQuestion": {
@@ -62,6 +64,381 @@
     "haveAccount": "Already have an account? Sign in"
   },
   "common": {
-    "continue": "Proceed to Price Protection"
+    "continue": "Proceed to Price Protection",
+    "stepOf": "STEP {{current}} OF {{total}}",
+    "retry": "Retry",
+    "done": "Done",
+    "close": "Close",
+    "cancel": "Cancel"
+  },
+  "signIn": {
+    "tagline": "Smart Cataloging & Market Linkage",
+    "artisan": "Artisan",
+    "coordinator": "Coordinator",
+    "createAccountAs": "Create {{role}} Account",
+    "signInAs": "Sign In as {{role}}",
+    "signUpSubtitle": "Join Karigari Connect with your phone number",
+    "signInSubtitle": "Enter your phone number or username to continue",
+    "username": "Username",
+    "usernamePlaceholder": "e.g. anita_potter",
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "10-digit mobile number",
+    "identifier": "Username or Phone Number",
+    "identifierPlaceholder": "e.g. 9876543210 or artisan_demo",
+    "haveAccountPrompt": "Already have an account?",
+    "newUserPrompt": "New user?",
+    "signInLink": "Sign in",
+    "signUpLink": "Sign up",
+    "orEvaluate": "or evaluate instantly",
+    "demoLogin": "One-Tap Demo Login ({{role}})",
+    "invalidCredentials": "Invalid username/phone number or password.",
+    "signInFailed": "Sign in failed.",
+    "registrationFailed": "Registration failed. Check details.",
+    "demoFailed": "Demo sign in failed."
+  },
+  "help": {
+    "title": "Artisan Support & Help",
+    "subtitle": "Have a question about craft photography, minimum wage calculations, or coordinator verification? Send a message directly to your cluster coordinator.",
+    "attachLabel": "ATTACH TO A CRAFT (OPTIONAL)",
+    "craftPrefix": "Craft: {{title}}",
+    "generalQuestion": "General question (no craft attached)",
+    "untitledCraft": "Untitled Craft",
+    "messageLabel": "YOUR MESSAGE",
+    "messagePlaceholder": "Type your question or request for the coordinator...",
+    "send": "Send to Coordinator",
+    "previousTitle": "Your Previous Questions",
+    "noPrevious": "No previous questions yet.",
+    "statusOpen": "Open · Pending Response",
+    "sentSuccess": "Your question has been sent to the cluster coordinator! You will hear back soon.",
+    "sendFailed": "Failed to submit question. Please try again.",
+    "emptyQuestion": "Please write your question before submitting."
+  },
+  "imageReview": {
+    "title": "Review Photos",
+    "processing": "Processing",
+    "subtitle": "Review captured angles ({{count}}) & pick primary cover",
+    "uploadingTitle": "Uploading Photos ({{count}})...",
+    "processingTitle": "Processing Photos...",
+    "loadingTitle": "Loading Review...",
+    "uploadingSub": "Uploading camera captures to server",
+    "processingSub": "AI image enhancement in progress",
+    "loadingSub": "Finalizing review",
+    "stageUpload": "1. Upload camera photos ({{count}})",
+    "stageEnhance": "2. AI enhancement",
+    "stageFinalize": "3. Finalize",
+    "cancelRetake": "Cancel & Retake",
+    "failed": "Something went wrong processing your photos.",
+    "retake": "Retake Photos",
+    "kickoffError": "Could not start photo processing. Check connection and try again.",
+    "capturedAngles": "Captured Angles ({{count}})",
+    "tapToInspect": "Tap angle to inspect",
+    "selectPhoto": "Select photo {{n}}",
+    "coverPill": "COVER",
+    "cleaned": "Cleaned Studio",
+    "original": "Original Camera",
+    "sideBySide": "Side by Side",
+    "noCleaned": "No Cleaned Photo",
+    "aiPending": "Backend AI pending",
+    "noCleanedYet": "No Cleaned Photo Yet",
+    "noCleanedYetSub": "Processed studio photo will appear here once the backend AI model runs.",
+    "primaryCoverBadge": "★ PRIMARY COVER",
+    "primaryCover": "Primary Cover Photo",
+    "marketplaceCover": "Marketplace Cover",
+    "shownFirst": "Shown first to buyers on the marketplace",
+    "setAngleAsMain": "Set Angle {{n}} as the main catalogue photo",
+    "cover": "Cover",
+    "setAngleAsCoverA11y": "Set angle {{n}} as primary cover photo",
+    "makeCover": "Make Cover",
+    "removeAngle": "Remove Angle {{n}}",
+    "acceptContinue": "Accept & Continue ({{count}})",
+    "addMore": "Add More Angles"
+  },
+  "confirm": {
+    "title": "Confirm Details",
+    "subtitle": "Review extracted details. Tap values to edit.",
+    "generating": "Generating your product details…",
+    "loadError": "Something went wrong loading your draft.",
+    "generateError": "Could not generate catalogue details. Your draft is safe — try again.",
+    "saveError": "Could not save your confirmation. Your edits are kept — try again.",
+    "confirmed": "Confirmed",
+    "tapToConfirm": "Tap to confirm this field",
+    "continue": "Continue to Artisan Profile",
+    "confirmHighlighted": "Confirm Highlighted Details to Continue",
+    "fields": {
+      "category": "Category",
+      "categoryPlaceholder": "e.g., Handloom Saree, Bidriware, Terracotta Pottery, Wooden Toy",
+      "materials": "Materials",
+      "materialsPlaceholder": "e.g., Mulberry Silk, Pure Cotton, Natural Clay, Teak Wood",
+      "techniques": "Techniques",
+      "techniquesPlaceholder": "e.g., Handloom Weaving, Chisel Carving, Block Printing, Natural Dyeing",
+      "hours": "Hours to make",
+      "hoursPlaceholder": "e.g., 12",
+      "materialCost": "Raw Material Cost (₹)",
+      "materialCostPlaceholder": "e.g., 450",
+      "title": "Title (English)",
+      "titlePlaceholder": "e.g., Handcrafted Mulberry Silk Saree with Zari Border",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g., Traditional artisan crafted item with heritage motifs, regional craft technique, and natural finish..."
+    }
+  },
+  "price": {
+    "calculating": "Calculating fair wage protection…",
+    "genericError": "Something went wrong loading your price.",
+    "loadError": "Could not load price calculation. Check connection and try again.",
+    "protectionTitle": "Price Protection",
+    "protectionSubtitle": "Statutory fair wage lookup",
+    "underVerification": "Wage rate under verification",
+    "underVerificationText": "No official skilled-wage notification is on file for your craft cluster yet. Your coordinator will establish a verified price floor before publishing.",
+    "referenceOnly": "REFERENCE ONLY · NOT AN APPROVED FLOOR",
+    "skilledTierRate": "Skilled Tier Rate",
+    "perHour": "{{amount}}/hr",
+    "continueToSubmission": "Continue to Submission",
+    "title": "Fair Price Calculation",
+    "subtitle": "Transparent cost breakdown and protected floor",
+    "costBreakdown": "COST BREAKDOWN",
+    "rawMaterials": "Raw Materials",
+    "labourLine": "Labour ({{hours}} hrs @ {{rate}}/hr)",
+    "floorLabel": "Protected Minimum Floor",
+    "floorNotice": "Never sell below this amount. It covers your material expenses and official minimum skilled wage.",
+    "pendingVerification": "Pending coordinator verification",
+    "pendingVerificationText": "Floor calculated at your self-declared Master tier. A coordinator will verify your craft experience before final marketplace listing.",
+    "recommendedBand": "RECOMMENDED MARKETPLACE BAND (AI HEURISTIC)",
+    "yourPrice": "YOUR LISTING PRICE",
+    "yourPriceText": "You set your final product asking price. Tap a suggestion or enter your own:",
+    "enterPrice": "Enter asking price",
+    "presetFloor": "Floor: {{amount}}",
+    "presetFair": "Fair: {{amount}}",
+    "presetPremium": "Premium: {{amount}}",
+    "belowFloor": "Protected wage notice: {{price}} is below your protected floor of {{floor}}. Selling below this does not cover your full recorded materials and statutory skilled wages.",
+    "wageSource": "STATUTORY WAGE SOURCE",
+    "effective": "Effective {{date}}",
+    "confirmProceed": "Confirm & Proceed to Submit"
+  },
+  "submit": {
+    "title": "Submit for Approval",
+    "subtitle": "Final verification before coordinator review",
+    "checklistHeader": "READINESS CHECKLIST",
+    "checklist": {
+      "catalogue": "Product details confirmed",
+      "image": "Photo quality accepted",
+      "price": "Fair price reviewed",
+      "claims": "No unverified sensitive claims pending"
+    },
+    "claimsNeedVerification": "Statutory claims (such as Master Craftsman tier) require coordinator verification before submission.",
+    "submitError": "Could not submit for review. Some details may still need attention — check your listing and try again.",
+    "submittedTitle": "Listing Submitted",
+    "submittedText": "Your cluster coordinator will review this listing shortly. You can track its status anytime on your listings page.",
+    "backToListings": "Back to My Listings",
+    "claimsPendingTitle": "STATUTORY CLAIMS PENDING REVIEW",
+    "claimsPendingText": "The following claims require coordinator verification before this listing can be submitted:",
+    "masterSelfDeclared": "Master Craftsman Tier (Self-Declared)",
+    "noticeReady": "Submitting locks this draft and forwards it to your coordinator review queue.",
+    "noticeIncomplete": "Complete all readiness checklist steps above before submitting for coordinator review.",
+    "submitBtn": "Submit for Coordinator Review",
+    "completeAllBtn": "Complete All Steps to Submit"
+  },
+  "tabs": {
+    "myListings": "My Listings",
+    "inReview": "In Review",
+    "help": "Help",
+    "profile": "Profile",
+    "artisanProfile": "Artisan Profile"
+  },
+  "listingState": {
+    "draft": "Draft",
+    "processing": "Processing",
+    "awaiting_confirmation": "Needs Confirm",
+    "awaiting_approval": "In Review",
+    "approved": "Approved",
+    "export_queued": "Export Queued",
+    "exported": "Live on Market",
+    "rejected": "Needs Revision",
+    "failed": "Failed"
+  },
+  "skillLevels": {
+    "beginner": "Apprentice",
+    "semi_skilled": "Semi-skilled",
+    "intermediate": "Practicing",
+    "skilled": "Skilled",
+    "highly_skilled": "Highly skilled",
+    "master": "Master",
+    "unskilled": "Unskilled"
+  },
+  "listings": {
+    "untitledDraft": "Untitled craft draft",
+    "listingA11y": "Listing: {{title}}",
+    "floor": "floor",
+    "updatedOn": "Updated {{date}}",
+    "updatedRecently": "Updated recently",
+    "locationA11y": "Location: {{location}}",
+    "zone1": "Zone 1",
+    "newCraft": "New Craft",
+    "loading": "Loading your crafts...",
+    "offlineSync": "{{count}} update(s) saved offline · Syncs automatically",
+    "marketReady": "Market Ready",
+    "liveOnOndc": "Live on ONDC",
+    "coordinatorApproved": "Coordinator Approved",
+    "liveEmptyTitle": "No Market-Ready Crafts Yet",
+    "liveEmptyText": "Crafts approved by the coordinator and ready for export will appear here. Check the In Review tab to see your in-progress listings.",
+    "addNewCraft": "Add New Craft",
+    "loadingInReview": "Loading in-review crafts...",
+    "drafts": "Drafts",
+    "withCoordinator": "With Coordinator",
+    "actionNeeded": "Action Needed",
+    "verifiedProfile": "Verified Profile · {{level}}",
+    "profileInReview": "Profile Verification in Review",
+    "completeProfile": "Complete Your Artisan Profile",
+    "verifiedProfileSub": "Statutory wage protection active across all listings",
+    "unverifiedProfileSub": "Get verified once to unlock statutory rates without individual claim reviews",
+    "reviewEmptyTitle": "No Crafts in Review",
+    "reviewEmptyText": "All your listings have been approved or you have not created any drafts yet. Tap below to document a craft.",
+    "startDraft": "Start New Craft Draft"
+  },
+  "capture": {
+    "permissionText": "Camera access is needed to photograph your product.",
+    "allowCamera": "Allow Camera Access",
+    "uploadFailed": "Photo saved on your device, but upload failed. It will retry when you continue.",
+    "captureFailed": "Could not capture photo. Try again.",
+    "goBack": "Go back",
+    "stepBadge": "Step 1 of 5: Photograph Product",
+    "flashOff": "Turn flashlight off",
+    "flashOn": "Turn flashlight on",
+    "alignHint": "Align product in center and take photo",
+    "capturedHint": "Photos captured: {{count}} — tap stack to view all",
+    "viewPhotos": "View captured photos ({{count}})",
+    "takePhoto": "Take photo",
+    "storedForListing": "Photos stored for this listing: {{count}}",
+    "closeGallery": "Close gallery",
+    "angle": "Angle {{n}}",
+    "takeMore": "Take More Angles",
+    "reviewPhotos": "Review Photos ({{count}})"
+  },
+  "experience": {
+    "zoneTitle": "Wage Jurisdiction & Zone",
+    "zoneSub": "{{state}} · Pick the zone matching your workshop location:",
+    "statewide": "Statewide",
+    "unifiedSchedule": "Unified minimum wage schedule"
+  },
+  "profile": {
+    "skillShort": {
+      "beginner": "Apprentice Artisan",
+      "intermediate": "Practicing Artisan (2-5 yrs)",
+      "skilled": "Skilled Artisan",
+      "master": "Master Craftsman"
+    },
+    "idProofShort": {
+      "pehchan_card": "Pehchan Card",
+      "pm_vishwakarma": "Vishwakarma Cert",
+      "none": "Self-declared ID"
+    },
+    "selectSkill": "Please select your skill tier.",
+    "selectZone": "Please select your wage zone.",
+    "enterIdNumber": "Please enter your ID registration number.",
+    "submitted": "Profile submitted for coordinator verification! Once approved, this skill tier applies automatically to all your listings.",
+    "submitFailed": "Failed to submit profile. Please try again.",
+    "declaredTier": "Declared Skill Tier",
+    "languageSelected": "{{language}} (Selected)",
+    "jurisdictionNote": "Statutory minimum wage jurisdiction",
+    "servicesHeader": "WORKSHOP & ID SERVICES",
+    "skillTierTitle": "Skill Tier & Official ID",
+    "appLanguage": "App Language",
+    "logoutA11y": "Log Out or Switch Role, signed in as {{username}}",
+    "logout": "Log Out / Switch Role",
+    "locationA11y": "Jurisdiction: {{state}}, {{zone}}. Tap to change.",
+    "status": {
+      "verified": "Verified Artisan Profile",
+      "pending_verification": "Pending Coordinator Review",
+      "rejected": "Verification Rejected",
+      "incomplete": "Profile Incomplete"
+    },
+    "roleSubtitle": "Artisan Micro-entrepreneur • Craft Specialist",
+    "noMobile": "Mobile not registered",
+    "statusInfoA11y": "Review status explanation"
+  },
+  "languagePicker": {
+    "title": "App Language",
+    "subtitle": "Select primary language for audio & cataloging"
+  },
+  "statusModal": {
+    "verified": {
+      "title": "VERIFIED ARTISAN PROFILE",
+      "subtitle": "Verified at {{level}} tier.",
+      "desc": "Your identity and craft experience have been verified by your cluster coordinator. All your craft listings automatically unlock legal minimum wage floors without waiting for per-listing claim reviews."
+    },
+    "pending": {
+      "title": "PENDING COORDINATOR REVIEW",
+      "subtitle": "Profile submitted to cluster coordinator",
+      "desc": "Your craft experience, jurisdiction, and official ID credentials have been queued for coordinator audit. You can still create drafts and listings in the meantime."
+    },
+    "rejected": {
+      "title": "VERIFICATION REJECTED",
+      "subtitle": "Credentials require correction",
+      "desc": "Your profile was not approved by the coordinator. Please review your ID registration number or declared skill tier in \"Skill Tier & Official ID\" and resubmit."
+    },
+    "incomplete": {
+      "title": "PROFILE INCOMPLETE",
+      "subtitle": "One-time coordinator verification",
+      "desc": "Submit your craft skill tier, workshop jurisdiction, and official ID proof once. Once verified, you skip the coordinator claim gate on every craft listing."
+    },
+    "statutoryNote": "Statutory Protection: Grounded in State Minimum Wages notifications under the Code on Wages 2019 to prevent price suppression on open commerce.",
+    "gotIt": "Got It"
+  },
+  "skillTierModal": {
+    "tiers": {
+      "beginner": {
+        "title": "Apprentice Artisan",
+        "experience": "Still learning / Beginner (< 2 yrs)",
+        "statutory": "Unskilled Floor"
+      },
+      "intermediate": {
+        "title": "Practicing Artisan",
+        "experience": "2–5 years independent crafting",
+        "statutory": "Semi-Skilled Floor"
+      },
+      "skilled": {
+        "title": "Experienced Craftsman",
+        "experience": "5+ years mastery & technique",
+        "statutory": "Skilled Floor"
+      },
+      "master": {
+        "title": "Master Craftsman",
+        "experience": "10+ years / trainer / awardee",
+        "statutory": "Master / Highly Skilled"
+      }
+    },
+    "proofs": {
+      "pehchan_card": {
+        "label": "Pehchan Artisan ID Card",
+        "helper": "Issued by Ministry of Textiles / DC Handicrafts"
+      },
+      "pm_vishwakarma": {
+        "label": "PM Vishwakarma Certificate",
+        "helper": "Registered under PM Vishwakarma Scheme"
+      },
+      "none": {
+        "label": "No Official ID Card Yet",
+        "helper": "Self-declared tier verified via coordinator workshop visit"
+      }
+    },
+    "dismiss": "Dismiss modal",
+    "subtitle": "Statutory wage protection and ID credential details",
+    "wageEyebrow": "LIVE STATUTORY FAIR WAGE FLOOR",
+    "perHour": "/ hr",
+    "perDay": "(~{{amount}} / 8-hr day)",
+    "protectedUnder": "{{state}} • {{zone}} • Protected under Code on Wages",
+    "section1Title": "CRAFT EXPERIENCE TIER",
+    "section1Sub": "Select your mastery level to determine your statutory wage rate",
+    "section2Title": "WORKSHOP JURISDICTION",
+    "section2Sub": "State & local territory of your craft loom or workshop",
+    "stateLabel": "State Jurisdiction:",
+    "zoneLabel": "Statutory Geographic Wage Zone ({{state}}):",
+    "section3Title": "OFFICIAL CRAFT CREDENTIAL",
+    "section3Sub": "Government artisan cards expedite verification to Master tier",
+    "idNumberLabel": "Card / Registration Number *",
+    "pehchanPlaceholder": "e.g. PEHCHAN-KA-84219",
+    "pmvPlaceholder": "e.g. PMV-102938475",
+    "idNumberHelp": "Enter the exact registration number printed on your official document.",
+    "resubmit": "Update & Resubmit Profile",
+    "submit": "Save & Submit for Verification"
   }
 }

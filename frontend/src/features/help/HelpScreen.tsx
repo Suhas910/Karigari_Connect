@@ -11,11 +11,13 @@ import {
 import { Text, TextInput, Button, Card, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { colors, spacing } from '../../theme';
 import type { Listing, SupportMessage } from '../../types/contracts';
 
 export default function HelpScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -43,21 +45,21 @@ export default function HelpScreen() {
       setPickerOpen(false);
       setFeedback({
         type: 'success',
-        text: 'Your question has been sent to the cluster coordinator! You will hear back soon.',
+        text: t('help.sentSuccess'),
       });
       queryClient.invalidateQueries({ queryKey: ['supportMessages'] });
     },
     onError: (err: any) => {
       setFeedback({
         type: 'error',
-        text: err?.response?.data?.error?.message || 'Failed to submit question. Please try again.',
+        text: err?.response?.data?.error?.message || t('help.sendFailed'),
       });
     },
   });
 
   const handleSubmit = () => {
     if (!messageText.trim()) {
-      setFeedback({ type: 'error', text: 'Please write your question before submitting.' });
+      setFeedback({ type: 'error', text: t('help.emptyQuestion') });
       return;
     }
     setFeedback(null);
@@ -68,7 +70,7 @@ export default function HelpScreen() {
   };
 
   const selectedListing = listings?.find((l) => l.id === selectedListingId);
-  const selectedListingTitle = selectedListing?.catalogue?.catalogue?.title?.en || 'Untitled Craft';
+  const selectedListingTitle = selectedListing?.catalogue?.catalogue?.title?.en || t('help.untitledCraft');
 
   return (
     <KeyboardAvoidingView
@@ -81,9 +83,9 @@ export default function HelpScreen() {
           <View style={styles.heroIconCircle}>
             <MaterialCommunityIcons name="help-circle-outline" size={32} color={colors.primary} />
           </View>
-          <Text style={styles.heroTitle}>Artisan Support & Help</Text>
+          <Text style={styles.heroTitle}>{t('help.title')}</Text>
           <Text style={styles.heroSubtitle}>
-            Have a question about craft photography, minimum wage calculations, or coordinator verification? Send a message directly to your cluster coordinator.
+            {t('help.subtitle')}
           </Text>
         </View>
 
@@ -115,7 +117,7 @@ export default function HelpScreen() {
         {/* Submission Card */}
         <Card style={styles.formCard}>
           <Card.Content>
-            <Text style={styles.fieldLabel}>ATTACH TO A CRAFT (OPTIONAL)</Text>
+            <Text style={styles.fieldLabel}>{t('help.attachLabel')}</Text>
 
             {/* Dropdown Selector */}
             <TouchableOpacity
@@ -130,7 +132,7 @@ export default function HelpScreen() {
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.pickerSelectorText} numberOfLines={1}>
-                {selectedListingId ? `Craft: ${selectedListingTitle}` : 'General question (no craft attached)'}
+                {selectedListingId ? t('help.craftPrefix', { title: selectedListingTitle }) : t('help.generalQuestion')}
               </Text>
               <MaterialCommunityIcons
                 name={pickerOpen ? 'chevron-up' : 'chevron-down'}
@@ -155,7 +157,7 @@ export default function HelpScreen() {
                       selectedListingId === null && styles.pickerOptionTextActive,
                     ]}
                   >
-                    General question (no craft attached)
+                    {t('help.generalQuestion')}
                   </Text>
                   {selectedListingId === null && (
                     <MaterialCommunityIcons name="check" size={16} color={colors.primary} />
@@ -163,7 +165,7 @@ export default function HelpScreen() {
                 </TouchableOpacity>
 
                 {(listings || []).map((l: Listing) => {
-                  const title = l.catalogue?.catalogue?.title?.en || 'Untitled Craft';
+                  const title = l.catalogue?.catalogue?.title?.en || t('help.untitledCraft');
                   const isSelected = selectedListingId === l.id;
                   return (
                     <TouchableOpacity
@@ -189,14 +191,14 @@ export default function HelpScreen() {
               </View>
             )}
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>YOUR MESSAGE</Text>
+            <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t('help.messageLabel')}</Text>
             <TextInput
               mode="outlined"
               multiline
               numberOfLines={5}
               value={messageText}
               onChangeText={setMessageText}
-              placeholder="Type your question or request for the coordinator..."
+              placeholder={t('help.messagePlaceholder')}
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
               style={styles.messageInput}
@@ -212,21 +214,21 @@ export default function HelpScreen() {
               style={styles.submitBtn}
               icon="send"
             >
-              Send to Coordinator
+              {t('help.send')}
             </Button>
           </Card.Content>
         </Card>
 
         {/* Previous Inquiries Section */}
         <View style={styles.inquiriesHeader}>
-          <Text style={styles.inquiriesTitle}>Your Previous Questions</Text>
+          <Text style={styles.inquiriesTitle}>{t('help.previousTitle')}</Text>
         </View>
 
         {isLoadingMessages ? (
           <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: spacing.lg }} />
         ) : !supportMessages || supportMessages.length === 0 ? (
           <View style={styles.emptyMessagesCard}>
-            <Text style={styles.emptyMessagesText}>No previous questions yet.</Text>
+            <Text style={styles.emptyMessagesText}>{t('help.noPrevious')}</Text>
           </View>
         ) : (
           supportMessages.map((msg: SupportMessage) => (
@@ -235,7 +237,7 @@ export default function HelpScreen() {
                 <View style={styles.msgHeader}>
                   <View style={styles.msgStatusPill}>
                     <Text style={styles.msgStatusText}>
-                      {msg.status === 'open' ? 'Open · Pending Response' : msg.status.toUpperCase()}
+                      {msg.status === 'open' ? t('help.statusOpen') : msg.status.toUpperCase()}
                     </Text>
                   </View>
                   <Text style={styles.msgDate}>
@@ -246,7 +248,7 @@ export default function HelpScreen() {
                 {msg.listing_title && (
                   <View style={styles.msgAttachedListing}>
                     <MaterialCommunityIcons name="tag-outline" size={14} color={colors.secondary} />
-                    <Text style={styles.msgAttachedText}>Craft: {msg.listing_title}</Text>
+                    <Text style={styles.msgAttachedText}>{t('help.craftPrefix', { title: msg.listing_title })}</Text>
                   </View>
                 )}
 

@@ -6,12 +6,14 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { colors, spacing } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
 
 export default function ImageReviewScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'ImageReview'>>();
   const { draftId } = route.params;
@@ -61,7 +63,7 @@ export default function ImageReviewScreen() {
           : await service.requestImageAnalysis(draftId, { media_id: 'media_photo_batch' });
         setJobId(result.job_id);
       } catch (err) {
-        setKickoffError('Could not start photo processing. Check connection and try again.');
+        setKickoffError('imageReview.kickoffError');
       }
     })();
   }, [draftId]);
@@ -197,24 +199,24 @@ export default function ImageReviewScreen() {
 
     const progressValue = isQueued ? 0.35 : isStudioActive ? 0.75 : 0.95;
     const stageTitle = isQueued
-      ? `Uploading ${photos.length} Photo${photos.length > 1 ? 's' : ''}...`
+      ? t('imageReview.uploadingTitle', { count: photos.length })
       : isStudioActive
-      ? 'Processing Photos...'
-      : 'Loading Review...';
+      ? t('imageReview.processingTitle')
+      : t('imageReview.loadingTitle');
 
     const stageSubtitle = isQueued
-      ? 'Uploading camera captures to server'
+      ? t('imageReview.uploadingSub')
       : isStudioActive
-      ? 'AI image enhancement in progress'
-      : 'Finalizing review';
+      ? t('imageReview.processingSub')
+      : t('imageReview.loadingSub');
 
     return (
       <View style={styles.processingContainer}>
         <StepHeader
           currentStep={2}
           totalSteps={5}
-          title="Review Photos"
-          subtitle="Processing"
+          title={t('imageReview.title')}
+          subtitle={t('imageReview.processing')}
         />
 
         <View style={styles.processingCenterWrapper}>
@@ -232,21 +234,21 @@ export default function ImageReviewScreen() {
               <View style={styles.stageItem}>
                 <View style={[styles.stageDot, !isQueued && styles.stageDotDone]} />
                 <Text style={[styles.stageItemText, !isQueued && styles.stageItemDone]}>
-                  1. Upload camera photos ({photos.length})
+                  {t('imageReview.stageUpload', { count: photos.length })}
                 </Text>
               </View>
 
               <View style={styles.stageItem}>
                 <View style={[styles.stageDot, (isStudioActive || isFetching) && styles.stageDotActive, isFetching && styles.stageDotDone]} />
                 <Text style={[styles.stageItemText, isFetching && styles.stageItemDone, isStudioActive && styles.stageItemCurrent]}>
-                  2. AI enhancement
+                  {t('imageReview.stageEnhance')}
                 </Text>
               </View>
 
               <View style={styles.stageItem}>
                 <View style={[styles.stageDot, isFetching && styles.stageDotActive]} />
                 <Text style={[styles.stageItemText, isFetching && styles.stageItemCurrent]}>
-                  3. Finalize
+                  {t('imageReview.stageFinalize')}
                 </Text>
               </View>
             </View>
@@ -257,7 +259,7 @@ export default function ImageReviewScreen() {
               style={styles.cancelBtn}
               textColor={colors.textMuted}
             >
-              Cancel & Retake
+              {t('imageReview.cancelRetake')}
             </Button>
           </View>
         </View>
@@ -269,9 +271,9 @@ export default function ImageReviewScreen() {
   if (isFailed) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.hint}>Something went wrong processing your photos.</Text>
+        <Text style={styles.hint}>{t('imageReview.failed')}</Text>
         <Button mode="contained" onPress={handleRetake} style={styles.retakeBtn} buttonColor={colors.primary}>
-          Retake Photos
+          {t('imageReview.retake')}
         </Button>
       </View>
     );
@@ -297,15 +299,15 @@ export default function ImageReviewScreen() {
         <StepHeader
           currentStep={2}
           totalSteps={5}
-          title="Review Photos"
-          subtitle={`Review ${photos.length} captured angle${photos.length > 1 ? 's' : ''} & pick primary cover`}
+          title={t('imageReview.title')}
+          subtitle={t('imageReview.subtitle', { count: photos.length })}
         />
 
       {/* Multi-Photo Horizontal Selector Strip */}
       <View style={styles.selectorContainer}>
         <View style={styles.selectorHeader}>
-          <Text style={styles.selectorTitle}>Captured Angles ({photos.length})</Text>
-          <Text style={styles.selectorHint}>Tap angle to inspect</Text>
+          <Text style={styles.selectorTitle}>{t('imageReview.capturedAngles', { count: photos.length })}</Text>
+          <Text style={styles.selectorHint}>{t('imageReview.tapToInspect')}</Text>
         </View>
 
         <ScrollView
@@ -323,12 +325,12 @@ export default function ImageReviewScreen() {
                 onPress={() => setSelectedIndex(idx)}
                 style={[styles.thumbCard, isSelected && styles.thumbCardSelected]}
                 accessibilityRole="button"
-                accessibilityLabel={`Select photo ${idx + 1}`}
+                accessibilityLabel={t('imageReview.selectPhoto', { n: idx + 1 })}
               >
                 <Image source={{ uri }} style={styles.stripThumbImage} />
                 {isCover && (
                   <View style={styles.coverPill}>
-                    <Text style={styles.coverPillText}>COVER</Text>
+                    <Text style={styles.coverPillText}>{t('imageReview.coverPill')}</Text>
                   </View>
                 )}
                 <View style={[styles.indexPill, isSelected && styles.indexPillActive]}>
@@ -350,7 +352,7 @@ export default function ImageReviewScreen() {
           accessibilityRole="button"
         >
           <Text style={[styles.toggleText, selectedView === 'enhanced' && styles.toggleTextActive]}>
-            Cleaned Studio
+            {t('imageReview.cleaned')}
           </Text>
         </TouchableOpacity>
 
@@ -360,7 +362,7 @@ export default function ImageReviewScreen() {
           accessibilityRole="button"
         >
           <Text style={[styles.toggleText, selectedView === 'original' && styles.toggleTextActive]}>
-            Original Camera
+            {t('imageReview.original')}
           </Text>
         </TouchableOpacity>
 
@@ -370,7 +372,7 @@ export default function ImageReviewScreen() {
           accessibilityRole="button"
         >
           <Text style={[styles.toggleText, selectedView === 'side_by_side' && styles.toggleTextActive]}>
-            Side by Side
+            {t('imageReview.sideBySide')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -381,7 +383,7 @@ export default function ImageReviewScreen() {
           {/* Left: Original Camera View */}
           <View style={styles.sideCard}>
             <View style={styles.sideHeader}>
-              <Text style={styles.sideHeaderText}>Original Camera</Text>
+              <Text style={styles.sideHeaderText}>{t('imageReview.original')}</Text>
             </View>
             <Image source={{ uri: activeOriginalUri }} style={styles.sideImage} />
           </View>
@@ -389,14 +391,14 @@ export default function ImageReviewScreen() {
           {/* Right: Cleaned Studio View */}
           <View style={styles.sideCard}>
             <View style={styles.sideHeader}>
-              <Text style={styles.sideHeaderText}>Cleaned Studio</Text>
+              <Text style={styles.sideHeaderText}>{t('imageReview.cleaned')}</Text>
             </View>
             {hasEnhancedPhoto ? (
               <Image source={{ uri: activeEnhancedUri }} style={styles.sideImage} />
             ) : (
               <View style={styles.sideEmptyPlaceholder}>
-                <Text style={styles.sideEmptyText}>No Cleaned Photo</Text>
-                <Text style={styles.sideEmptySub}>Backend AI pending</Text>
+                <Text style={styles.sideEmptyText}>{t('imageReview.noCleaned')}</Text>
+                <Text style={styles.sideEmptySub}>{t('imageReview.aiPending')}</Text>
               </View>
             )}
           </View>
@@ -408,15 +410,15 @@ export default function ImageReviewScreen() {
             <Image source={{ uri: activeEnhancedUri }} style={styles.mainImage} />
           ) : (
             <View style={styles.emptyPlaceholder}>
-              <Text style={styles.emptyPlaceholderTitle}>No Cleaned Photo Yet</Text>
+              <Text style={styles.emptyPlaceholderTitle}>{t('imageReview.noCleanedYet')}</Text>
               <Text style={styles.emptyPlaceholderSub}>
-                Processed studio photo will appear here once the backend AI model runs.
+                {t('imageReview.noCleanedYetSub')}
               </Text>
             </View>
           )}
           {isCurrentCover && (
             <View style={styles.previewCoverFloatingBadge}>
-              <Text style={styles.previewCoverFloatingText}>★ PRIMARY COVER</Text>
+              <Text style={styles.previewCoverFloatingText}>{t('imageReview.primaryCoverBadge')}</Text>
             </View>
           )}
         </View>
@@ -426,7 +428,7 @@ export default function ImageReviewScreen() {
           <Image source={{ uri: activeOriginalUri }} style={styles.mainImage} />
           {isCurrentCover && (
             <View style={styles.previewCoverFloatingBadge}>
-              <Text style={styles.previewCoverFloatingText}>★ PRIMARY COVER</Text>
+              <Text style={styles.previewCoverFloatingText}>{t('imageReview.primaryCoverBadge')}</Text>
             </View>
           )}
         </View>
@@ -446,19 +448,19 @@ export default function ImageReviewScreen() {
 
           <View style={styles.coverCardContent}>
             <Text style={[styles.coverCardTitle, isCurrentCover && styles.coverCardTitleActive]}>
-              {isCurrentCover ? 'Primary Cover Photo' : 'Marketplace Cover'}
+              {isCurrentCover ? t('imageReview.primaryCover') : t('imageReview.marketplaceCover')}
             </Text>
             <Text style={styles.coverCardSubtitle} numberOfLines={2}>
               {isCurrentCover
-                ? 'Shown first to buyers on the marketplace'
-                : `Set Angle ${selectedIndex + 1} as the main catalogue photo`}
+                ? t('imageReview.shownFirst')
+                : t('imageReview.setAngleAsMain', { n: selectedIndex + 1 })}
             </Text>
           </View>
 
           {isCurrentCover ? (
             <View style={styles.activeCoverBadge}>
               <IconButton icon="check" size={14} iconColor={colors.secondary} style={{ margin: 0, marginRight: -2 }} />
-              <Text style={styles.activeCoverBadgeText}>Cover</Text>
+              <Text style={styles.activeCoverBadgeText}>{t('imageReview.cover')}</Text>
             </View>
           ) : (
             <TouchableOpacity
@@ -466,9 +468,9 @@ export default function ImageReviewScreen() {
               onPress={() => handleSetCover(selectedIndex)}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityLabel={`Set angle ${selectedIndex + 1} as primary cover photo`}
+              accessibilityLabel={t('imageReview.setAngleAsCoverA11y', { n: selectedIndex + 1 })}
             >
-              <Text style={styles.setCoverBtnText}>Make Cover</Text>
+              <Text style={styles.setCoverBtnText}>{t('imageReview.makeCover')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -478,10 +480,10 @@ export default function ImageReviewScreen() {
             style={styles.deleteAngleRow}
             onPress={() => handleRemovePhoto(selectedIndex)}
             accessibilityRole="button"
-            accessibilityLabel={`Remove angle ${selectedIndex + 1}`}
+            accessibilityLabel={t('imageReview.removeAngle', { n: selectedIndex + 1 })}
           >
             <IconButton icon="trash-can-outline" size={15} iconColor={colors.primary} style={{ margin: 0 }} />
-            <Text style={styles.deleteAngleText}>Remove Angle {selectedIndex + 1}</Text>
+            <Text style={styles.deleteAngleText}>{t('imageReview.removeAngle', { n: selectedIndex + 1 })}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -500,7 +502,7 @@ export default function ImageReviewScreen() {
             contentStyle={{ height: 48 }}
             labelStyle={styles.primaryContinueText}
           >
-            Accept & Continue ({photos.length})
+            {t('imageReview.acceptContinue', { count: photos.length })}
           </Button>
           <Button
             mode="outlined"
@@ -510,7 +512,7 @@ export default function ImageReviewScreen() {
             contentStyle={{ height: 42 }}
             icon="camera-plus"
           >
-            Add More Angles
+            {t('imageReview.addMore')}
           </Button>
         </View>
       </BottomDock>

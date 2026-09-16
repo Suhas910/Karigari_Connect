@@ -4,6 +4,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, Checkbox, Card } from 'react-native-paper';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
@@ -13,10 +14,10 @@ import { StepHeader, BottomDock } from '../../components';
 // Checklist items mirror the contract's actual gate conditions before awaiting_approval:
 // catalogue valid, confirmations done, image accepted, price resolved, claims evidenced.
 const CHECKLIST = [
-  { key: 'catalogue', label: 'Product details confirmed' },
-  { key: 'image', label: 'Photo quality accepted' },
-  { key: 'price', label: 'Fair price reviewed' },
-  { key: 'claims', label: 'No unverified sensitive claims pending' },
+  { key: 'catalogue', labelKey: 'submit.checklist.catalogue' },
+  { key: 'image', labelKey: 'submit.checklist.image' },
+  { key: 'price', labelKey: 'submit.checklist.price' },
+  { key: 'claims', labelKey: 'submit.checklist.claims' },
 ];
 
 interface DraftPayload {
@@ -26,6 +27,7 @@ interface DraftPayload {
 }
 
 export default function SubmitApprovalScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'SubmitApproval'>>();
   const { draftId } = route.params;
@@ -77,7 +79,7 @@ export default function SubmitApprovalScreen() {
 
   const handleToggle = async (key: string) => {
     if (key === 'claims' && unverifiedClaims.length > 0) {
-      setSubmitError('Statutory claims (such as Master Craftsman tier) require coordinator verification before submission.');
+      setSubmitError(t('submit.claimsNeedVerification'));
       return;
     }
     setSubmitError(null);
@@ -113,7 +115,7 @@ export default function SubmitApprovalScreen() {
       await service.submitForApproval(draftId);
       setSubmitted(true);
     } catch (err) {
-      setSubmitError('Could not submit for review. Some details may still need attention — check your listing and try again.');
+      setSubmitError(t('submit.submitError'));
     } finally {
       setSubmitting(false);
     }
@@ -131,9 +133,9 @@ export default function SubmitApprovalScreen() {
       <View style={styles.submittedContainer}>
         <Card style={styles.submittedCard}>
           <Card.Content>
-            <Text variant="titleLarge" style={styles.submittedTitle}>Listing Submitted</Text>
+            <Text variant="titleLarge" style={styles.submittedTitle}>{t('submit.submittedTitle')}</Text>
             <Text style={styles.submittedSubtitle}>
-              Your cluster coordinator will review this listing shortly. You can track its status anytime on your listings page.
+              {t('submit.submittedText')}
             </Text>
             <Button
               mode="contained"
@@ -141,7 +143,7 @@ export default function SubmitApprovalScreen() {
               buttonColor={colors.primary}
               style={styles.doneBtn}
             >
-              Back to My Listings
+              {t('submit.backToListings')}
             </Button>
           </Card.Content>
         </Card>
@@ -161,14 +163,14 @@ export default function SubmitApprovalScreen() {
         <StepHeader
           currentStep={5}
           totalSteps={5}
-          title="Submit for Approval"
-          subtitle="Final verification before coordinator review"
+          title={t('submit.title')}
+          subtitle={t('submit.subtitle')}
         />
 
         <View style={styles.content}>
           <Card style={styles.checklistCard}>
             <Card.Content>
-              <Text style={styles.checklistHeader}>READINESS CHECKLIST</Text>
+              <Text style={styles.checklistHeader}>{t('submit.checklistHeader')}</Text>
               {CHECKLIST.map((item) => {
                 const checked = Boolean(checkedState[item.key]);
                 return (
@@ -186,7 +188,7 @@ export default function SubmitApprovalScreen() {
                       color={colors.secondary}
                     />
                     <Text style={[styles.checklistLabel, checked && styles.checklistLabelDone]}>
-                      {item.label}
+                      {t(item.labelKey)}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -197,13 +199,13 @@ export default function SubmitApprovalScreen() {
           {unverifiedClaims.length > 0 && (
             <Card style={styles.claimWarningCard}>
               <Card.Content>
-                <Text style={styles.claimWarningTitle}>STATUTORY CLAIMS PENDING REVIEW</Text>
+                <Text style={styles.claimWarningTitle}>{t('submit.claimsPendingTitle')}</Text>
                 <Text style={styles.claimWarningSubtitle}>
-                  The following claims require coordinator verification before this listing can be submitted:
+                  {t('submit.claimsPendingText')}
                 </Text>
                 {unverifiedClaims.map((claim) => (
                   <Text key={claim} style={styles.claimWarningItem}>
-                    • {claim === 'skill_level_master_self_declared' ? 'Master Craftsman Tier (Self-Declared)' : claim.replace(/_/g, ' ')}
+                    • {claim === 'skill_level_master_self_declared' ? t('submit.masterSelfDeclared') : claim.replace(/_/g, ' ')}
                   </Text>
                 ))}
               </Card.Content>
@@ -213,8 +215,8 @@ export default function SubmitApprovalScreen() {
           <View style={styles.noticeBox}>
             <Text style={styles.noticeText}>
               {allItemsChecked
-                ? 'Submitting locks this draft and forwards it to your coordinator review queue.'
-                : 'Complete all readiness checklist steps above before submitting for coordinator review.'}
+                ? t('submit.noticeReady')
+                : t('submit.noticeIncomplete')}
             </Text>
           </View>
         </View>
@@ -232,7 +234,7 @@ export default function SubmitApprovalScreen() {
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {allItemsChecked ? 'Submit for Coordinator Review' : 'Complete All Steps to Submit'}
+          {allItemsChecked ? t('submit.submitBtn') : t('submit.completeAllBtn')}
         </Button>
       </BottomDock>
     </View>

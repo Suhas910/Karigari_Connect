@@ -22,7 +22,7 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   visible,
   onDismiss,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const handleSelectLanguage = async (code: string) => {
     try {
@@ -53,9 +53,9 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
               <MaterialCommunityIcons name="translate" size={24} color={colors.secondary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>App Language / भाषा</Text>
+              <Text style={styles.headerTitle}>{t('languagePicker.title')}</Text>
               <Text style={styles.headerSubtitle}>
-                Select primary language for audio & cataloging
+                {t('languagePicker.subtitle')}
               </Text>
             </View>
             <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
@@ -108,7 +108,7 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
             style={styles.cancelBtn}
             textColor={colors.textMuted}
           >
-            Close
+            {t('common.close')}
           </Button>
         </View>
       </View>

@@ -14,7 +14,7 @@ import { useDraftStore } from '../../store/draftStore';
 import { colors, spacing } from '../../theme';
 
 export default function CaptureScreen() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
@@ -48,10 +48,10 @@ export default function CaptureScreen() {
     return (
       <View style={styles.centered}>
         <Text style={{ color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-          Camera access is needed to photograph your product.
+          {t('capture.permissionText')}
         </Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
-          <Text style={{ color: '#FFF' }}>Allow Camera Access</Text>
+          <Text style={{ color: '#FFF' }}>{t('capture.allowCamera')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -108,10 +108,10 @@ export default function CaptureScreen() {
           client_checksum: 'mock_checksum',
         });
       } catch (uploadErr) {
-        setUploadError('Photo saved on your device, but upload failed. It will retry when you continue.');
+        setUploadError(t('capture.uploadFailed'));
       }
     } catch (err) {
-      setUploadError('Could not capture photo. Try again.');
+      setUploadError(t('capture.captureFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -160,18 +160,18 @@ export default function CaptureScreen() {
           style={styles.backBtn}
           onPress={() => navigation.goBack()}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('capture.goBack')}
         >
           <IconButton icon="arrow-left" size={22} iconColor="#FFFFFF" style={{ margin: 0 }} />
         </TouchableOpacity>
         <View style={styles.topStepBadge}>
-          <Text style={styles.topStepText}>Step 1 of 5: Photograph Product</Text>
+          <Text style={styles.topStepText}>{t('capture.stepBadge')}</Text>
         </View>
         <TouchableOpacity
           style={[styles.flashBtn, torchOn && styles.flashBtnActive]}
           onPress={() => setTorchOn((prev) => !prev)}
           accessibilityRole="button"
-          accessibilityLabel={torchOn ? 'Turn flashlight off' : 'Turn flashlight on'}
+          accessibilityLabel={torchOn ? t('capture.flashOff') : t('capture.flashOn')}
         >
           <IconButton
             icon={torchOn ? 'flashlight' : 'flashlight-off'}
@@ -194,8 +194,8 @@ export default function CaptureScreen() {
       <View style={styles.controls}>
         <Text style={styles.hint}>
           {capturedUris.length === 0
-            ? 'Align product in center and take photo'
-            : `${capturedUris.length} photo${capturedUris.length > 1 ? 's' : ''} captured — tap stack to view all`}
+            ? t('capture.alignHint')
+            : t('capture.capturedHint', { count: capturedUris.length })}
         </Text>
         {uploadError && <Text style={styles.errorText}>{uploadError}</Text>}
 
@@ -206,7 +206,7 @@ export default function CaptureScreen() {
               style={styles.stackPreviewBtn}
               onPress={() => setGalleryVisible(true)}
               accessibilityRole="button"
-              accessibilityLabel={`View ${capturedUris.length} captured photos`}
+              accessibilityLabel={t('capture.viewPhotos', { count: capturedUris.length })}
             >
               {capturedUris.length > 1 && <View style={styles.stackBackdrop2} />}
               {capturedUris.length > 2 && <View style={styles.stackBackdrop1} />}
@@ -228,7 +228,7 @@ export default function CaptureScreen() {
             onPress={handleCapture}
             disabled={isSaving}
             accessibilityRole="button"
-            accessibilityLabel="Take photo"
+            accessibilityLabel={t('capture.takePhoto')}
           >
             {isSaving ? <ActivityIndicator color="#FFF" /> : <View style={styles.captureBtnInner} />}
           </TouchableOpacity>
@@ -260,16 +260,16 @@ export default function CaptureScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View>
-                <Text style={styles.modalTitle}>Captured Angles</Text>
+                <Text style={styles.modalTitle}>{t('imageReview.capturedAngles', { count: capturedUris.length })}</Text>
                 <Text style={styles.modalSubtitle}>
-                  {capturedUris.length} photo{capturedUris.length > 1 ? 's' : ''} stored for this listing
+                  {t('capture.storedForListing', { count: capturedUris.length })}
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setGalleryVisible(false)}
                 style={styles.modalCloseBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Close gallery"
+                accessibilityLabel={t('capture.closeGallery')}
               >
                 <IconButton icon="close" size={20} iconColor={colors.text} style={{ margin: 0 }} />
               </TouchableOpacity>
@@ -289,7 +289,7 @@ export default function CaptureScreen() {
                       onPress={() => handleRemovePhoto(idx)}
                       style={styles.removePhotoBadge}
                       accessibilityRole="button"
-                      accessibilityLabel={`Remove angle ${idx + 1}`}
+                      accessibilityLabel={t('imageReview.removeAngle', { n: idx + 1 })}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <IconButton
@@ -301,7 +301,7 @@ export default function CaptureScreen() {
                     </TouchableOpacity>
                   </View>
                   <View style={styles.galleryCardFooter}>
-                    <Text style={styles.galleryAngleText}>Angle {idx + 1}</Text>
+                    <Text style={styles.galleryAngleText}>{t('capture.angle', { n: idx + 1 })}</Text>
                   </View>
                 </View>
               ))}
@@ -314,7 +314,7 @@ export default function CaptureScreen() {
                 textColor={colors.text}
                 style={styles.modalBtn}
               >
-                Take More Angles
+                {t('capture.takeMore')}
               </Button>
               <Button
                 mode="contained"
@@ -326,7 +326,7 @@ export default function CaptureScreen() {
                 textColor="#FFFFFF"
                 style={styles.modalBtn}
               >
-                Review Photos ({capturedUris.length})
+                {t('capture.reviewPhotos', { count: capturedUris.length })}
               </Button>
             </View>
           </View>

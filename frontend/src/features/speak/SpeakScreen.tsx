@@ -285,10 +285,10 @@ export default function SpeakScreen() {
             <View style={styles.modalHeader}>
               <View>
                 <Text style={styles.modalTitle}>
-                  {t('speak.languageLabel') || 'Select Voice Language'}
+                  {t('speak.selectVoiceLanguage')}
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  Choose the regional dialect you will record in
+                  {t('speak.chooseDialect')}
                 </Text>
               </View>
               <IconButton
@@ -340,7 +340,7 @@ export default function SpeakScreen() {
               textColor={colors.text}
               style={styles.modalCloseBtn}
             >
-              Done
+              {t('common.done')}
             </Button>
           </Pressable>
         </Pressable>

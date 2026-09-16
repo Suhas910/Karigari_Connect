@@ -30,6 +30,7 @@ import {
 import { Text, Button, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { colors, spacing } from '../../theme';
 import { type SkillOption } from '../../components';
@@ -48,30 +49,30 @@ const CRAFT_TIER_OPTIONS: CraftTierOption[] = [
   {
     id: 'beginner',
     emoji: '🌱',
-    title: 'Apprentice Artisan',
-    experience: 'Still learning / Beginner (< 2 yrs)',
-    statutoryLevel: 'Unskilled Floor',
+    title: 'skillTierModal.tiers.beginner.title',
+    experience: 'skillTierModal.tiers.beginner.experience',
+    statutoryLevel: 'skillTierModal.tiers.beginner.statutory',
   },
   {
     id: 'intermediate',
     emoji: '🧵',
-    title: 'Practicing Artisan',
-    experience: '2–5 years independent crafting',
-    statutoryLevel: 'Semi-Skilled Floor',
+    title: 'skillTierModal.tiers.intermediate.title',
+    experience: 'skillTierModal.tiers.intermediate.experience',
+    statutoryLevel: 'skillTierModal.tiers.intermediate.statutory',
   },
   {
     id: 'skilled',
     emoji: '🛠️',
-    title: 'Experienced Craftsman',
-    experience: '5+ years mastery & technique',
-    statutoryLevel: 'Skilled Floor',
+    title: 'skillTierModal.tiers.skilled.title',
+    experience: 'skillTierModal.tiers.skilled.experience',
+    statutoryLevel: 'skillTierModal.tiers.skilled.statutory',
   },
   {
     id: 'master',
     emoji: '🏆',
-    title: 'Master Craftsman',
-    experience: '10+ years / trainer / awardee',
-    statutoryLevel: 'Master / Highly Skilled',
+    title: 'skillTierModal.tiers.master.title',
+    experience: 'skillTierModal.tiers.master.experience',
+    statutoryLevel: 'skillTierModal.tiers.master.statutory',
   },
 ];
 
@@ -85,20 +86,20 @@ interface CredentialOption {
 const ID_PROOFS: CredentialOption[] = [
   {
     type: 'pehchan_card',
-    label: 'Pehchan Artisan ID Card',
-    helper: 'Issued by Ministry of Textiles / DC Handicrafts',
+    label: 'skillTierModal.proofs.pehchan_card.label',
+    helper: 'skillTierModal.proofs.pehchan_card.helper',
     icon: 'card-account-details-outline',
   },
   {
     type: 'pm_vishwakarma',
-    label: 'PM Vishwakarma Certificate',
-    helper: 'Registered under PM Vishwakarma Scheme',
+    label: 'skillTierModal.proofs.pm_vishwakarma.label',
+    helper: 'skillTierModal.proofs.pm_vishwakarma.helper',
     icon: 'certificate-outline',
   },
   {
     type: 'none',
-    label: 'No Official ID Card Yet',
-    helper: 'Self-declared tier verified via coordinator workshop visit',
+    label: 'skillTierModal.proofs.none.label',
+    helper: 'skillTierModal.proofs.none.helper',
     icon: 'shield-outline',
   },
 ];
@@ -195,6 +196,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
   message,
   onDismiss,
 }) => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const currentStateObj =
@@ -237,7 +239,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
           ]}
           activeOpacity={1}
           onPress={onDismiss}
-          accessibilityLabel="Dismiss modal"
+          accessibilityLabel={t('skillTierModal.dismiss')}
         />
 
         {/* Sheet Body Container with rounded top corners */}
@@ -250,16 +252,16 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
           {/* Modal Header */}
           <View style={styles.headerBar}>
             <View style={styles.headerTextGroup}>
-              <Text style={styles.headerTitle}>Skill Tier & Official ID</Text>
+              <Text style={styles.headerTitle}>{t('profile.skillTierTitle')}</Text>
               <Text style={styles.headerSubtitle}>
-                Statutory wage protection and ID credential details
+                {t('skillTierModal.subtitle')}
               </Text>
             </View>
             <TouchableOpacity
               onPress={onDismiss}
               style={styles.closeBtn}
               accessibilityRole="button"
-              accessibilityLabel="Close"
+              accessibilityLabel={t('common.close')}
             >
               <MaterialCommunityIcons name="close" size={20} color={colors.text} />
             </TouchableOpacity>
@@ -278,12 +280,12 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                   <MaterialCommunityIcons name="scale-balance" size={22} color={colors.primary} />
                 </View>
                 <View style={styles.wageHeaderDetails}>
-                  <Text style={styles.wageEyebrow}>LIVE STATUTORY FAIR WAGE FLOOR</Text>
+                  <Text style={styles.wageEyebrow}>{t('skillTierModal.wageEyebrow')}</Text>
                   <View style={styles.wageRateRow}>
                     <Text style={styles.wageRateNumber}>₹{wageData.hourly.toFixed(2)}</Text>
-                    <Text style={styles.wageRateUnit}>/ hr</Text>
+                    <Text style={styles.wageRateUnit}>{t('skillTierModal.perHour')}</Text>
                     <Text style={styles.wageDailyPill}>
-                      (~₹{Math.round(wageData.daily)} / 8-hr day)
+                      {t('skillTierModal.perDay', { amount: `₹${Math.round(wageData.daily)}` })}
                     </Text>
                   </View>
                 </View>
@@ -292,8 +294,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
               <View style={styles.wageFooterRow}>
                 <MaterialCommunityIcons name="shield-check" size={15} color="#059669" />
                 <Text style={styles.wageFooterText}>
-                  {currentStateObj.name} • {currentZoneObj?.name || 'Zone 1'} • Protected under
-                  Code on Wages
+                  {t('skillTierModal.protectedUnder', { state: currentStateObj.name, zone: currentZoneObj?.name || t('listings.zone1') })}
                 </Text>
               </View>
             </View>
@@ -305,9 +306,9 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                   <Text style={styles.sectionStepBadgeText}>1</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>CRAFT EXPERIENCE TIER</Text>
+                  <Text style={styles.sectionTitle}>{t('skillTierModal.section1Title')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    Select your mastery level to determine your statutory wage rate
+                    {t('skillTierModal.section1Sub')}
                   </Text>
                 </View>
               </View>
@@ -330,7 +331,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                       <View style={styles.tierInfo}>
                         <View style={styles.tierTitleRow}>
                           <Text style={[styles.tierTitle, isSelected && styles.tierTitleSelected]}>
-                            {opt.title}
+                            {t(opt.title)}
                           </Text>
                           <Text
                             style={[
@@ -338,10 +339,10 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                               isSelected && styles.tierStatutoryBadgeSelected,
                             ]}
                           >
-                            {opt.statutoryLevel}
+                            {t(opt.statutoryLevel)}
                           </Text>
                         </View>
-                        <Text style={styles.tierExperience}>{opt.experience}</Text>
+                        <Text style={styles.tierExperience}>{t(opt.experience)}</Text>
                       </View>
                       <View style={[styles.radioCircle, isSelected && styles.radioCircleSelected]}>
                         {isSelected && <View style={styles.radioInnerDot} />}
@@ -359,16 +360,16 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                   <Text style={styles.sectionStepBadgeText}>2</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>WORKSHOP JURISDICTION</Text>
+                  <Text style={styles.sectionTitle}>{t('skillTierModal.section2Title')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    State & local territory of your craft loom or workshop
+                    {t('skillTierModal.section2Sub')}
                   </Text>
                 </View>
               </View>
 
               {/* State Selection Pills */}
               <View style={styles.subFieldGroup}>
-                <Text style={styles.fieldLabel}>State Jurisdiction:</Text>
+                <Text style={styles.fieldLabel}>{t('skillTierModal.stateLabel')}</Text>
                 <View style={styles.statePillsRow}>
                   {PILOT_STATES.map((s) => {
                     const isSelected = (selectedState || 'KA') === s.code;
@@ -411,7 +412,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
               {/* Geographic Wage Zone Cards */}
               <View style={styles.subFieldGroup}>
                 <Text style={styles.fieldLabel}>
-                  Statutory Geographic Wage Zone ({currentStateObj.name}):
+                  {t('skillTierModal.zoneLabel', { state: currentStateObj.name })}
                 </Text>
                 <View style={styles.cardsStack}>
                   {availableZones.map((z) => {
@@ -454,9 +455,9 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                   <Text style={styles.sectionStepBadgeText}>3</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>OFFICIAL CRAFT CREDENTIAL</Text>
+                  <Text style={styles.sectionTitle}>{t('skillTierModal.section3Title')}</Text>
                   <Text style={styles.sectionSubtitle}>
-                    Government artisan cards expedite verification to Master tier
+                    {t('skillTierModal.section3Sub')}
                   </Text>
                 </View>
               </View>
@@ -487,9 +488,9 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                       {/* Center: Title & Helper */}
                       <View style={styles.proofTextContainer}>
                         <Text style={[styles.proofLabel, isSelected && styles.proofLabelSelected]}>
-                          {proof.label}
+                          {t(proof.label)}
                         </Text>
-                        <Text style={styles.proofHelper}>{proof.helper}</Text>
+                        <Text style={styles.proofHelper}>{t(proof.helper)}</Text>
                       </View>
 
                       {/* Right: Radio Circle (fixes the bullet-on-left issue) */}
@@ -506,15 +507,15 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
               {/* Dynamic ID Number Input if official card selected */}
               {idProofType !== 'none' && (
                 <View style={styles.idInputSection}>
-                  <Text style={styles.inputLabel}>Card / Registration Number *</Text>
+                  <Text style={styles.inputLabel}>{t('skillTierModal.idNumberLabel')}</Text>
                   <TextInput
                     mode="outlined"
                     value={idProofNumber}
                     onChangeText={onChangeIdProofNumber}
                     placeholder={
                       idProofType === 'pehchan_card'
-                        ? 'e.g. PEHCHAN-KA-84219'
-                        : 'e.g. PMV-102938475'
+                        ? t('skillTierModal.pehchanPlaceholder')
+                        : t('skillTierModal.pmvPlaceholder')
                     }
                     outlineColor={colors.border}
                     activeOutlineColor={colors.primary}
@@ -522,7 +523,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                     autoCapitalize="characters"
                   />
                   <Text style={styles.inputHelpText}>
-                    Enter the exact registration number printed on your official document.
+                    {t('skillTierModal.idNumberHelp')}
                   </Text>
                 </View>
               )}
@@ -570,8 +571,8 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
               labelStyle={styles.submitBtnLabel}
             >
               {status === 'pending_verification'
-                ? 'Update & Resubmit Profile'
-                : 'Save & Submit for Verification'}
+                ? t('skillTierModal.resubmit')
+                : t('skillTierModal.submit')}
             </Button>
           </View>
         </View>
