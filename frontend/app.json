@@ -6,7 +6,12 @@
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FFFFFF",
+      "translucent": false
+    },
     "ios": {
       "icon": "./src/assets/expo.icon",
       "bundleIdentifier": "com.avinavkaushal.karigariconnect",

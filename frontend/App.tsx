@@ -1,5 +1,6 @@
 // App.tsx
 import React, { useEffect } from 'react';
+import { StatusBar } from 'react-native';
 import { MD3LightTheme as DefaultTheme, PaperProvider } from 'react-native-paper';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -39,6 +40,7 @@ export default function App() {
         theme={theme}
         settings={{ icon: (props) => <MaterialCommunityIcons {...props} /> }}
       >
+        <StatusBar barStyle="dark-content" backgroundColor={colors.surface} />
         <RootNavigator />
       </PaperProvider>
       </I18nextProvider>
