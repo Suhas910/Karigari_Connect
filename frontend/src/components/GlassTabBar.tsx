@@ -137,6 +137,9 @@ export default function GlassTabBar({
                 )}
               </View>
               <Animated.Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.72}
                 style={[
                   styles.label,
                   { color: isFocused ? activeColor : colors.textMuted },
@@ -163,8 +166,8 @@ const styles = StyleSheet.create({
   pillContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 64,
-    borderRadius: 32,
+    height: 68,
+    borderRadius: 34,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
@@ -182,7 +185,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 6,
     marginVertical: 6,
-    borderRadius: 26,
+    borderRadius: 28,
     overflow: 'hidden',
   },
   highlightTint: {
@@ -190,20 +193,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(193,80,46,0.16)', // colors.primary translucent
     borderWidth: 1,
     borderColor: 'rgba(193,80,46,0.25)',
-    borderRadius: 26,
+    borderRadius: 28,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 2,
     gap: 2,
   },
   iconWrap: {
     position: 'relative',
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: {
-    fontSize: 10,
+    fontSize: 10.5,
     fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 14,
+    includeFontPadding: true,
+    paddingHorizontal: 1,
   },
   badge: {
     position: 'absolute',

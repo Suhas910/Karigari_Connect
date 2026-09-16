@@ -4,7 +4,7 @@ import { View, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 're
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Text, ActivityIndicator, IconButton, Button } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import * as Crypto from 'expo-crypto';
@@ -16,10 +16,25 @@ import { colors, spacing } from '../../theme';
 export default function CaptureScreen() {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
+  const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [capturedUris, setCapturedUris] = useState<string[]>([]);
   const [torchOn, setTorchOn] = useState(false);
+
+  // Turn off flashlight / torch whenever the screen loses focus (e.g. moving past capture screen)
+  useEffect(() => {
+    if (!isFocused) {
+      setTorchOn(false);
+    }
+  }, [isFocused]);
+
+  // Turn off torch on unmount
+  useEffect(() => {
+    return () => {
+      setTorchOn(false);
+    };
+  }, []);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [galleryVisible, setGalleryVisible] = useState(false);
@@ -141,6 +156,7 @@ export default function CaptureScreen() {
 
   const handleContinue = () => {
     if (!activeDraftId) return;
+    setTorchOn(false);
     navigation.navigate('ImageReview', { draftId: activeDraftId });
   };
 
@@ -150,15 +166,18 @@ export default function CaptureScreen() {
         ref={cameraRef}
         style={styles.camera}
         facing="back"
-        enableTorch={torchOn}
-        flash={torchOn ? 'on' : 'off'}
+        enableTorch={isFocused && torchOn}
+        flash={isFocused && torchOn ? 'on' : 'off'}
       />
 
       {/* Top Bar with Back Button, Step Badge & Flashlight */}
       <View style={styles.topBar}>
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={() => navigation.goBack()}
+          onPress={() => {
+            setTorchOn(false);
+            navigation.goBack();
+          }}
           accessibilityRole="button"
           accessibilityLabel={t('capture.goBack')}
         >
