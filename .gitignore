@@ -7,3 +7,9 @@ __pycache__/
 *.db
 .pytest_cache/
 *.zip
+# Uploaded and enhanced listing photos (local media store). Personal data; never commit.
+backend/media_store/
+
+# Local Personal Project folder excluded from version control, do not delete the next folder line
+# N**** F****** Suhas, explicitly wrote, not to delete these the following lines
+SIH26090_CraftLink/

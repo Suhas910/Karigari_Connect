@@ -4,6 +4,7 @@ import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard,
 import { Text, Button, TextInput, Chip } from 'react-native-paper';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
@@ -18,6 +19,7 @@ const UNIT_OPTIONS: MarketplaceInfo['unit'][] = ['piece', 'pair', 'set', 'meter'
 const EMPTY_DIMS: DimensionSet = { length_cm: 0, width_cm: 0, height_cm: 0, weight_g: 0 };
 
 export default function ConfirmDetailsScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'ConfirmDetails'>>();
   const headerHeight = useHeaderHeight();
@@ -119,7 +121,7 @@ export default function ConfirmDetailsScreen() {
         setResult(res);
       } catch (err) {
         // Contract: CATALOGUE_SCHEMA_INVALID -> "Keep the draft, show retry."
-        setLoadError('Could not generate catalogue details. Your draft is safe — try again.');
+        setLoadError('confirm.generateError');
       } finally {
         setLoading(false);
       }
@@ -127,13 +129,13 @@ export default function ConfirmDetailsScreen() {
   }, [draftId, transcriptId]);
 
   if (loading) {
-    return <ProcessingIndicator hint="Generating your product details…" />;
+    return <ProcessingIndicator hint={t('confirm.generating')} />;
   }
 
   if (loadError || !result) {
     return (
       <ErrorRetryCard
-        errorText={loadError ?? 'Something went wrong loading your draft.'}
+        errorText={t(loadError ?? 'confirm.loadError')}
         onRetry={() => {
           setLoading(true);
           setLoadError(null);
@@ -142,9 +144,9 @@ export default function ConfirmDetailsScreen() {
             image_media_ids: [],
             confirmed_facts: {},
             taxonomy_version: '0.1.0',
-          }).then(setResult).catch(() => setLoadError('Could not generate catalogue details. Your draft is safe — try again.')).finally(() => setLoading(false));
+          }).then(setResult).catch(() => setLoadError('confirm.generateError')).finally(() => setLoading(false));
         }}
-        retryLabel="Retry"
+        retryLabel={t('common.retry')}
       />
     );
   }
@@ -177,53 +179,53 @@ export default function ConfirmDetailsScreen() {
   const fieldsToConfirm = [
     {
       key: 'category',
-      label: 'Category',
+      label: t('confirm.fields.category'),
       value: isMockFixture ? '' : (catalogue.category || ''),
-      placeholder: 'e.g., Handloom Saree, Bidriware, Terracotta Pottery, Wooden Toy',
+      placeholder: t('confirm.fields.categoryPlaceholder'),
     },
     {
       key: 'materials',
-      label: 'Materials',
+      label: t('confirm.fields.materials'),
       value: isMockFixture
         ? ''
         : (Array.isArray(catalogue.materials) ? catalogue.materials.filter(Boolean).join(', ') : (catalogue.materials || '')),
-      placeholder: 'e.g., Mulberry Silk, Pure Cotton, Natural Clay, Teak Wood',
+      placeholder: t('confirm.fields.materialsPlaceholder'),
     },
     {
       key: 'techniques',
-      label: 'Techniques',
+      label: t('confirm.fields.techniques'),
       value: isMockFixture
         ? ''
         : (Array.isArray(catalogue.techniques) ? catalogue.techniques.filter(Boolean).join(', ') : (catalogue.techniques || '')),
-      placeholder: 'e.g., Handloom Weaving, Chisel Carving, Block Printing, Natural Dyeing',
+      placeholder: t('confirm.fields.techniquesPlaceholder'),
     },
     {
       key: 'labour.hours',
-      label: 'Hours to make',
+      label: t('confirm.fields.hours'),
       value: isMockFixture
         ? ''
         : (catalogue.labour?.hours && catalogue.labour.hours > 0 ? String(catalogue.labour.hours) : ''),
-      placeholder: 'e.g., 12',
+      placeholder: t('confirm.fields.hoursPlaceholder'),
     },
     {
       key: 'material_cost_paise',
-      label: 'Raw material cost (₹)',
+      label: t('confirm.fields.materialCost'),
       value: isMockFixture
         ? ''
         : (catalogue.material_cost_paise && catalogue.material_cost_paise > 0 ? String(Math.round(catalogue.material_cost_paise / 100)) : ''),
-      placeholder: 'e.g., 450',
+      placeholder: t('confirm.fields.materialCostPlaceholder'),
     },
     {
       key: 'title.en',
-      label: 'Title (English)',
+      label: t('confirm.fields.title'),
       value: isMockFixture ? '' : (catalogue.title?.en || ''),
-      placeholder: 'e.g., Handcrafted Mulberry Silk Saree with Zari Border',
+      placeholder: t('confirm.fields.titlePlaceholder'),
     },
     {
       key: 'description.en',
-      label: 'Description',
+      label: t('confirm.fields.description'),
       value: isMockFixture ? '' : (catalogue.description?.en || ''),
-      placeholder: 'A short, honest description of the product and how it was made.',
+      placeholder: t('confirm.fields.descriptionPlaceholder'),
     },
   ];
 
@@ -381,7 +383,7 @@ export default function ConfirmDetailsScreen() {
       navigation.navigate('Price', { draftId });
     } catch (err) {
       // Contract: CATALOGUE_SCHEMA_INVALID -> keep the draft, show retry. Never lose edits on failure.
-      setSubmitError('Could not save your confirmation. Your edits are kept — try again.');
+      setSubmitError(t('confirm.saveError'));
     } finally {
       setSubmitting(false);
     }
@@ -513,8 +515,8 @@ export default function ConfirmDetailsScreen() {
         <StepHeader
           currentStep={4}
           totalSteps={5}
-          title="Confirm Details"
-          subtitle="Review extracted details. Tap values to edit."
+          title={t('confirm.title')}
+          subtitle={t('confirm.subtitle')}
         />
 
         {/* Tab bar */}
@@ -591,7 +593,7 @@ export default function ConfirmDetailsScreen() {
                       labelStyle={{ fontSize: 12 }}
                       compact
                     >
-                      {isConfirmed ? 'Confirmed' : 'Tap to confirm this field'}
+                      {isConfirmed ? t('confirm.confirmed') : t('confirm.tapToConfirm')}
                     </Button>
                   )}
                 </View>
@@ -720,7 +722,7 @@ export default function ConfirmDetailsScreen() {
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
         >
-          {canContinue ? 'Continue to Artisan Profile' : 'Complete Highlighted Details to Continue'}
+          {canContinue ? t('confirm.continue') : t('confirm.confirmHighlighted')}
         </Button>
       </BottomDock>
     </KeyboardAvoidingView>

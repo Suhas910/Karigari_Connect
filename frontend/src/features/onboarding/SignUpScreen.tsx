@@ -59,7 +59,7 @@ export default function SignUpScreen() {
 
       <TextInput
         mode="outlined"
-        label="Username"
+        label={t('signIn.username')}
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
@@ -68,7 +68,7 @@ export default function SignUpScreen() {
 
       <TextInput
         mode="outlined"
-        label="Phone Number"
+        label={t('signIn.phoneNumber')}
         keyboardType="phone-pad"
         value={phoneNumber}
         onChangeText={setPhoneNumber}

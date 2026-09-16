@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 load_dotenv()
 logger = logging.getLogger(__name__)
 
+# gemini-2.5-flash is no longer available to new API keys (404 NOT_FOUND).
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
+
 NEGATION_WORDS = {"not", "no", "never", "without", "nahi", "nahin", "illa", "ಬೇಡ", "ಇಲ್ಲ", "ನಹೀ", "नहीं"}
 
 def _is_negated(text: str, keyword: str) -> bool:
@@ -64,7 +67,7 @@ class GeminiClient:
             try:
                 from google import genai
                 self.client = genai.Client(api_key=self.api_key)
-                logger.info("GeminiClient initialized with Google GenAI SDK (gemini-2.5-flash)")
+                logger.info("GeminiClient initialized with Google GenAI SDK (%s)", GEMINI_MODEL)
             except Exception as e:
                 logger.warning(f"Failed to initialize Google GenAI SDK: {e}. Falling back to deterministic pipeline.")
         else:
@@ -89,7 +92,7 @@ class GeminiClient:
                     '{"blur": "low", "lighting": "acceptable", "framing": "acceptable", "overall": "acceptable", "guidance": ["tip1", "tip2"]}'
                 )
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=GEMINI_MODEL,
                     contents=prompt,
                 )
                 text = response.text.strip()
@@ -131,7 +134,7 @@ class GeminiClient:
                     '{"transcript": "...", "translated_text": "...", "asr_confidence": 0.94, "detected_language": "..."}'
                 )
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=GEMINI_MODEL,
                     contents=prompt,
                 )
                 text = response.text.strip()
@@ -223,7 +226,7 @@ class GeminiClient:
                     "}"
                 )
                 response = self.client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model=GEMINI_MODEL,
                     contents=prompt,
                 )
                 text = response.text.strip()

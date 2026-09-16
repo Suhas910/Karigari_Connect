@@ -5,6 +5,7 @@ import { Text, FAB, IconButton, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDb } from '../../services/database';
 import { processOutbox } from '../../services/outbox';
@@ -24,6 +25,7 @@ const IN_REVIEW_STATES = new Set([
 ]);
 
 export default function InReviewListingsScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const navigation = useNavigation<any>();
@@ -47,17 +49,17 @@ export default function InReviewListingsScreen() {
           <View
             style={styles.locationPill}
             accessibilityRole="text"
-            accessibilityLabel={`Location: ${selectedState} ${currentZoneObj?.name || ''}`}
+            accessibilityLabel={t('listings.locationA11y', { location: `${selectedState} ${currentZoneObj?.name || ''}` })}
           >
             <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.primary} />
             <Text style={styles.locationPillText}>
-              {selectedState} · {currentZoneObj?.name || 'Zone 1'}
+              {selectedState} · {currentZoneObj?.name || t('listings.zone1')}
             </Text>
           </View>
         </View>
       ),
     });
-  }, [navigation, selectedState, selectedZone, currentZoneObj]);
+  }, [navigation, selectedState, selectedZone, currentZoneObj, t]);
 
   const {
     data: listings,
@@ -138,7 +140,7 @@ export default function InReviewListingsScreen() {
   };
 
   if (isLoading) {
-    return <ProcessingIndicator hint="Loading in-review crafts..." />;
+    return <ProcessingIndicator hint={t('listings.loadingInReview')} />;
   }
 
   const inReviewListings = (listings || []).filter((l) => IN_REVIEW_STATES.has(l.state));
@@ -154,7 +156,7 @@ export default function InReviewListingsScreen() {
         <View style={styles.syncNotice}>
           <IconButton icon="cloud-sync-outline" size={16} iconColor={colors.secondary} style={{ margin: 0, marginRight: 6 }} />
           <Text style={styles.syncNoticeText}>
-            {pendingSyncCount} update{pendingSyncCount > 1 ? 's' : ''} saved offline · Syncs automatically
+            {t('listings.offlineSync', { count: pendingSyncCount })}
           </Text>
         </View>
       )}
@@ -163,17 +165,17 @@ export default function InReviewListingsScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{draftsCount}</Text>
-          <Text style={styles.statLabel}>Drafts</Text>
+          <Text style={styles.statLabel}>{t('listings.drafts')}</Text>
         </View>
         <View style={[styles.statCard, styles.statCardMiddle]}>
           <Text style={[styles.statNumber, { color: colors.secondary }]}>{awaitingApprovalCount}</Text>
-          <Text style={styles.statLabel}>With Coordinator</Text>
+          <Text style={styles.statLabel}>{t('listings.withCoordinator')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statNumber, { color: actionNeededCount > 0 ? colors.error : colors.text }]}>
             {actionNeededCount}
           </Text>
-          <Text style={styles.statLabel}>Action Needed</Text>
+          <Text style={styles.statLabel}>{t('listings.actionNeeded')}</Text>
         </View>
       </View>
 
@@ -199,15 +201,15 @@ export default function InReviewListingsScreen() {
         <View style={styles.profileBannerTextContainer}>
           <Text style={styles.profileBannerTitle}>
             {profile?.profile_status === 'verified'
-              ? `Verified Profile · ${profile?.verified_skill_level?.replace(/_/g, ' ')}`
+              ? t('listings.verifiedProfile', { level: t(`skillLevels.${profile?.verified_skill_level}`, { defaultValue: profile?.verified_skill_level?.replace(/_/g, ' ') }) })
               : profile?.profile_status === 'pending_verification'
-              ? 'Profile Verification in Review'
-              : 'Complete Your Artisan Profile'}
+              ? t('listings.profileInReview')
+              : t('listings.completeProfile')}
           </Text>
           <Text style={styles.profileBannerSub}>
             {profile?.profile_status === 'verified'
-              ? 'Statutory wage protection active across all listings'
-              : 'Get verified once to unlock statutory rates without individual claim reviews'}
+              ? t('listings.verifiedProfileSub')
+              : t('listings.unverifiedProfileSub')}
           </Text>
         </View>
         <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
@@ -230,9 +232,9 @@ export default function InReviewListingsScreen() {
             <View style={styles.emptyIconCircle}>
               <IconButton icon="clock-outline" size={36} iconColor={colors.secondary} style={{ margin: 0 }} />
             </View>
-            <Text style={styles.emptyTitle}>No Crafts in Review</Text>
+            <Text style={styles.emptyTitle}>{t('listings.reviewEmptyTitle')}</Text>
             <Text style={styles.emptySubtitle}>
-              All your listings have been approved or you have not created any drafts yet. Tap below to document a craft.
+              {t('listings.reviewEmptyText')}
             </Text>
             <Button
               mode="contained"
@@ -242,7 +244,7 @@ export default function InReviewListingsScreen() {
               style={styles.emptyActionBtn}
               icon="plus"
             >
-              Start New Craft Draft
+              {t('listings.startDraft')}
             </Button>
           </View>
         }
@@ -253,7 +255,7 @@ export default function InReviewListingsScreen() {
 
       <FAB
         icon="plus"
-        label="New Craft"
+        label={t('listings.newCraft')}
         style={styles.fab}
         color="#FFFFFF"
         onPress={handleStartNewListing}

@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing } from '../../theme';
 
@@ -20,13 +21,14 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   isConfigured = true,
   onPress,
 }) => {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       style={styles.card}
       onPress={onPress}
       activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={`Jurisdiction: ${stateName}, ${zoneName}. Tap to change.`}
+      accessibilityLabel={t('profile.locationA11y', { state: stateName, zone: zoneName })}
     >
       {/* Pin icon in rounded terracotta square */}
       <View style={styles.iconSquare}>
@@ -39,7 +41,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           {stateName} · {zoneName}
         </Text>
         <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
-          {zoneNote || 'Statutory minimum wage jurisdiction'}
+          {zoneNote || t('profile.jurisdictionNote')}
         </Text>
       </View>
 

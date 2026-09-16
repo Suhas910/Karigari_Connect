@@ -254,6 +254,7 @@ export interface ListingService {
   getListing(listingId: string): Promise<Listing>;
   completeMediaUpload(listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }): Promise<{ status: string; media_id: string }>;
   requestImageAnalysis(listingId: string, payload: { media_id: string; photos?: string[] }): Promise<{ job_id: string }>;
+  requestImageEnhancement(listingId: string, photoUris: string[]): Promise<{ job_id: string }>;
   requestTranscription(listingId: string, payload: { audio_media_id: string; declared_language: string }): Promise<{ job_id: string }>;
   getJobStatus(jobId: string): Promise<JobStatus>;
   getImageJobResult(jobId: string): Promise<ImageJobResult>;

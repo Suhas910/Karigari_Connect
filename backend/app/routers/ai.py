@@ -1,14 +1,71 @@
 # backend/app/routers/ai.py
 import json
-from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional, Dict, Any, List
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models, schemas, auth
 from ..ai.service import ai_service
+from ..ai import studio
 
 router = APIRouter(tags=["AI Pipeline"])
+
+ENHANCEMENT_IMAGE_TYPES = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+MAX_ENHANCEMENT_PHOTO_BYTES = 10 * 1024 * 1024  # 10 MB per photo
+
+# --- BIREFNET IMAGE ENHANCEMENT ---
+@router.post("/listings/{listing_id}/jobs/image-enhancement")
+def request_image_enhancement(
+    listing_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    files: List[UploadFile] = File(...),
+    engine: str = Form("processing"),
+    background: str = Form("studio"),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    """
+    Upload the listing's photos; they are levelled, relit and placed on a catalogue background in the
+    background. Poll GET /jobs/{job_id}.
+
+    engine: "processing" (BiRefNet + image processing, default) or "ai" (Gemini image edit, verified
+    against the original and falling back to processing). background: "studio" (soft sweep with a
+    contact shadow, default) or "white" (pure white, for marketplaces that require it).
+    """
+    if engine not in studio.ENGINES:
+        raise HTTPException(status_code=400, detail=f"engine must be one of: {', '.join(studio.ENGINES)}")
+    if background not in studio.BACKGROUNDS:
+        raise HTTPException(status_code=400, detail=f"background must be one of: {', '.join(studio.BACKGROUNDS)}")
+
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this listing")
+
+    photos = []
+    for upload in files:
+        extension = ENHANCEMENT_IMAGE_TYPES.get(upload.content_type)
+        if not extension:
+            raise HTTPException(status_code=400, detail="Only JPEG, PNG and WEBP photos can be enhanced.")
+        content = upload.file.read()
+        if len(content) > MAX_ENHANCEMENT_PHOTO_BYTES:
+            raise HTTPException(status_code=400, detail="Each photo must be 10 MB or smaller.")
+        photos.append((extension, content))
+
+    base_url = str(request.base_url)
+    job, original_media_ids = ai_service.create_birefnet_image_job(
+        listing=listing,
+        photos=photos,
+        base_url=base_url,
+        db=db
+    )
+    background_tasks.add_task(
+        ai_service.run_birefnet_image_job, job.job_id, original_media_ids, base_url, engine, background
+    )
+    return {"job_id": job.job_id}
 
 # --- IMAGE STUDIO ENDPOINTS ---
 @router.post("/listings/{listing_id}/jobs/image-studio")

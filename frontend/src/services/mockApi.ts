@@ -131,6 +131,17 @@ export const mockApi: ListingService = {
     return { job_id: jobId };
   },
 
+  requestImageEnhancement: async (listingId: string, photoUris: string[]) => {
+    const jobId = `job_image_${Date.now()}`;
+    activeJobRegistry.set(jobId, {
+      type: 'image_studio',
+      createdAt: Date.now(),
+      listingId,
+      photos: photoUris,
+    });
+    return { job_id: jobId };
+  },
+
   requestTranscription: async (listingId: string, payload: { audio_media_id: string; declared_language: string }) => {
     const jobId = `job_audio_${Date.now()}`;
     activeJobRegistry.set(jobId, {

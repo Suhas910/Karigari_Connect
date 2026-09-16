@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../../theme';
 import type { ArtisanProfile, ProfileStatus } from '../../types/contracts';
@@ -17,42 +18,47 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
   profile,
   onDismiss,
 }) => {
+  const { t } = useTranslation();
   const status: ProfileStatus = profile?.profile_status || 'incomplete';
 
   const getStatusInfo = () => {
     switch (status) {
       case 'verified':
         return {
-          title: 'VERIFIED ARTISAN PROFILE',
-          subtitle: `Verified at ${profile?.verified_skill_level?.replace(/_/g, ' ') || 'Skilled'} tier.`,
-          desc: 'Your identity and craft experience have been verified by your cluster coordinator. All your craft listings automatically unlock legal minimum wage floors without waiting for per-listing claim reviews.',
+          title: t('statusModal.verified.title'),
+          subtitle: t('statusModal.verified.subtitle', {
+            level: profile?.verified_skill_level
+              ? t(`skillLevels.${profile.verified_skill_level}`, { defaultValue: profile.verified_skill_level.replace(/_/g, ' ') })
+              : t('skillLevels.skilled'),
+          }),
+          desc: t('statusModal.verified.desc'),
           icon: 'shield-check' as const,
           color: '#1E40AF',
           bgColor: colors.indigoLight,
         };
       case 'pending_verification':
         return {
-          title: 'PENDING COORDINATOR REVIEW',
-          subtitle: 'Profile submitted to cluster coordinator',
-          desc: 'Your craft experience, jurisdiction, and official ID credentials have been queued for coordinator audit. You can still create drafts and listings in the meantime.',
+          title: t('statusModal.pending.title'),
+          subtitle: t('statusModal.pending.subtitle'),
+          desc: t('statusModal.pending.desc'),
           icon: 'clock-outline' as const,
           color: '#B45309',
           bgColor: '#FEF3C7',
         };
       case 'rejected':
         return {
-          title: 'VERIFICATION REJECTED',
-          subtitle: 'Credentials require correction',
-          desc: 'Your profile was not approved by the coordinator. Please review your ID registration number or declared skill tier in "Skill Tier & Official ID" and resubmit.',
+          title: t('statusModal.rejected.title'),
+          subtitle: t('statusModal.rejected.subtitle'),
+          desc: t('statusModal.rejected.desc'),
           icon: 'alert-circle-outline' as const,
           color: colors.error,
           bgColor: '#FEE2E2',
         };
       default:
         return {
-          title: 'PROFILE INCOMPLETE',
-          subtitle: 'One-time coordinator verification',
-          desc: 'Submit your craft skill tier, workshop jurisdiction, and official ID proof once. Once verified, you skip the coordinator claim gate on every craft listing.',
+          title: t('statusModal.incomplete.title'),
+          subtitle: t('statusModal.incomplete.subtitle'),
+          desc: t('statusModal.incomplete.desc'),
           icon: 'account-outline' as const,
           color: colors.textMuted,
           bgColor: colors.badgeNeutral,
@@ -99,7 +105,7 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
           <View style={styles.statutoryBox}>
             <MaterialCommunityIcons name="scale-balance" size={20} color={colors.primary} />
             <Text style={styles.statutoryText}>
-              Statutory Protection: Grounded in State Minimum Wages notifications under the Code on Wages 2019 to prevent price suppression on open commerce.
+              {t('statusModal.statutoryNote')}
             </Text>
           </View>
 
@@ -111,7 +117,7 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
             style={styles.actionBtn}
             labelStyle={styles.actionBtnLabel}
           >
-            Got It
+            {t('statusModal.gotIt')}
           </Button>
         </View>
       </View>

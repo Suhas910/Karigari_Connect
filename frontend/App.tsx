@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import RootNavigator from './src/app/RootNavigator';
 import { initDatabase } from './src/services/database';
 import { colors } from './src/theme';
-import i18n from './src/i18n';
+import i18n, { restoreAppLanguage } from './src/i18n';
 import { I18nextProvider } from 'react-i18next';
 
 import { useAuthStore } from './src/store/authStore';
@@ -30,6 +30,7 @@ export default function App() {
   // Initialize SQLite local draft + outbox tables and restore auth on boot
   useEffect(() => {
     initDatabase();
+    restoreAppLanguage();
     useAuthStore.getState().initAuth();
   }, []);
 
