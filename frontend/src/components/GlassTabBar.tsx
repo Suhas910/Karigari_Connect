@@ -137,10 +137,10 @@ export default function GlassTabBar({
                 )}
               </View>
               <Text
-                numberOfLines={1}
+                numberOfLines={2}
                 adjustsFontSizeToFit={Platform.OS === 'ios'}
                 minimumFontScale={0.8}
-                maxFontSizeMultiplier={1.12}
+                maxFontSizeMultiplier={1.1}
                 style={[
                   styles.label,
                   { color: isFocused ? activeColor : colors.textMuted },
@@ -160,14 +160,14 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 24 : 16,
-    left: 8,
-    right: 8,
+    left: 6,
+    right: 6,
   },
   pillContainer: {
     flexDirection: 'row',
     width: '100%',
-    height: 66,
-    borderRadius: 33,
+    height: 68,
+    borderRadius: 34,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.4)',
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 3,
+    paddingVertical: 2,
     paddingHorizontal: 0,
   },
   iconWrap: {
@@ -210,12 +210,13 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   label: {
-    fontSize: 8.8,
-    fontWeight: '600',
+    fontSize: Platform.OS === 'ios' ? 9.5 : 8.2,
+    fontWeight: Platform.OS === 'ios' ? '600' : '500',
     textAlign: 'center',
+    width: '100%',
     letterSpacing: -0.2,
-    includeFontPadding: true,
-    paddingHorizontal: 0,
+    includeFontPadding: false,
+    paddingHorizontal: 1,
   },
   badge: {
     position: 'absolute',
