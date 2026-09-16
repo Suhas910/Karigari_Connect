@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from .. import models, schemas, auth
+from .coordinator import get_unverified_claims
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
@@ -286,16 +287,21 @@ def submit_for_approval(
     if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="Not authorized to submit this listing")
 
-    # Phase 4 Gating: Unverified self-declared master craftsman claim blocks submission
-    unverified_master = db.query(models.ClaimModel).filter(
-        models.ClaimModel.listing_id == listing_id,
-        models.ClaimModel.claim == "skill_level_master_self_declared",
-        models.ClaimModel.coordinator_verified == False,
-    ).first()
-    if unverified_master:
+    # Phase 4 Gating: Any unverified claim blocks submission
+    unverified = get_unverified_claims(db, listing_id)
+    if unverified:
         raise HTTPException(
             status_code=400,
-            detail="Cannot submit for approval: unverified self-declared Master Craftsman tier requires coordinator verification."
+            detail={
+                "error": {
+                    "code": "PROVENANCE_VERIFICATION_REQUIRED",
+                    "message": f"Cannot proceed: {len(unverified)} claim(s) "
+                                f"[{', '.join(c.claim for c in unverified)}] "
+                                "require coordinator verification.",
+                    "recoverable": True,
+                    "action": "contact_coordinator",
+                }
+            },
         )
 
     listing.state = "awaiting_approval"

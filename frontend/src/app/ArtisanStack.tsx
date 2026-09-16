@@ -22,6 +22,7 @@ export default function ArtisanStack() {
     <Stack.Navigator
       initialRouteName="HomeTabs"
       screenOptions={{
+        statusBarStyle: 'dark',
         headerTitle: APP_HEADER_TITLE,
         headerTintColor: colors.text,
         headerStyle: { backgroundColor: colors.surface },

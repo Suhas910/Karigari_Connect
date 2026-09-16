@@ -32,7 +32,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={navTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, statusBarStyle: 'dark' }}>
         {!isAuthenticated ? (
           // Unauthenticated Flow
           <Stack.Screen name="Auth" component={SignInScreen} />

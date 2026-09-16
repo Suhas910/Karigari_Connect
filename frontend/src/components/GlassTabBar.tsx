@@ -45,7 +45,7 @@ export default function GlassTabBar({
 
   const glassOverlayBg = isCoordinator
     ? 'rgba(238, 242, 249, 0.50)' // colors.indigoLight (#EEF2F9)
-    : 'rgba(255, 255, 255, 0.75)'; // pure white translucent glass
+    : 'rgba(255, 255, 255, 0.50)'; // pure white translucent glass
 
   const tabWidth = 100 / state.routes.length;
   const translateX = useSharedValue(state.index * tabWidth);
@@ -66,7 +66,7 @@ export default function GlassTabBar({
     <View style={styles.wrapper} pointerEvents="box-none">
       <View style={styles.pillContainer}>
         <BlurView
-          intensity={Platform.OS === 'ios' ? 50 : 80}
+          intensity={Platform.OS === 'ios' ? 30 : 60}
           tint="light"
           style={StyleSheet.absoluteFill}
         />
