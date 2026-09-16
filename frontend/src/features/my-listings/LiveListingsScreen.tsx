@@ -5,6 +5,7 @@ import { Text, FAB, IconButton, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDb } from '../../services/database';
 import { processOutbox } from '../../services/outbox';
@@ -17,6 +18,7 @@ import { ListingCard } from './ListingCard';
 const LIVE_STATES = new Set(['approved', 'export_queued', 'exported']);
 
 export default function LiveListingsScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const navigation = useNavigation<any>();
@@ -40,17 +42,17 @@ export default function LiveListingsScreen() {
           <View
             style={styles.locationPill}
             accessibilityRole="text"
-            accessibilityLabel={`Location: ${selectedState} ${currentZoneObj?.name || ''}`}
+            accessibilityLabel={t('listings.locationA11y', { location: `${selectedState} ${currentZoneObj?.name || ''}` })}
           >
             <MaterialCommunityIcons name="map-marker-outline" size={14} color={colors.primary} />
             <Text style={styles.locationPillText}>
-              {selectedState} · {currentZoneObj?.name || 'Zone 1'}
+              {selectedState} · {currentZoneObj?.name || t('listings.zone1')}
             </Text>
           </View>
         </View>
       ),
     });
-  }, [navigation, selectedState, selectedZone, currentZoneObj]);
+  }, [navigation, selectedState, selectedZone, currentZoneObj, t]);
 
   const {
     data: listings,
@@ -107,7 +109,7 @@ export default function LiveListingsScreen() {
   };
 
   if (isLoading) {
-    return <ProcessingIndicator hint="Loading your crafts..." />;
+    return <ProcessingIndicator hint={t('listings.loading')} />;
   }
 
   const liveListings = (listings || []).filter((l) => LIVE_STATES.has(l.state));
@@ -120,7 +122,7 @@ export default function LiveListingsScreen() {
         <View style={styles.syncNotice}>
           <IconButton icon="cloud-sync-outline" size={16} iconColor={colors.secondary} style={{ margin: 0, marginRight: 6 }} />
           <Text style={styles.syncNoticeText}>
-            {pendingSyncCount} update{pendingSyncCount > 1 ? 's' : ''} saved offline · Syncs automatically
+            {t('listings.offlineSync', { count: pendingSyncCount })}
           </Text>
         </View>
       )}
@@ -129,15 +131,15 @@ export default function LiveListingsScreen() {
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{liveListings.length}</Text>
-          <Text style={styles.statLabel}>Market Ready</Text>
+          <Text style={styles.statLabel}>{t('listings.marketReady')}</Text>
         </View>
         <View style={[styles.statCard, styles.statCardMiddle]}>
           <Text style={[styles.statNumber, { color: colors.secondary }]}>{exportedCount}</Text>
-          <Text style={styles.statLabel}>Live on ONDC</Text>
+          <Text style={styles.statLabel}>{t('listings.liveOnOndc')}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statNumber, { color: colors.primary }]}>{approvedCount}</Text>
-          <Text style={styles.statLabel}>Coordinator Approved</Text>
+          <Text style={styles.statLabel}>{t('listings.coordinatorApproved')}</Text>
         </View>
       </View>
 
@@ -158,9 +160,9 @@ export default function LiveListingsScreen() {
             <View style={styles.emptyIconCircle}>
               <IconButton icon="package-variant-closed" size={36} iconColor={colors.secondary} style={{ margin: 0 }} />
             </View>
-            <Text style={styles.emptyTitle}>No Market-Ready Crafts Yet</Text>
+            <Text style={styles.emptyTitle}>{t('listings.liveEmptyTitle')}</Text>
             <Text style={styles.emptySubtitle}>
-              Crafts approved by the coordinator and ready for export will appear here. Check the In Review tab to see your in-progress listings.
+              {t('listings.liveEmptyText')}
             </Text>
             <Button
               mode="contained"
@@ -170,7 +172,7 @@ export default function LiveListingsScreen() {
               style={styles.emptyActionBtn}
               icon="plus"
             >
-              Add New Craft
+              {t('listings.addNewCraft')}
             </Button>
           </View>
         }
@@ -181,7 +183,7 @@ export default function LiveListingsScreen() {
 
       <FAB
         icon="plus"
-        label="New Craft"
+        label={t('listings.newCraft')}
         style={styles.fab}
         color="#FFFFFF"
         onPress={handleStartNewListing}

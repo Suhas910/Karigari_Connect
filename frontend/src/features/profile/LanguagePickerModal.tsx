@@ -5,6 +5,7 @@ import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../../theme';
+import { setAppLanguage } from '../../i18n';
 
 export const LANGUAGES = [
   { code: 'en', native: 'English', label: 'English', shortCode: 'EN' },
@@ -21,11 +22,11 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   visible,
   onDismiss,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const handleSelectLanguage = async (code: string) => {
     try {
-      await i18n.changeLanguage(code);
+      await setAppLanguage(code);
     } catch (err) {
       console.error('Failed to change language', err);
     }
@@ -52,9 +53,9 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
               <MaterialCommunityIcons name="translate" size={24} color={colors.secondary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.headerTitle}>App Language / भाषा</Text>
+              <Text style={styles.headerTitle}>{t('languagePicker.title')}</Text>
               <Text style={styles.headerSubtitle}>
-                Select primary language for audio & cataloging
+                {t('languagePicker.subtitle')}
               </Text>
             </View>
             <TouchableOpacity onPress={onDismiss} style={styles.closeBtn}>
@@ -107,7 +108,7 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
             style={styles.cancelBtn}
             textColor={colors.textMuted}
           >
-            Close
+            {t('common.close')}
           </Button>
         </View>
       </View>

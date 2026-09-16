@@ -2,6 +2,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../../theme';
 import type { ArtisanProfile, ProfileStatus } from '../../types/contracts';
@@ -22,28 +23,28 @@ const STATUS_CONFIG: Record<
   }
 > = {
   verified: {
-    label: 'Verified Artisan Profile',
+    label: 'profile.status.verified',
     icon: 'shield-check',
     bgColor: colors.indigoLight,
     textColor: colors.secondary,
     borderColor: colors.indigoBorder,
   },
   pending_verification: {
-    label: 'Pending Coordinator Review',
+    label: 'profile.status.pending_verification',
     icon: 'clock-outline',
     bgColor: '#FEF3C7',
     textColor: '#92400E',
     borderColor: '#FDE68A',
   },
   rejected: {
-    label: 'Verification Rejected',
+    label: 'profile.status.rejected',
     icon: 'alert-circle-outline',
     bgColor: '#FEE2E2',
     textColor: colors.error,
     borderColor: '#FCA5A5',
   },
   incomplete: {
-    label: 'Profile Incomplete',
+    label: 'profile.status.incomplete',
     icon: 'account-outline',
     bgColor: colors.badgeNeutral,
     textColor: colors.textMuted,
@@ -52,6 +53,7 @@ const STATUS_CONFIG: Record<
 };
 
 export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo }) => {
+  const { t } = useTranslation();
   const status: ProfileStatus = profile?.profile_status || 'incomplete';
   const statusConfig = STATUS_CONFIG[status];
 
@@ -65,10 +67,10 @@ export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo
   // Assumption & Constraint Flag:
   // ArtisanProfile stores `role: string` (e.g. 'artisan'), but does not store an artisan-level craft category string.
   // Crafts belong to per-listing catalogues. We present the standard role label in terracotta.
-  const roleCraftSubtitle = 'Artisan Micro-entrepreneur • Craft Specialist';
+  const roleCraftSubtitle = t('profile.roleSubtitle');
 
   const username = profile?.username || 'artisan';
-  const phoneNumber = profile?.phone_number || 'Mobile not registered';
+  const phoneNumber = profile?.phone_number || t('profile.noMobile');
 
   return (
     <View style={styles.card}>
@@ -124,7 +126,7 @@ export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo
             style={[styles.statusText, { color: statusConfig.textColor }]}
             numberOfLines={1}
           >
-            {statusConfig.label}
+            {t(statusConfig.label)}
           </Text>
         </View>
 
@@ -133,7 +135,7 @@ export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo
           style={styles.infoButton}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Review status explanation"
+          accessibilityLabel={t('profile.statusInfoA11y')}
         >
           <MaterialCommunityIcons
             name="information-outline"

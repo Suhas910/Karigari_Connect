@@ -4,6 +4,7 @@ import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard 
 import { Text, Button, Card, TextInput, Chip } from 'react-native-paper';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
@@ -16,6 +17,7 @@ import { ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../
 const paiseToRupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
 
 export default function PriceScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'Price'>>();
   const headerHeight = useHeaderHeight();
@@ -131,7 +133,7 @@ export default function PriceScreen() {
         }
       }
     } catch (err) {
-      setPriceError('Could not load price calculation. Check connection and try again.');
+      setPriceError(t('price.loadError'));
     } finally {
       setLoading(false);
     }
@@ -194,15 +196,15 @@ export default function PriceScreen() {
   };
 
   if (loading) {
-    return <ProcessingIndicator hint="Calculating fair wage protection…" />;
+    return <ProcessingIndicator hint={t('price.calculating')} />;
   }
 
   if (priceError || !price) {
     return (
       <ErrorRetryCard
-        errorText={priceError ?? 'Something went wrong loading your price.'}
+        errorText={priceError ?? t('price.genericError')}
         onRetry={fetchPrice}
-        retryLabel="Retry"
+        retryLabel={t('common.retry')}
       />
     );
   }
@@ -215,19 +217,18 @@ export default function PriceScreen() {
           <StepHeader
             currentStep={5}
             totalSteps={5}
-            title="Price Protection"
-            subtitle="Statutory fair wage lookup"
+            title={t('price.protectionTitle')}
+            subtitle={t('price.protectionSubtitle')}
           />
 
           <View style={styles.content}>
             <Card style={styles.unavailableCard}>
               <Card.Content>
                 <Text variant="titleMedium" style={styles.cardTitle}>
-                  Wage rate under verification
+                  {t('price.underVerification')}
                 </Text>
                 <Text style={styles.unavailableText}>
-                  No official skilled-wage notification is on file for your craft cluster yet.
-                  Your coordinator will establish a verified price floor before publishing.
+                  {t('price.underVerificationText')}
                 </Text>
               </Card.Content>
             </Card>
@@ -236,10 +237,10 @@ export default function PriceScreen() {
               <Card style={styles.fallbackCard}>
                 <Card.Content>
                   <Text style={styles.fallbackBadge}>
-                    REFERENCE ONLY · NOT AN APPROVED FLOOR
+                    {t('price.referenceOnly')}
                   </Text>
                   <Text variant="titleMedium" style={styles.fallbackTitle}>
-                    {price.fallback_suggestion.used_tier === 'skilled' ? 'Skilled Tier Rate' : price.fallback_suggestion.used_tier}: ₹{price.fallback_suggestion.hourly_wage_inr.toFixed(2)}/hr
+                    {price.fallback_suggestion.used_tier === 'skilled' ? t('price.skilledTierRate') : price.fallback_suggestion.used_tier}: {t('price.perHour', { amount: `₹${price.fallback_suggestion.hourly_wage_inr.toFixed(2)}` })}
                   </Text>
                   <Text style={styles.fallbackNote}>
                     {price.fallback_suggestion.note}
@@ -258,7 +259,7 @@ export default function PriceScreen() {
             style={styles.continueBtn}
             contentStyle={{ height: 48 }}
           >
-            Continue to Submission
+            {t('price.continueToSubmission')}
           </Button>
         </BottomDock>
       </View>
@@ -287,23 +288,23 @@ export default function PriceScreen() {
         <StepHeader
           currentStep={5}
           totalSteps={5}
-          title="Fair Price Calculation"
-          subtitle="Transparent cost breakdown and protected floor"
+          title={t('price.title')}
+          subtitle={t('price.subtitle')}
         />
 
         <View style={styles.content}>
           <Card style={styles.breakdownCard}>
             <Card.Content>
-              <Text style={styles.sectionLabel}>COST BREAKDOWN</Text>
+              <Text style={styles.sectionLabel}>{t('price.costBreakdown')}</Text>
 
               <View style={styles.mathRow}>
-                <Text style={styles.mathLabel}>Raw Materials</Text>
+                <Text style={styles.mathLabel}>{t('price.rawMaterials')}</Text>
                 <Text style={styles.mathValue}>{paiseToRupees(price.inputs.material_cost_paise)}</Text>
               </View>
 
               <View style={styles.mathRow}>
                 <Text style={styles.mathLabel}>
-                  Labour ({price.inputs.labour_hours} hrs @ {paiseToRupees(price.inputs.hourly_wage_paise)}/hr)
+                  {t('price.labourLine', { hours: price.inputs.labour_hours, rate: paiseToRupees(price.inputs.hourly_wage_paise) })}
                 </Text>
                 <Text style={styles.mathValue}>
                   {paiseToRupees(price.inputs.labour_hours * price.inputs.hourly_wage_paise)}
@@ -313,11 +314,11 @@ export default function PriceScreen() {
               <View style={styles.divider} />
 
               <View style={styles.mathRow}>
-                <Text style={styles.floorLabel}>Protected Minimum Floor</Text>
+                <Text style={styles.floorLabel}>{t('price.floorLabel')}</Text>
                 <Text style={styles.floorValue}>{paiseToRupees(price.floor_amount_paise)}</Text>
               </View>
               <Text style={styles.floorNotice}>
-                Never sell below this amount. It covers your material expenses and official minimum skilled wage.
+                {t('price.floorNotice')}
               </Text>
             </Card.Content>
           </Card>
@@ -329,17 +330,17 @@ export default function PriceScreen() {
               <View style={styles.pendingVerificationCard}>
                 <View style={styles.pendingBadgeHeader}>
                   <View style={styles.amberDot} />
-                  <Text style={styles.pendingBadgeTitle}>Pending coordinator verification</Text>
+                  <Text style={styles.pendingBadgeTitle}>{t('price.pendingVerification')}</Text>
                 </View>
                 <Text style={styles.pendingBadgeCaption}>
-                  Floor calculated at your self-declared Master tier. A coordinator will verify your craft experience before final marketplace listing.
+                  {t('price.pendingVerificationText')}
                 </Text>
               </View>
             )}
 
           <Card style={styles.statCard}>
             <Card.Content>
-              <Text style={styles.statSectionLabel}>RECOMMENDED MARKETPLACE BAND (AI HEURISTIC)</Text>
+              <Text style={styles.statSectionLabel}>{t('price.recommendedBand')}</Text>
               <Text style={styles.statValue}>
                 {paiseToRupees(price.recommended_low_paise)} – {paiseToRupees(price.recommended_high_paise)}
               </Text>
@@ -350,9 +351,9 @@ export default function PriceScreen() {
           {/* Your Listing / Asking Price Card */}
           <Card style={styles.sellingPriceCard}>
             <Card.Content>
-              <Text style={styles.sectionLabel}>YOUR LISTING PRICE</Text>
+              <Text style={styles.sectionLabel}>{t('price.yourPrice')}</Text>
               <Text style={styles.sellingPriceSubtitle}>
-                You set your final product asking price. Tap a suggestion or enter your own:
+                {t('price.yourPriceText')}
               </Text>
 
               <View style={styles.priceInputRow}>
@@ -363,7 +364,7 @@ export default function PriceScreen() {
                   value={sellingPrice}
                   onChangeText={(val) => setSellingPrice(val.replace(/[^0-9]/g, ''))}
                   onFocus={handlePriceInputFocus}
-                  placeholder="Enter asking price"
+                  placeholder={t('price.enterPrice')}
                   style={styles.priceInput}
                   outlineColor={isBelowFloor ? colors.error : colors.border}
                   activeOutlineColor={isBelowFloor ? colors.error : colors.primary}
@@ -379,7 +380,7 @@ export default function PriceScreen() {
                   onPress={() => setSellingPrice(String(floorRupees))}
                   compact
                 >
-                  Floor: ₹{floorRupees.toLocaleString('en-IN')}
+                  {t('price.presetFloor', { amount: `₹${floorRupees.toLocaleString('en-IN')}` })}
                 </Chip>
                 <Chip
                   style={[styles.presetChip, sellingPrice === String(recLowRupees) && styles.presetChipFairActive]}
@@ -387,7 +388,7 @@ export default function PriceScreen() {
                   onPress={() => setSellingPrice(String(recLowRupees))}
                   compact
                 >
-                  Fair: ₹{recLowRupees.toLocaleString('en-IN')}
+                  {t('price.presetFair', { amount: `₹${recLowRupees.toLocaleString('en-IN')}` })}
                 </Chip>
                 <Chip
                   style={[styles.presetChip, sellingPrice === String(recHighRupees) && styles.presetChipActive]}
@@ -395,7 +396,7 @@ export default function PriceScreen() {
                   onPress={() => setSellingPrice(String(recHighRupees))}
                   compact
                 >
-                  Premium: ₹{recHighRupees.toLocaleString('en-IN')}
+                  {t('price.presetPremium', { amount: `₹${recHighRupees.toLocaleString('en-IN')}` })}
                 </Chip>
               </View>
 
@@ -403,7 +404,7 @@ export default function PriceScreen() {
               {isBelowFloor && (
                 <View style={styles.warningBox}>
                   <Text style={styles.warningText}>
-                    Protected wage notice: ₹{sellingPriceNum.toLocaleString('en-IN')} is below your protected floor of ₹{floorRupees.toLocaleString('en-IN')}. Selling below this does not cover your full recorded materials and statutory skilled wages.
+                    {t('price.belowFloor', { price: `₹${sellingPriceNum.toLocaleString('en-IN')}`, floor: `₹${floorRupees.toLocaleString('en-IN')}` })}
                   </Text>
                 </View>
               )}
@@ -412,12 +413,12 @@ export default function PriceScreen() {
 
           {price.wage_source && (
             <View style={styles.sourceBox}>
-              <Text style={styles.sourceLabel}>STATUTORY WAGE SOURCE</Text>
+              <Text style={styles.sourceLabel}>{t('price.wageSource')}</Text>
               <Text style={styles.sourceText}>
                 {price.wage_source.state_code}
                 {price.wage_source.zone ? ` · ${price.wage_source.zone.replace('_', ' ').toUpperCase()}` : ''}
                 {price.inputs?.skill_level ? ` · ${price.inputs.skill_level.replace('_', ' ').toUpperCase()}` : ''}
-                {' · Effective '}{price.wage_source.effective_from}
+                {' · '}{t('price.effective', { date: price.wage_source.effective_from })}
               </Text>
               <Text style={styles.sourceRef}>{price.wage_source.notification_ref}</Text>
             </View>
@@ -434,7 +435,7 @@ export default function PriceScreen() {
           style={styles.continueBtn}
           contentStyle={{ height: 48 }}
         >
-          Confirm & Proceed to Submit
+          {t('price.confirmProceed')}
         </Button>
       </BottomDock>
     </KeyboardAvoidingView>

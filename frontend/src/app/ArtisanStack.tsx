@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { useTranslation } from 'react-i18next';
 import ArtisanTabs from './ArtisanTabs';
 
 import CaptureScreen from '../features/capture/CaptureScreen';
@@ -21,6 +21,7 @@ const Stack = createNativeStackNavigator();
 export const APP_HEADER_TITLE = 'Karigari Connect';
 
 export default function ArtisanStack() {
+  const { t } = useTranslation();
   return (
     <Stack.Navigator
       initialRouteName="HomeTabs"
@@ -111,9 +112,7 @@ export default function ArtisanStack() {
       <Stack.Screen
         name="ArtisanProfile"
         component={ArtisanProfileScreen}
-        options={{
-          title: 'Artisan Profile',
-        }}
+        options={{ title: t('tabs.artisanProfile') }}
       />
     </Stack.Navigator>
   );

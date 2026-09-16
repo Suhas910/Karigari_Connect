@@ -1,13 +1,21 @@
 # backend/app/ai/service.py
 import json
 import uuid
+import logging
 from datetime import datetime, timezone
-from typing import Optional, Dict, Any, List
+from pathlib import Path
+from typing import Optional, Dict, Any, List, Tuple
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from .. import models, schemas
+from . import birefnet, studio
 from .gemini_client import gemini_client
+
+logger = logging.getLogger(__name__)
+
+# Uploaded and enhanced listing photos; served by main.py at /media.
+MEDIA_ROOT = Path(__file__).resolve().parents[2] / "media_store"
 
 STATUTORY_WAGES: Dict[str, Dict[str, Any]] = {
     "KA": {
@@ -135,6 +143,146 @@ class AIService:
         return job
 
     @staticmethod
+    def create_birefnet_image_job(
+        listing: models.ListingModel,
+        photos: List[Tuple[str, bytes]],
+        base_url: str,
+        db: Session
+    ) -> Tuple[models.JobModel, List[str]]:
+        """
+        Store the uploaded photos as original media and create a 'processing' image_studio job.
+        photos is a list of (file extension, bytes). run_birefnet_image_job completes the job.
+        Returns the job and the original media ids, in upload order.
+        """
+        listing_dir = MEDIA_ROOT / listing.id
+        listing_dir.mkdir(parents=True, exist_ok=True)
+        base_url = base_url.rstrip("/")
+
+        original_media_ids = []
+        for extension, content in photos:
+            media_id = str(uuid.uuid4())
+            filename = f"{media_id}.{extension}"
+            (listing_dir / filename).write_bytes(content)
+            db.add(models.MediaAssetModel(
+                id=media_id,
+                listing_id=listing.id,
+                kind="image",
+                variant="original",
+                status="complete",
+                url=f"{base_url}/media/{listing.id}/{filename}",
+                storage_path=f"{listing.id}/{filename}"
+            ))
+            original_media_ids.append(media_id)
+
+        job = models.JobModel(
+            job_id=str(uuid.uuid4()),
+            listing_id=listing.id,
+            type="image_studio",
+            status="processing",
+            attempt=1
+        )
+        listing.state = "processing"
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        return job, original_media_ids
+
+    @staticmethod
+    def run_birefnet_image_job(
+        job_id: str,
+        original_media_ids: List[str],
+        base_url: str,
+        engine: str = "processing",
+        background: str = "studio"
+    ) -> None:
+        """
+        Background task: turn each stored photo into a catalogue photo (angle, background, studio light)
+        with the requested studio engine, then complete or fail the job.
+        """
+        from ..database import SessionLocal
+
+        db = SessionLocal()
+        try:
+            job = db.query(models.JobModel).filter(models.JobModel.job_id == job_id).first()
+            if not job:
+                return
+            base_url = base_url.rstrip("/")
+            originals = [
+                db.query(models.MediaAssetModel).filter(models.MediaAssetModel.id == media_id).first()
+                for media_id in original_media_ids
+            ]
+
+            try:
+                enhanced, studio_results = [], []
+                for original in originals:
+                    studio_result = studio.enhance(
+                        (MEDIA_ROOT / original.storage_path).read_bytes(), engine=engine, background=background
+                    )
+                    content = studio_result.image_bytes
+                    media_id = str(uuid.uuid4())
+                    filename = f"{media_id}.jpg"
+                    (MEDIA_ROOT / original.listing_id / filename).write_bytes(content)
+                    media = models.MediaAssetModel(
+                        id=media_id,
+                        listing_id=original.listing_id,
+                        kind="image",
+                        variant="enhanced",
+                        status="complete",
+                        url=f"{base_url}/media/{original.listing_id}/{filename}",
+                        storage_path=f"{original.listing_id}/{filename}",
+                        metadata_json=json.dumps({
+                            "source_media_id": original.id,
+                            "model": birefnet.MODEL_ID,
+                            "engine": studio_result.engine,
+                            "ai_generated": studio_result.engine == "ai",
+                            "transformations": studio_result.transformations,
+                            "details": studio_result.details
+                        })
+                    )
+                    db.add(media)
+                    enhanced.append(media)
+                    studio_results.append(studio_result)
+            except Exception as exc:
+                logger.error("BiRefNet enhancement failed for job %s: %s", job_id, exc, exc_info=True)
+                db.rollback()
+                job.status = "failed"
+                job.result_data = json.dumps({"job_id": job_id, "status": "failed", "error": str(exc)})
+                db.commit()
+                return
+
+            audit = gemini_client.audit_image_quality(originals[0].url)
+            job.status = "complete"
+            job.result_data = json.dumps({
+                "job_id": job_id,
+                "status": "complete",
+                "quality": audit,
+                "original_url": originals[0].url,
+                "enhanced_media_id": enhanced[0].id,
+                "enhanced_url": enhanced[0].url,
+                "enhanced_urls": [media.url for media in enhanced],
+                "transformations": list(dict.fromkeys(t for r in studio_results for t in r.transformations)),
+                "requested_engine": engine,
+                "background": background,
+                "enhancements": [
+                    {
+                        "media_id": media.id,
+                        "engine": result.engine,
+                        "transformations": result.transformations,
+                        "human_review_required": result.human_review_required,
+                        **result.details
+                    }
+                    for media, result in zip(enhanced, studio_results)
+                ],
+                "human_review_required": (
+                    audit.get("overall") == "needs_review"
+                    or any(r.human_review_required for r in studio_results)
+                )
+            })
+            db.commit()
+        finally:
+            db.close()
+
+    @staticmethod
     def create_transcription_job(
         listing_id: str,
         audio_media_id: str,
@@ -209,6 +357,11 @@ class AIService:
             # By default prompt confirmation for financial/material cost to empower artisan control
             needs_confirmation.append("material_cost_paise")
 
+        # Gemini returns claims either as objects or as bare names such as "natural_dye".
+        raw_claims = [
+            c if isinstance(c, dict) else {"claim": c}
+            for c in (raw_cat.get("claims") or [])
+        ]
         claims_list = [
             schemas.ClaimSchema(
                 claim=c["claim"],
@@ -216,7 +369,7 @@ class AIService:
                 coordinator_verified=c.get("coordinator_verified", False),
                 evidence_note=c.get("evidence_note")
             )
-            for c in raw_cat.get("claims", [])
+            for c in raw_claims
         ]
 
         catalogue_draft = schemas.CatalogueDraft(

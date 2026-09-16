@@ -121,10 +121,10 @@ export default function ArtisanExperienceScreen() {
         <View style={styles.zoneSection}>
           <View style={styles.zoneSectionHeader}>
             <Text style={styles.zoneSectionTitle}>
-              Wage Jurisdiction & Zone
+              {t('experience.zoneTitle')}
             </Text>
             <Text style={styles.zoneSectionSub}>
-              {currentStateObj.name} ({currentStateObj.code}) · Pick the zone matching your workshop location:
+              {t('experience.zoneSub', { state: `${currentStateObj.name} (${currentStateObj.code})` })}
             </Text>
           </View>
 
@@ -157,8 +157,8 @@ export default function ArtisanExperienceScreen() {
             </View>
           ) : (
             <View style={styles.singleZoneCard}>
-              <Text style={styles.singleZoneTitle}>{availableZones[0]?.name || 'Statewide'}</Text>
-              <Text style={styles.singleZoneNote}>{availableZones[0]?.note || 'Unified minimum wage schedule'}</Text>
+              <Text style={styles.singleZoneTitle}>{availableZones[0]?.name || t('experience.statewide')}</Text>
+              <Text style={styles.singleZoneNote}>{availableZones[0]?.note || t('experience.unifiedSchedule')}</Text>
             </View>
           )}
         </View>
