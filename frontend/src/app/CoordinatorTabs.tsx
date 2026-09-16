@@ -51,6 +51,7 @@ export default function CoordinatorTabs() {
           fontWeight: '800',
           fontSize: 20,
           color: colors.text,
+          lineHeight: 28,
         },
         headerShadowVisible: false,
       }}

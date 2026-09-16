@@ -170,6 +170,31 @@ class SourceInfo(BaseModel):
     asr_provider: Optional[str] = None
     catalogue_provider: Optional[str] = None
 
+class MarketplaceInfo(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    quantity_available: Optional[int] = None
+    unit: Optional[str] = "piece"
+    min_order_qty: Optional[int] = 1
+    max_order_qty: Optional[int] = None
+    cod_available: Optional[bool] = False
+    returnable: Optional[bool] = False
+    cancellable: Optional[bool] = False
+
+class DimensionSet(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    length_cm: Optional[float] = None
+    width_cm: Optional[float] = None
+    height_cm: Optional[float] = None
+    weight_g: Optional[float] = None
+
+class ProductDimensions(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    product: Optional[DimensionSet] = None
+    packaging: Optional[DimensionSet] = None
+
 class CatalogueDraft(BaseModel):
     model_config = ConfigDict(extra="allow")
 
@@ -183,6 +208,8 @@ class CatalogueDraft(BaseModel):
     material_cost_paise: Optional[int] = 0
     provenance: Optional[ProvenanceInfo] = None
     source: Optional[SourceInfo] = None
+    marketplace: Optional[MarketplaceInfo] = None
+    dimensions: Optional[ProductDimensions] = None
 
 class CatalogueResult(BaseModel):
     model_config = ConfigDict(extra="allow")

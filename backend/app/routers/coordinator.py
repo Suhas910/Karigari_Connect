@@ -202,6 +202,22 @@ def export_listing(
                                 },
                                 "price": price_data,
                                 "category_id": cat_data.get("category", "Handicrafts"),
+                                "quantity": {
+                                    "available": {
+                                        "count": (cat_data.get("marketplace") or {}).get("quantity_available", 0)
+                                    },
+                                    "unitized": {
+                                        "measure": {"unit": (cat_data.get("marketplace") or {}).get("unit", "piece")}
+                                    },
+                                },
+                                "@ondc/org/returnable": (cat_data.get("marketplace") or {}).get("returnable", False),
+                                "@ondc/org/cancellable": (cat_data.get("marketplace") or {}).get("cancellable", False),
+                                "@ondc/org/available_on_cod": (cat_data.get("marketplace") or {}).get("cod_available", False),
+                                "@ondc/org/dimensions": {
+                                    "length": {"unit": "cm", "value": ((cat_data.get("dimensions") or {}).get("product") or {}).get("length_cm")},
+                                    "width": {"unit": "cm", "value": ((cat_data.get("dimensions") or {}).get("product") or {}).get("width_cm")},
+                                    "height": {"unit": "cm", "value": ((cat_data.get("dimensions") or {}).get("product") or {}).get("height_cm")},
+                                },
                                 "tags": {
                                     "heritage_claims": claims_data,
                                     "statutory_wage_protected": True,

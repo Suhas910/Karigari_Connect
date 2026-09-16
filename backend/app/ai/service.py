@@ -343,7 +343,7 @@ class AIService:
         elif payload and isinstance(payload, dict) and payload.get("transcript"):
             sample_text = payload.get("transcript")
         else:
-            sample_text = "Traditional handmade craft using natural materials."
+            sample_text = ""
 
         raw_cat = gemini_client.extract_catalogue_metadata(sample_text, declared_language=declared_lang)
 
@@ -353,9 +353,10 @@ class AIService:
         needs_confirmation = [
             f for f, score in field_confidence.items() if score < 0.85
         ]
-        if not needs_confirmation and "material_cost_paise" not in needs_confirmation:
-            # By default prompt confirmation for financial/material cost to empower artisan control
+        if "material_cost_paise" not in needs_confirmation:
             needs_confirmation.append("material_cost_paise")
+        if "labour.hours" not in needs_confirmation:
+            needs_confirmation.append("labour.hours")
 
         # Gemini returns claims either as objects or as bare names such as "natural_dye".
         raw_claims = [
