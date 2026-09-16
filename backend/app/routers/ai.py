@@ -1,0 +1,96 @@
+# backend/app/routers/ai.py
+import json
+from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from ..database import get_db
+from .. import models, schemas, auth
+from ..ai.service import ai_service
+
+router = APIRouter(tags=["AI Pipeline"])
+
+# --- IMAGE STUDIO ENDPOINTS ---
+@router.post("/listings/{listing_id}/jobs/image-studio")
+@router.post("/listings/{listing_id}/ai/image-studio")
+def request_image_studio(
+    listing_id: str,
+    payload: schemas.ImageStudioRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    job = ai_service.create_image_job(
+        listing_id=listing_id,
+        media_id=payload.media_id,
+        photos=payload.photos,
+        db=db
+    )
+    return {"job_id": job.job_id}
+
+# --- TRANSCRIPTION ENDPOINTS ---
+@router.post("/listings/{listing_id}/jobs/transcription")
+@router.post("/listings/{listing_id}/ai/transcription")
+def request_transcription(
+    listing_id: str,
+    payload: schemas.TranscriptionRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    job = ai_service.create_transcription_job(
+        listing_id=listing_id,
+        audio_media_id=payload.audio_media_id,
+        declared_language=payload.declared_language,
+        db=db
+    )
+    return {"job_id": job.job_id}
+
+# --- ASYNC JOB STATUS & RESULT ENDPOINTS ---
+@router.get("/jobs/{job_id}", response_model=schemas.JobStatus)
+def get_job_status(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    job = db.query(models.JobModel).filter(models.JobModel.job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    return schemas.JobStatus(
+        job_id=job.job_id,
+        type=job.type,
+        status=job.status,
+        attempt=job.attempt,
+        created_at=job.created_at.isoformat() if job.created_at else "",
+        updated_at=job.updated_at.isoformat() if job.updated_at else ""
+    )
+
+@router.get("/jobs/{job_id}/result")
+def get_job_result(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    job = db.query(models.JobModel).filter(models.JobModel.job_id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if not job.result_data:
+        raise HTTPException(status_code=400, detail="Job result not yet available")
+
+    return json.loads(job.result_data)
+
+# --- CATALOGUE GENERATION ENDPOINTS ---
+@router.post("/listings/{listing_id}/jobs/catalogue", response_model=schemas.CatalogueResult)
+@router.post("/listings/{listing_id}/ai/catalogue", response_model=schemas.CatalogueResult)
+def request_catalogue_generation(
+    listing_id: str,
+    payload: Optional[Dict[str, Any]] = None,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    return ai_service.generate_catalogue(
+        listing_id=listing_id,
+        payload=payload,
+        db=db
+    )
+

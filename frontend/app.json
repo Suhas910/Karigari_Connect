@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "Karigari Connect",
+    "slug": "karigari-connect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/icon.png",
+    "scheme": "frontend",
+    "userInterfaceStyle": "light",
+    "androidStatusBar": {
+      "barStyle": "dark-content",
+      "backgroundColor": "#FFFFFF",
+      "translucent": false
+    },
+    "ios": {
+      "icon": "./src/assets/expo.icon",
+      "bundleIdentifier": "com.avinavkaushal.karigariconnect",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Karigari Connect to access your camera to photograph craft products."
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Karigari Connect to record your voice to describe craft details."
+        }
+      ],
+      "expo-secure-store",
+      "expo-sqlite",
+      "expo-audio",
+      "expo-asset"
+    ],
+    "experiments": {
+      "reactCompiler": true
+    },
+    "extra": {
+      "apiBaseUrl": "http://192.168.1.104:8000/api/v1",
+      "eas": {
+        "projectId": "2402bd36-cd1c-45bf-8f82-57dd00d533ee"
+      },
+      "supabaseUrl": "https://your-project.supabase.co",
+      "supabaseAnonKey": "your-anon-key"
+    },
+    "android": {
+      "package": "com.avinavkaushal.karigariconnect",
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
+    }
+  }
+}

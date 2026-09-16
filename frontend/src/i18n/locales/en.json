@@ -1,0 +1,53 @@
+{
+  "speak": {
+    "instruction": "Tap microphone and describe product",
+    "start": "Start Recording",
+    "stop": "Stop Recording",
+    "title": "Spoken Details",
+    "subtitle": "Speak about your craft in your native language",
+    "guideTitle": "What to mention:",
+    "guideItemMaterials": "Materials used (e.g., silk, cotton, river clay)",
+    "guideItemLabour": "Total hours or days of labour invested",
+    "guideItemTechnique": "Technique applied (e.g., handloom weave, hand carving)",
+    "tapToRecord": "Tap to start recording",
+    "recordingActive": "Recording... Tap square to stop",
+    "recordingFinished": "Recording finished",
+    "transcribing": "Transcribing speech into catalogue details...",
+    "transcriptionFailed": "Transcription could not complete. Please record again.",
+    "languageLabel": "Language",
+    "continueBtn": "Continue to Confirmation",
+    "micPermissionRequired": "Microphone permission is required to record. Please enable it in device settings.",
+    "startRecordingError": "Could not start recording. Please try again.",
+    "processingError": "Could not process recording. Check connection and try again."
+  },
+  "onboarding": {
+    "skillQuestion": {
+      "title": "How long have you been doing this craft?",
+      "subtitle": "This helps us protect your fair price.",
+      "options": {
+        "beginner": {
+          "icon": "🌱",
+          "label": "Apprentice / Still learning"
+        },
+        "intermediate": {
+          "icon": "🧵",
+          "label": "Practicing Artisan (2–5 years, independent)"
+        },
+        "skilled": {
+          "icon": "🛠️",
+          "label": "Experienced Craftsman (5+ years mastery)"
+        },
+        "master": {
+          "icon": "🏆",
+          "label": "Master Artisan (10+ years / train others / awardee)"
+        }
+      },
+      "artisanCardPrompt": {
+        "question": "Do you have an artisan ID card? (PM Vishwakarma, ODOP, or SHG card)",
+        "yes": "Yes, I have one",
+        "no": "No / not sure",
+        "helperText": "If yes, your coordinator will confirm your skill grade from it later."
+      }
+    }
+  }
+}
