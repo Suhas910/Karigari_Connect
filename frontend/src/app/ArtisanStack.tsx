@@ -1,9 +1,10 @@
-// src/app/ArtisanStack
+// src/app/ArtisanStack.tsx
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import ArtisanTabs from './ArtisanTabs';
+
 import CaptureScreen from '../features/capture/CaptureScreen';
 import ImageReviewScreen from '../features/image-review/ImageReviewScreen';
 import SpeakScreen from '../features/speak/SpeakScreen';
@@ -11,6 +12,7 @@ import ConfirmDetailsScreen from '../features/confirm-details/ConfirmDetailsScre
 import PriceScreen from '../features/price/PriceScreen';
 import SubmitApprovalScreen from '../features/submit-approval/SubmitApprovalScreen';
 import ArtisanProfileScreen from '../features/profile/ArtisanProfileScreen';
+import ListingStatusScreen from '../features/listing-status/ListingStatusScreen';
 
 import { colors } from '../theme';
 
@@ -27,7 +29,9 @@ export default function ArtisanStack() {
         statusBarStyle: 'dark',
         headerTitle: APP_HEADER_TITLE,
         headerTintColor: colors.text,
-        headerStyle: { backgroundColor: colors.surface },
+        headerStyle: {
+          backgroundColor: colors.surface,
+        },
         headerTitleStyle: {
           fontWeight: '800',
           fontSize: 20,
@@ -41,41 +45,70 @@ export default function ArtisanStack() {
         component={ArtisanTabs}
         options={{ headerShown: false }}
       />
+
       <Stack.Screen
         name="MyListings"
         component={ArtisanTabs}
         options={{ headerShown: false }}
       />
+
       <Stack.Screen
         name="Capture"
         component={CaptureScreen}
-        options={{ title: APP_HEADER_TITLE, headerShown: false }}
+        options={{
+          title: APP_HEADER_TITLE,
+          headerShown: false,
+        }}
       />
+
       <Stack.Screen
         name="ImageReview"
         component={ImageReviewScreen}
-        options={{ title: APP_HEADER_TITLE }}
+        options={{
+          title: APP_HEADER_TITLE,
+        }}
       />
+
       <Stack.Screen
-        name="Speak" 
+        name="Speak"
         component={SpeakScreen}
-        options={{ title: APP_HEADER_TITLE }}
+        options={{
+          title: APP_HEADER_TITLE,
+        }}
       />
-      <Stack.Screen 
-        name="ConfirmDetails" 
+
+      <Stack.Screen
+        name="ConfirmDetails"
         component={ConfirmDetailsScreen}
-        options={{ title: APP_HEADER_TITLE }}
+        options={{
+          title: APP_HEADER_TITLE,
+        }}
       />
-      <Stack.Screen 
+
+      <Stack.Screen
         name="Price"
         component={PriceScreen}
-        options={{ title: APP_HEADER_TITLE }}
+        options={{
+          title: APP_HEADER_TITLE,
+        }}
       />
+
       <Stack.Screen
         name="SubmitApproval"
         component={SubmitApprovalScreen}
-        options={{ title: APP_HEADER_TITLE }}
+        options={{
+          title: APP_HEADER_TITLE,
+        }}
       />
+
+      <Stack.Screen
+        name="ListingStatus"
+        component={ListingStatusScreen}
+        options={{
+          title: 'Listing Status',
+        }}
+      />
+
       <Stack.Screen
         name="ArtisanProfile"
         component={ArtisanProfileScreen}
