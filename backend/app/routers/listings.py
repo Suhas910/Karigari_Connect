@@ -4,6 +4,8 @@ import uuid
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from ..supabase_client import upload_media_bytes
 
 from ..database import get_db
 from .. import models, schemas, auth
@@ -189,9 +191,9 @@ def get_listing(
     return format_listing_response(listing)
 
 @router.post("/{listing_id}/media", response_model=schemas.MediaUploadResponse)
-def complete_media_upload(
+async def complete_media_upload(
     listing_id: str,
-    payload: schemas.MediaUploadRequest,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
@@ -203,21 +205,50 @@ def complete_media_upload(
         raise HTTPException(status_code=403, detail="Not authorized to update this listing")
 
     media_id = str(uuid.uuid4())
-    default_url = (
-        "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
-        if payload.kind == "image"
-        else "https://actions.google.com/sounds/v1/ambiences/outdoor_market.ogg"
-    )
-    url = payload.url or default_url
+    content_type = request.headers.get("content-type", "")
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        file_obj = form.get("file")
+        kind = str(form.get("kind", "image"))
+        checksum = form.get("client_checksum")
+
+        if file_obj and hasattr(file_obj, "read"):
+            contents = await file_obj.read()
+            filename = f"{listing_id}/{media_id}_{getattr(file_obj, 'filename', 'upload.bin')}"
+            file_ct = getattr(file_obj, "content_type", "application/octet-stream")
+            url = upload_media_bytes("media", filename, contents, content_type=file_ct)
+        else:
+            raw_url = form.get("url")
+            if raw_url:
+                url = str(raw_url)
+            else:
+                # Fixed media kind check for multipart fallback
+                url = (
+                    "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
+                    if kind == "image"
+                    else "https://actions.google.com/sounds/v1/ambiences/outdoor_market.ogg"
+                )
+    else:
+        body = await request.json()
+        kind = body.get("kind", "image")
+        checksum = body.get("client_checksum")
+        url = body.get("url")
+        if not url:
+            url = (
+                "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
+                if kind == "image"
+                else "https://actions.google.com/sounds/v1/ambiences/outdoor_market.ogg"
+            )
 
     media = models.MediaAssetModel(
         id=media_id,
         listing_id=listing_id,
-        kind=payload.kind,
+        kind=kind,
         variant="original",
         status="complete",
         url=url,
-        checksum=payload.client_checksum
+        checksum=checksum
     )
     db.add(media)
     db.commit()
