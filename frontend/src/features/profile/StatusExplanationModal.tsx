@@ -33,7 +33,7 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
           }),
           desc: t('statusModal.verified.desc'),
           icon: 'shield-check' as const,
-          color: '#1E40AF',
+          color: colors.secondary,
           bgColor: colors.indigoLight,
         };
       case 'pending_verification':

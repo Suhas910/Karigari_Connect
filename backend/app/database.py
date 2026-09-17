@@ -29,13 +29,29 @@ sqlite_engine = create_engine(
 SQLiteSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sqlite_engine)
 
 
-def ensure_sqlite_schema(eng):
-    """Ensure SQLite database has all required columns if table already existed."""
+def ensure_user_schema_columns(eng):
+    """
+    Ensure the `users` table has every column models.py currently expects,
+    adding any that are missing via ALTER TABLE.
+
+    Base.metadata.create_all() only creates TABLES that don't exist yet — it
+    never adds columns to a table that's already there. Without this running
+    against the PRIMARY engine too (not just the SQLite fallback, which is
+    all the old ensure_sqlite_schema() covered), the live Postgres/Neon DB
+    silently drifts from models.py on every schema change, and the first
+    write to a new column 500s in production while working fine locally
+    against a fresh SQLite file.
+
+    Column type strings below are plain ANSI-ish tokens (VARCHAR(n), BOOLEAN,
+    JSON) that both SQLite (which doesn't enforce declared types on ALTER
+    TABLE ADD COLUMN) and Postgres accept, so one list works for both engines.
+    """
     try:
         inspector = inspect(eng)
         if "users" in inspector.get_table_names():
             columns = {c["name"] for c in inspector.get_columns("users")}
             needed_columns = [
+                # --- pre-existing (kept for any engine that never ran this before) ---
                 ("profile_status", "VARCHAR(32) DEFAULT 'incomplete'"),
                 ("declared_skill_level", "VARCHAR(32)"),
                 ("declared_zone", "VARCHAR(64)"),
@@ -45,6 +61,35 @@ def ensure_sqlite_schema(eng):
                 ("verified_by", "INTEGER"),
                 ("verified_at", "DATETIME"),
                 ("phone_number", "VARCHAR(20)"),
+                # --- PROFILE-EXPANSION: personal ---
+                ("first_name", "VARCHAR(100)"),
+                ("middle_name", "VARCHAR(100)"),
+                ("last_name", "VARCHAR(100)"),
+                ("name_as_per_aadhaar", "VARCHAR(150)"),
+                ("gender", "VARCHAR(20)"),
+                ("profile_image_url", "VARCHAR(500)"),
+                # --- PROFILE-EXPANSION: business ---
+                ("business_name", "VARCHAR(200)"),
+                ("brand_name", "VARCHAR(200)"),
+                ("establishment_type", "VARCHAR(30)"),
+                ("pan_number", "VARCHAR(10)"),
+                ("aadhaar_number", "VARCHAR(12)"),
+                ("gst_registered", "BOOLEAN DEFAULT FALSE"),
+                ("gst_number", "VARCHAR(15)"),
+                ("enrollment_number", "VARCHAR(50)"),
+                ("business_address_line", "VARCHAR(300)"),
+                ("pincode", "VARCHAR(6)"),
+                ("district", "VARCHAR(100)"),
+                ("city", "VARCHAR(100)"),
+                ("business_state_code", "VARCHAR(5)"),
+                ("ondc_std_code", "VARCHAR(10)"),
+                ("location_type", "VARCHAR(20)"),
+                ("pickup_days", "JSON"),
+                # --- PROFILE-EXPANSION: bank ---
+                ("account_holder_name", "VARCHAR(150)"),
+                ("account_number", "VARCHAR(30)"),
+                ("ifsc_code", "VARCHAR(11)"),
+                ("bank_name", "VARCHAR(150)"),
             ]
             with eng.connect() as conn:
                 for col_name, col_type in needed_columns:
@@ -53,9 +98,9 @@ def ensure_sqlite_schema(eng):
                             conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type};"))
                             conn.commit()
                         except Exception as exc:
-                            logger.warning("Failed to add column %s to SQLite users: %s", col_name, exc)
+                            logger.warning("Failed to add column %s to users table (%s): %s", col_name, eng.dialect.name, exc)
     except Exception as e:
-        logger.warning("Error checking SQLite schema: %s", e)
+        logger.warning("Error checking users table schema (%s): %s", eng.dialect.name, e)
 
 
 def create_resilient_engine():
@@ -87,7 +132,7 @@ def create_resilient_engine():
                     time.sleep(1)
 
     logger.warning("Falling back to local SQLite: %s", SQLITE_URL)
-    ensure_sqlite_schema(sqlite_engine)
+    ensure_user_schema_columns(sqlite_engine)
     return sqlite_engine
 
 
@@ -140,13 +185,14 @@ def init_db():
     # Initialize primary engine
     try:
         Base.metadata.create_all(bind=engine)
+        ensure_user_schema_columns(engine)  # PROFILE-EXPANSION FIX: patch columns on an already-existing primary table too
         seed_demo_users(engine)
     except Exception as exc:
         logger.warning("Failed initializing primary database: %s", exc)
 
     # Always ensure fallback SQLite engine is fully initialized and seeded
     try:
-        ensure_sqlite_schema(sqlite_engine)
+        ensure_user_schema_columns(sqlite_engine)
         Base.metadata.create_all(bind=sqlite_engine)
         seed_demo_users(sqlite_engine)
     except Exception as exc:

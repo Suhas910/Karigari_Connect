@@ -1,5 +1,6 @@
 // src/store/draftStore.ts
 import { create } from 'zustand';
+import { SUPPORTED_STATES, type SupportedState, type StateZone } from '../constants/states';
 
 export type SkillLevel = 'unskilled' | 'semi_skilled' | 'skilled' | 'highly_skilled';
 
@@ -11,49 +12,13 @@ export interface SkillDeclaration {
   stateCode?: string;
 }
 
-export interface StateZone {
-  code: string;
-  name: string;
-  note: string;
-}
+export type { StateZone, SupportedState };
 
-export interface SupportedState {
-  code: string;
-  name: string;
-  note: string;
-  zones: StateZone[];
-}
-
-export const PILOT_STATES: SupportedState[] = [
-  {
-    code: 'KA',
-    name: 'Karnataka',
-    note: 'Zones 1–4',
-    zones: [
-      { code: 'zone_1', name: 'Zone 1', note: 'Bengaluru (BBMP) & Agglomeration Areas' },
-      { code: 'zone_2', name: 'Zone 2', note: 'Other Municipal Corporations (Mysore, Mangalore, Hubballi, etc.)' },
-      { code: 'zone_3', name: 'Zone 3', note: 'District Headquarters' },
-      { code: 'zone_4', name: 'Zone 4', note: 'Rural & all other parts of Karnataka' },
-    ],
-  },
-  {
-    code: 'UP',
-    name: 'Uttar Pradesh',
-    note: 'Statewide Unified Schedule',
-    zones: [
-      { code: 'statewide', name: 'Statewide', note: 'Unified schedule (Varanasi, Lucknow, etc.)' },
-    ],
-  },
-  {
-    code: 'WB',
-    name: 'West Bengal',
-    note: 'Zones A & B',
-    zones: [
-      { code: 'zone_a', name: 'Zone A', note: 'Kolkata, Municipalities & Notified Areas' },
-      { code: 'zone_b', name: 'Zone B', note: 'Rural & rest of West Bengal (Shantiniketan, etc.)' },
-    ],
-  },
-];
+// Kept as PILOT_STATES for backward compatibility — 8 existing files import
+// this name (ArtisanProfileScreen, SkillTierEditModal, LiveListingsScreen,
+// InReviewListingsScreen, MyListingsScreen, ArtisanExperienceScreen). Full
+// list now lives in constants/states.ts.
+export const PILOT_STATES: SupportedState[] = SUPPORTED_STATES;
 
 interface DraftState {
   activeDraftId: string | null;

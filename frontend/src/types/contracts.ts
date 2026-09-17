@@ -82,6 +82,7 @@ export interface PriceResult {
     skill_level_self_declared?: string;
     skill_level_source?: 'self_declared' | 'technique_floor' | 'artisan_card_elevation' | 'coordinator_verified';
     zone?: string;
+    state_code?: string;
   };
   floor_amount_paise: number;
   recommended_low_paise: number;
@@ -209,6 +210,72 @@ export interface ArtisanProfile {
   verified_skill_level: string | null;
   verified_by: number | null;
   verified_at: string | null;
+  // PROFILE-EXPANSION: personal
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  name_as_per_aadhaar?: string | null;
+  email?: string | null;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
+  profile_image_url?: string | null;
+  // PROFILE-EXPANSION: business
+  business_name?: string | null;
+  brand_name?: string | null;
+  establishment_type?: 'individual' | 'proprietorship' | 'partnership' | 'llp' | 'pvt_ltd' | 'public_ltd' | 'huf' | 'trust' | 'society' | null;
+  pan_number?: string | null;
+  aadhaar_number?: string | null; // masked by backend, e.g. "XXXXXXXX1234"
+  gst_registered?: boolean | null;
+  gst_number?: string | null;
+  enrollment_number?: string | null;
+  business_address_line?: string | null;
+  pincode?: string | null;
+  district?: string | null;
+  city?: string | null;
+  business_state_code?: string | null;
+  ondc_std_code?: string | null;
+  location_type?: 'warehouse' | 'shop' | 'office' | 'home' | null;
+  pickup_days?: string[] | null;
+  // PROFILE-EXPANSION: bank
+  account_holder_name?: string | null;
+  account_number?: string | null; // masked by backend
+  ifsc_code?: string | null;
+  bank_name?: string | null;
+}
+
+export interface PersonalDetailsUpdate {
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  name_as_per_aadhaar?: string;
+  email?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  profile_image_url?: string;
+}
+
+export interface BusinessDetailsUpdate {
+  business_name?: string;
+  brand_name?: string;
+  establishment_type?: 'individual' | 'proprietorship' | 'partnership' | 'llp' | 'pvt_ltd' | 'public_ltd' | 'huf' | 'trust' | 'society';
+  pan_number?: string;
+  aadhaar_number?: string;
+  gst_registered?: boolean;
+  gst_number?: string;
+  enrollment_number?: string;
+  business_address_line?: string;
+  pincode?: string;
+  district?: string;
+  city?: string;
+  business_state_code?: string;
+  ondc_std_code?: string;
+  location_type?: 'warehouse' | 'shop' | 'office' | 'home';
+  pickup_days?: string[];
+}
+
+export interface BankDetailsUpdate {
+  account_holder_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  bank_name?: string;
 }
 
 export interface ArtisanProfileSubmitRequest {
@@ -268,6 +335,9 @@ export interface ListingService {
   requestExport(listingId: string, payload: { target: string; schema_version: string; simulate_network_submission?: boolean }): Promise<ExportResult>;
   getArtisanProfile(userId?: number): Promise<ArtisanProfile>;
   submitArtisanProfile(payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile>;
+  submitPersonalDetails(payload: PersonalDetailsUpdate): Promise<ArtisanProfile>;
+  submitBusinessDetails(payload: BusinessDetailsUpdate): Promise<ArtisanProfile>;
+  submitBankDetails(payload: BankDetailsUpdate): Promise<ArtisanProfile>;
   getPendingArtisanProfiles(): Promise<ArtisanProfile[]>;
   reviewArtisanProfile(userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile>;
   submitSupportMessage(payload: SupportMessageSubmitRequest): Promise<SupportMessage>;

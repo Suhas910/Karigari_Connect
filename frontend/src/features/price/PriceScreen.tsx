@@ -66,6 +66,10 @@ export default function PriceScreen() {
               profileZone = profile.declared_zone;
             }
           }
+
+          if (profileState) {
+            useDraftStore.getState().setSelectedState(profileState, profileZone);
+          }
         }
       } catch (err) {
         // Fall back gracefully if offline or mock
@@ -74,16 +78,16 @@ export default function PriceScreen() {
       const materialCostInr = cat?.material_cost_paise ? Math.round(cat.material_cost_paise / 100) : 800;
       const labourHours = cat?.labour?.hours ?? 12;
       const stateCode =
-        useDraftStore.getState().selectedState ||
         profileState ||
         declaration?.stateCode ||
+        useDraftStore.getState().selectedState ||
         cat?.labour?.state_code ||
         'KA';
 
       const zoneCode =
-        useDraftStore.getState().selectedZone ||
         profileZone ||
         declaration?.zone ||
+        useDraftStore.getState().selectedZone ||
         'zone_1';
 
       let declaredSkill = declaration?.skillLevelSelfDeclared;

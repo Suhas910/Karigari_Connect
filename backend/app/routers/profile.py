@@ -10,6 +10,15 @@ from .. import models, schemas, auth
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
+def _mask_tail(value: Optional[str], visible: int = 4) -> Optional[str]:
+    """Mask all but the last `visible` characters, e.g. Aadhaar/account numbers."""
+    if not value:
+        return value
+    if len(value) <= visible:
+        return "*" * len(value)
+    return "*" * (len(value) - visible) + value[-visible:]
+
+
 def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse:
     return schemas.ArtisanProfileResponse(
         user_id=user.user_id,
@@ -24,6 +33,36 @@ def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse
         verified_skill_level=user.verified_skill_level,
         verified_by=user.verified_by,
         verified_at=user.verified_at,
+        # PROFILE-EXPANSION: personal
+        first_name=user.first_name,
+        middle_name=user.middle_name,
+        last_name=user.last_name,
+        name_as_per_aadhaar=user.name_as_per_aadhaar,
+        email=user.email,
+        gender=user.gender,
+        profile_image_url=user.profile_image_url,
+        # PROFILE-EXPANSION: business
+        business_name=user.business_name,
+        brand_name=user.brand_name,
+        establishment_type=user.establishment_type,
+        pan_number=user.pan_number,
+        aadhaar_number=_mask_tail(user.aadhaar_number),
+        gst_registered=user.gst_registered,
+        gst_number=user.gst_number,
+        enrollment_number=user.enrollment_number,
+        business_address_line=user.business_address_line,
+        pincode=user.pincode,
+        district=user.district,
+        city=user.city,
+        business_state_code=user.business_state_code,
+        ondc_std_code=user.ondc_std_code,
+        location_type=user.location_type,
+        pickup_days=user.pickup_days,
+        # PROFILE-EXPANSION: bank
+        account_holder_name=user.account_holder_name,
+        account_number=_mask_tail(user.account_number),
+        ifsc_code=user.ifsc_code,
+        bank_name=user.bank_name,
     )
 
 
@@ -50,6 +89,55 @@ def submit_artisan_profile(
     current_user.id_proof_number = payload.id_proof_number
     current_user.profile_status = "pending_verification"
 
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user)
+
+
+@router.post("/artisan/personal", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/personal", response_model=schemas.ArtisanProfileResponse)
+def submit_personal_details(
+    payload: schemas.PersonalDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """
+    Partial update of personal details (name, email, gender, profile image).
+    Does NOT touch profile_status — that transition belongs exclusively to
+    submit_artisan_profile()'s skill/ID verification flow above.
+    """
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user)
+
+
+@router.post("/artisan/business", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/business", response_model=schemas.ArtisanProfileResponse)
+def submit_business_details(
+    payload: schemas.BusinessDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Partial update of business/KYC details. Does NOT touch profile_status."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user)
+
+
+@router.post("/artisan/bank", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/bank", response_model=schemas.ArtisanProfileResponse)
+def submit_bank_details(
+    payload: schemas.BankDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Partial update of bank details. Does NOT touch profile_status."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
     return format_profile_response(current_user)

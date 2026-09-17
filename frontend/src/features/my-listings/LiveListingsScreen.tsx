@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   headerRightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: spacing.sm,
+    marginRight: 16,
   },
   locationPill: {
     flexDirection: 'row',

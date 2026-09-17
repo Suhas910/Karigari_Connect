@@ -36,6 +36,25 @@
 
 ---
 
+### Artisan Profile Expansion & Verification
+
+- **Profile Router** (`backend/app/routers/profile.py`):
+  - `GET /api/v1/profile/artisan/me` (alias `/profile/artisan`) — Retrieve full artisan profile including personal, business, and bank details with masked PII.
+  - `POST /api/v1/profile/artisan` — Submit declared skill level and ID proof for verification (sets `profile_status = "pending_verification"`).
+  - `POST /api/v1/profile/artisan/personal` — Partial update for personal details (`first_name`, `middle_name`, `last_name`, `name_as_per_aadhaar`, `email`, `gender`, `profile_image_url`). Does NOT alter `profile_status`.
+  - `POST /api/v1/profile/artisan/business` — Partial update for KYC & business details (`business_name`, `brand_name`, `establishment_type`, `pan_number`, `aadhaar_number`, `gst_registered`, `gst_number`, `enrollment_number`, `business_address_line`, `pincode`, `district`, `city`, `business_state_code`, `ondc_std_code`, `location_type`, `pickup_days`). Enforces strict regex & cross-field GST vs Enrollment conditionality. Does NOT alter `profile_status`.
+  - `POST /api/v1/profile/artisan/bank` — Partial update for banking details (`account_holder_name`, `account_number`, `ifsc_code`, `bank_name`). Enforces IFSC regex. Does NOT alter `profile_status`.
+  - `GET /api/v1/profile/artisan/pending` — Coordinator reads all profiles pending review.
+  - `POST /api/v1/profile/artisan/{user_id}/review` — Coordinator decision (`verified` or `rejected`).
+
+- **Frontend Profile Screen & Modals** (`frontend/src/features/profile/`):
+  - `ArtisanProfileScreen.tsx` — Modular screen with `IdentityCard`, `PersonalDetailsCard`, `LocationCard`, `BusinessDetailsCard`, `BankDetailsCard`, and `SettingsRow`.
+  - `PersonalDetailsEditModal.tsx`, `BusinessDetailsEditModal.tsx`, `BankDetailsEditModal.tsx` — Full form modals with inline validation, status bar translucency, and scroll containers.
+  - `pincodeLookup.ts` — Automatic postal API prefill for district, city, and state.
+  - `states.ts` — Comprehensive 36 Indian states & UTs coverage, re-exported as `PILOT_STATES`.
+
+---
+
 ### Listings Lifecycle (9-State Machine)
 
 - **Listings Router** (`backend/app/routers/listings.py`):

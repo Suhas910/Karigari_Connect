@@ -70,6 +70,7 @@ export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo
   const roleCraftSubtitle = t('profile.roleSubtitle');
 
   const username = profile?.username || 'artisan';
+  const displayName = profile?.name_as_per_aadhaar?.trim() || username;
   const phoneNumber = profile?.phone_number || t('profile.noMobile');
 
   return (
@@ -82,7 +83,7 @@ export const IdentityCard: React.FC<IdentityCardProps> = ({ profile, onPressInfo
 
         <View style={styles.nameContainer}>
           <Text style={styles.artisanName} numberOfLines={1}>
-            {username}
+            {displayName}
           </Text>
           <Text style={styles.roleSubtitle} numberOfLines={1}>
             {roleCraftSubtitle}

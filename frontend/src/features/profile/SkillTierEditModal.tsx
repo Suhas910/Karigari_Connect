@@ -17,7 +17,7 @@
 // 4. Sticky Bottom Action Dock:
 //    - Submit button anchored at the bottom with safe area insets so artisans don't have to scroll.
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -26,6 +26,7 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -35,6 +36,8 @@ import { useTranslation } from 'react-i18next';
 import { colors, spacing } from '../../theme';
 import { type SkillOption } from '../../components';
 import { PILOT_STATES } from '../../store/draftStore';
+import { getWageFloorPreview } from '../../constants/wageRates';
+import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 import type { ArtisanProfile, IdProofType } from '../../types/contracts';
 
 interface CraftTierOption {
@@ -104,60 +107,7 @@ const ID_PROOFS: CredentialOption[] = [
   },
 ];
 
-// Grounded in wage_rates.json & State Minimum Wage Notifications
-const WAGE_FLOOR_LOOKUP: Record<
-  string,
-  Record<string, Record<SkillOption, { hourly: number; daily: number }>>
-> = {
-  KA: {
-    zone_1: {
-      beginner: { hourly: 75.49, daily: 603.91 },
-      intermediate: { hourly: 81.06, daily: 648.47 },
-      skilled: { hourly: 87.19, daily: 697.5 },
-      master: { hourly: 93.93, daily: 751.46 },
-    },
-    zone_2: {
-      beginner: { hourly: 72.84, daily: 582.68 },
-      intermediate: { hourly: 78.14, daily: 625.13 },
-      skilled: { hourly: 83.98, daily: 671.82 },
-      master: { hourly: 90.4, daily: 723.23 },
-    },
-    zone_3: {
-      beginner: { hourly: 70.31, daily: 562.47 },
-      intermediate: { hourly: 75.36, daily: 602.9 },
-      skilled: { hourly: 80.92, daily: 647.38 },
-      master: { hourly: 87.04, daily: 696.34 },
-    },
-    zone_4: {
-      beginner: { hourly: 67.9, daily: 543.22 },
-      intermediate: { hourly: 72.72, daily: 581.72 },
-      skilled: { hourly: 78.01, daily: 624.08 },
-      master: { hourly: 83.83, daily: 670.64 },
-    },
-  },
-  UP: {
-    statewide: {
-      beginner: { hourly: 53.0, daily: 424.0 },
-      intermediate: { hourly: 58.3, daily: 466.4 },
-      skilled: { hourly: 65.3, daily: 522.4 },
-      master: { hourly: 73.13, daily: 585.0 },
-    },
-  },
-  WB: {
-    zone_a: {
-      beginner: { hourly: 48.5, daily: 388.0 },
-      intermediate: { hourly: 53.35, daily: 426.8 },
-      skilled: { hourly: 58.69, daily: 469.5 },
-      master: { hourly: 64.56, daily: 516.48 },
-    },
-    zone_b: {
-      beginner: { hourly: 44.2, daily: 353.6 },
-      intermediate: { hourly: 48.62, daily: 388.96 },
-      skilled: { hourly: 53.48, daily: 427.84 },
-      master: { hourly: 58.83, daily: 470.62 },
-    },
-  },
-};
+
 
 interface SkillTierEditModalProps {
   visible: boolean;
@@ -198,6 +148,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   const currentStateObj =
     PILOT_STATES.find((s) => s.code === (selectedState || 'KA')) || PILOT_STATES[0];
@@ -205,17 +156,23 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
   const currentZoneObj =
     availableZones.find((z) => z.code === selectedZone) || availableZones[0];
 
+  const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
+  const [stateSearchQuery, setStateSearchQuery] = useState('');
+
+  const filteredStates = PILOT_STATES.filter((s) => {
+    if (!stateSearchQuery.trim()) return true;
+    const q = stateSearchQuery.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q);
+  });
+
   const status = profile?.profile_status || 'incomplete';
 
-  // Live Statutory Fair Wage calculation
+  // Live Statutory Fair Wage calculation (mechanically grounded in canonical wage_rates.json)
   const stateCode = selectedState || 'KA';
   const zoneCode = selectedZone || availableZones[0]?.code || 'zone_1';
   const activeSkill = selectedSkill || 'skilled';
-  const wageData =
-    WAGE_FLOOR_LOOKUP[stateCode]?.[zoneCode]?.[activeSkill] || {
-      hourly: 87.19,
-      daily: 697.5,
-    };
+  const wageData = getWageFloorPreview(stateCode, zoneCode, activeSkill);
+  const isWageDataSourced = Boolean(wageData);
 
   return (
     <Modal
@@ -225,79 +182,123 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
       statusBarTranslucent={true}
       onRequestClose={onDismiss}
     >
-      <View style={styles.modalRoot}>
-        {/* Top Backdrop Area: Clears Android status bar and allows tap to dismiss */}
-        <TouchableOpacity
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardAvoid}
+      >
+        <View
           style={[
-            styles.topBackdrop,
-            {
-              height:
-                Platform.OS === 'android'
-                  ? Math.max(StatusBar.currentHeight || 24, 28) + 24
-                  : Math.max(insets.top, 24) + 16,
-            },
+            styles.modalRoot,
+            Platform.OS === 'android' && keyboardHeight > 0 && { paddingBottom: keyboardHeight },
           ]}
-          activeOpacity={1}
-          onPress={onDismiss}
-          accessibilityLabel={t('skillTierModal.dismiss')}
-        />
+        >
+          {/* Top Backdrop Area: Clears Android status bar and allows tap to dismiss */}
+          <TouchableOpacity
+            style={[
+              styles.topBackdrop,
+              {
+                height:
+                  keyboardHeight > 0
+                    ? 8
+                    : Platform.OS === 'android'
+                    ? Math.max(StatusBar.currentHeight || 24, 28) + 24
+                    : Math.max(insets.top, 24) + 16,
+              },
+            ]}
+            activeOpacity={1}
+            onPress={onDismiss}
+            accessibilityLabel={t('skillTierModal.dismiss')}
+          />
 
-        {/* Sheet Body Container with rounded top corners */}
-        <View style={styles.sheetContainer}>
-          {/* Top Pill Drag Indicator */}
-          <View style={styles.dragHandleContainer}>
-            <View style={styles.dragHandle} />
-          </View>
-
-          {/* Modal Header */}
-          <View style={styles.headerBar}>
-            <View style={styles.headerTextGroup}>
-              <Text style={styles.headerTitle}>{t('profile.skillTierTitle')}</Text>
-              <Text style={styles.headerSubtitle}>
-                {t('skillTierModal.subtitle')}
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={onDismiss}
-              style={styles.closeBtn}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.close')}
-            >
-              <MaterialCommunityIcons name="close" size={20} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Scrollable Form Body */}
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+          {/* Sheet Body Container with rounded top corners */}
+          <View
+            style={[
+              styles.sheetContainer,
+              keyboardHeight > 0 && { maxHeight: Platform.OS === 'ios' ? '80%' : '75%' },
+            ]}
           >
-            {/* Live Fair Wage Floor Callout Banner */}
-            <View style={styles.wageFloorCard}>
-              <View style={styles.wageFloorHeader}>
-                <View style={styles.wageIconBadge}>
-                  <MaterialCommunityIcons name="scale-balance" size={22} color={colors.primary} />
+            {/* Top Pill Drag Indicator */}
+            <View style={styles.dragHandleContainer}>
+              <View style={styles.dragHandle} />
+            </View>
+
+            {/* Modal Header */}
+            <View style={styles.headerBar}>
+              <View style={styles.headerTextGroup}>
+                <Text style={styles.headerTitle}>{t('profile.skillTierTitle')}</Text>
+                <Text style={styles.headerSubtitle}>
+                  {t('skillTierModal.subtitle')}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={onDismiss}
+                style={styles.closeBtn}
+                accessibilityRole="button"
+                accessibilityLabel={t('common.close')}
+              >
+                <MaterialCommunityIcons name="close" size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Scrollable Form Body */}
+            <ScrollView
+              contentContainerStyle={[
+                styles.scrollContent,
+                { paddingBottom: keyboardHeight > 0 ? 60 : 24 },
+              ]}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+            {/* Live Fair Wage Floor Callout Banner: only shown when wage data is officially sourced */}
+            {isWageDataSourced && wageData ? (
+              <View style={styles.wageFloorCard}>
+                <View style={styles.wageFloorHeader}>
+                  <View style={styles.wageIconBadge}>
+                    <MaterialCommunityIcons name="scale-balance" size={22} color={colors.primary} />
+                  </View>
+                  <View style={styles.wageHeaderDetails}>
+                    <Text style={styles.wageEyebrow}>{t('skillTierModal.wageEyebrow')}</Text>
+                    <View style={styles.wageRateRow}>
+                      <Text style={styles.wageRateNumber}>₹{wageData.hourly.toFixed(2)}</Text>
+                      <Text style={styles.wageRateUnit}>{t('skillTierModal.perHour')}</Text>
+                      <Text style={styles.wageDailyPill}>
+                        {t('skillTierModal.perDay', { amount: `₹${Math.round(wageData.daily)}` })}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-                <View style={styles.wageHeaderDetails}>
-                  <Text style={styles.wageEyebrow}>{t('skillTierModal.wageEyebrow')}</Text>
-                  <View style={styles.wageRateRow}>
-                    <Text style={styles.wageRateNumber}>₹{wageData.hourly.toFixed(2)}</Text>
-                    <Text style={styles.wageRateUnit}>{t('skillTierModal.perHour')}</Text>
-                    <Text style={styles.wageDailyPill}>
-                      {t('skillTierModal.perDay', { amount: `₹${Math.round(wageData.daily)}` })}
+                <View style={styles.wageFloorDivider} />
+                <View style={styles.wageFooterRow}>
+                  <MaterialCommunityIcons name="shield-check" size={15} color="#059669" />
+                  <Text style={styles.wageFooterText}>
+                    {t('skillTierModal.protectedUnder', { state: currentStateObj.name, zone: currentZoneObj?.name || t('listings.zone1') })}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View style={[styles.wageFloorCard, styles.wageFloorPendingCard]}>
+                <View style={styles.wageFloorHeader}>
+                  <View style={[styles.wageIconBadge, styles.wageIconBadgePending]}>
+                    <MaterialCommunityIcons name="clock-outline" size={22} color={colors.secondary} />
+                  </View>
+                  <View style={styles.wageHeaderDetails}>
+                    <Text style={[styles.wageEyebrow, { color: colors.secondary }]}>
+                      {t('skillTierModal.wageFloorPendingEyebrow')}
+                    </Text>
+                    <Text style={styles.wagePendingNoticeText}>
+                      {t('skillTierModal.wageFloorPendingNotice', { state: currentStateObj.name })}
                     </Text>
                   </View>
                 </View>
+                <View style={styles.wageFloorDivider} />
+                <View style={styles.wageFooterRow}>
+                  <MaterialCommunityIcons name="information-outline" size={15} color={colors.secondary} />
+                  <Text style={[styles.wageFooterText, { color: colors.secondary }]}>
+                    {t('skillTierModal.wageFloorPendingBadge')} • {currentStateObj.name}
+                  </Text>
+                </View>
               </View>
-              <View style={styles.wageFloorDivider} />
-              <View style={styles.wageFooterRow}>
-                <MaterialCommunityIcons name="shield-check" size={15} color="#059669" />
-                <Text style={styles.wageFooterText}>
-                  {t('skillTierModal.protectedUnder', { state: currentStateObj.name, zone: currentZoneObj?.name || t('listings.zone1') })}
-                </Text>
-              </View>
-            </View>
+            )}
 
             {/* SECTION 1: Craft Skill & Experience Tier */}
             <View style={styles.sectionContainer}>
@@ -367,46 +368,113 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                 </View>
               </View>
 
-              {/* State Selection Pills */}
+              {/* State Selection Dropdown with Search */}
               <View style={styles.subFieldGroup}>
                 <Text style={styles.fieldLabel}>{t('skillTierModal.stateLabel')}</Text>
-                <View style={styles.statePillsRow}>
-                  {PILOT_STATES.map((s) => {
-                    const isSelected = (selectedState || 'KA') === s.code;
-                    return (
-                      <TouchableOpacity
-                        key={s.code}
-                        style={[styles.statePill, isSelected && styles.statePillSelected]}
-                        onPress={() => onSelectState(s.code)}
-                        activeOpacity={0.7}
-                      >
-                        <Text
-                          style={[
-                            styles.statePillName,
-                            isSelected && styles.statePillNameSelected,
-                          ]}
-                        >
-                          {s.name}
-                        </Text>
-                        <View
-                          style={[
-                            styles.stateCodeBadge,
-                            isSelected && styles.stateCodeBadgeSelected,
-                          ]}
-                        >
-                          <Text
+                <TouchableOpacity
+                  style={styles.stateDropdownTrigger}
+                  onPress={() => setStateDropdownOpen(!stateDropdownOpen)}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select state jurisdiction, currently ${currentStateObj.name}`}
+                >
+                  <View style={styles.stateDropdownValueRow}>
+                    <MaterialCommunityIcons name="map-marker-outline" size={20} color={colors.secondary} />
+                    <Text style={styles.stateDropdownSelectedName}>
+                      {currentStateObj.name}
+                    </Text>
+                    <View style={styles.stateCodeBadgeSelected}>
+                      <Text style={styles.stateCodeTextSelected}>{currentStateObj.code}</Text>
+                    </View>
+                  </View>
+                  <MaterialCommunityIcons
+                    name={stateDropdownOpen ? 'chevron-up' : 'chevron-down'}
+                    size={22}
+                    color={colors.textMuted}
+                  />
+                </TouchableOpacity>
+
+                {stateDropdownOpen && (
+                  <View style={styles.stateDropdownContainer}>
+                    <TextInput
+                      mode="outlined"
+                      dense
+                      placeholder={t('skillTierModal.searchStatePlaceholder')}
+                      value={stateSearchQuery}
+                      onChangeText={setStateSearchQuery}
+                      left={<TextInput.Icon icon="magnify" />}
+                      right={
+                        stateSearchQuery ? (
+                          <TextInput.Icon icon="close" onPress={() => setStateSearchQuery('')} />
+                        ) : undefined
+                      }
+                      style={styles.stateSearchInput}
+                    />
+                    <ScrollView
+                      nestedScrollEnabled
+                      style={styles.stateDropdownScroll}
+                      keyboardShouldPersistTaps="handled"
+                    >
+                      {filteredStates.map((s) => {
+                        const isSelected = (selectedState || 'KA') === s.code;
+                        return (
+                          <TouchableOpacity
+                            key={s.code}
                             style={[
-                              styles.stateCodeText,
-                              isSelected && styles.stateCodeTextSelected,
+                              styles.stateDropdownItem,
+                              isSelected && styles.stateDropdownItemSelected,
                             ]}
+                            onPress={() => {
+                              onSelectState(s.code);
+                              setStateDropdownOpen(false);
+                              setStateSearchQuery('');
+                            }}
                           >
-                            {s.code}
-                          </Text>
+                            <View style={styles.stateItemLeft}>
+                              <Text
+                                style={[
+                                  styles.stateItemName,
+                                  isSelected && styles.stateItemNameSelected,
+                                ]}
+                              >
+                                {s.name}
+                              </Text>
+                              <Text style={styles.stateItemNote}>• {s.note}</Text>
+                            </View>
+                            <View
+                              style={[
+                                styles.stateCodeBadge,
+                                isSelected && styles.stateCodeBadgeSelected,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.stateCodeText,
+                                  isSelected && styles.stateCodeTextSelected,
+                                ]}
+                              >
+                                {s.code}
+                              </Text>
+                            </View>
+                            {isSelected && (
+                              <MaterialCommunityIcons
+                                name="check"
+                                size={18}
+                                color={colors.secondary}
+                                style={{ marginLeft: 6 }}
+                              />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {filteredStates.length === 0 && (
+                        <View style={styles.stateEmptyRow}>
+                          <Text style={styles.stateEmptyText}>No matching state found</Text>
                         </View>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                      )}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
 
               {/* Geographic Wage Zone Cards */}
@@ -534,7 +602,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
           <View
             style={[
               styles.bottomDock,
-              { paddingBottom: Math.max(insets.bottom, 16) },
+              { paddingBottom: keyboardHeight > 0 ? 8 : Math.max(insets.bottom, 16) },
             ]}
           >
             {message && (
@@ -577,11 +645,15 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
           </View>
         </View>
       </View>
+    </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoid: {
+    flex: 1,
+  },
   modalRoot: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
@@ -720,6 +792,20 @@ const styles = StyleSheet.create({
     color: '#059669',
     fontWeight: '600',
   },
+  wageFloorPendingCard: {
+    borderColor: colors.indigoBorder,
+    backgroundColor: '#FAF8F6',
+  },
+  wageIconBadgePending: {
+    backgroundColor: colors.indigoLight,
+    borderColor: colors.indigoBorder,
+  },
+  wagePendingNoticeText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 17,
+    marginTop: 4,
+  },
 
   // Section Grouping
   sectionContainer: {
@@ -838,32 +924,87 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // State Pills
-  statePillsRow: {
+  // State Dropdown
+  stateDropdownTrigger: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 50,
   },
-  statePill: {
+  stateDropdownValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  stateDropdownSelectedName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  stateDropdownContainer: {
+    marginTop: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    padding: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  stateSearchInput: {
+    backgroundColor: colors.surface,
+    marginBottom: spacing.xs,
+  },
+  stateDropdownScroll: {
+    maxHeight: 220,
+  },
+  stateDropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: spacing.sm,
+    borderRadius: 8,
+  },
+  stateDropdownItemSelected: {
+    backgroundColor: colors.indigoLight,
+  },
+  stateItemLeft: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FAFAFA',
     gap: 6,
   },
-  statePillSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FAF5F2',
-  },
-  statePillName: {
-    fontSize: 12,
-    fontWeight: '700',
+  stateItemName: {
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.text,
+  },
+  stateItemNameSelected: {
+    color: colors.secondary,
+    fontWeight: '700',
+  },
+  stateItemNote: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  stateEmptyRow: {
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  stateEmptyText: {
+    fontSize: 13,
+    color: colors.textMuted,
   },
   statePillNameSelected: {
     color: colors.primary,

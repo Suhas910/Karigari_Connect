@@ -1,7 +1,8 @@
 // src/features/confirm-details/ConfirmDetailsScreen.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard, type LayoutChangeEvent } from 'react-native';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableOpacity, type LayoutChangeEvent } from 'react-native';
 import { Text, Button, TextInput, Chip } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useTranslation } from 'react-i18next';
@@ -53,6 +54,8 @@ export default function ConfirmDetailsScreen() {
   const [productDims, setProductDims] = useState<DimensionSet>(EMPTY_DIMS);
   const [hasBox, setHasBox] = useState(false);
   const [boxDims, setBoxDims] = useState<DimensionSet>(EMPTY_DIMS);
+  const [editingQtyField, setEditingQtyField] = useState<'quantity_available' | 'min_order_qty' | 'max_order_qty' | null>(null);
+  const [qtyInputText, setQtyInputText] = useState<string>('');
 
   // hydrate marketplace/dimensions from an existing draft, once catalogue loads
   const hydratedRef = useRef(false);
@@ -307,10 +310,55 @@ export default function ConfirmDetailsScreen() {
     setMarketplace((prev) => ({ ...prev, min_order_qty: Math.max(1, prev.min_order_qty + delta) }));
   };
   const stepMaxOrder = (delta: number) => {
-    setMarketplace((prev) => ({
-      ...prev,
-      max_order_qty: Math.max(0, (prev.max_order_qty ?? 0) + delta),
-    }));
+    setMarketplace((prev) => {
+      const current = prev.max_order_qty;
+      if (current === null || current === undefined) {
+        if (delta > 0) {
+          return { ...prev, max_order_qty: Math.max(1, prev.min_order_qty || 1) };
+        }
+        return { ...prev, max_order_qty: null };
+      }
+      const nextVal = current + delta;
+      return {
+        ...prev,
+        max_order_qty: nextVal <= 0 ? null : nextVal,
+      };
+    });
+  };
+
+  const startEditingQty = (
+    field: 'quantity_available' | 'min_order_qty' | 'max_order_qty',
+    currentVal: number | null | undefined
+  ) => {
+    setEditingQtyField(field);
+    if (field === 'max_order_qty' && (currentVal === null || currentVal === undefined || currentVal <= 0)) {
+      setQtyInputText('');
+    } else {
+      setQtyInputText(currentVal !== undefined && currentVal !== null ? String(currentVal) : '');
+    }
+  };
+
+  const commitQty = (field: 'quantity_available' | 'min_order_qty' | 'max_order_qty') => {
+    const trimmed = qtyInputText.trim();
+    const parsed = parseInt(trimmed, 10);
+    if (field === 'quantity_available') {
+      setMarketplace((prev) => ({
+        ...prev,
+        quantity_available: isNaN(parsed) ? 0 : Math.max(0, parsed),
+      }));
+    } else if (field === 'min_order_qty') {
+      setMarketplace((prev) => ({
+        ...prev,
+        min_order_qty: isNaN(parsed) ? 1 : Math.max(1, parsed),
+      }));
+    } else if (field === 'max_order_qty') {
+      setMarketplace((prev) => ({
+        ...prev,
+        max_order_qty: isNaN(parsed) || trimmed === '' || parsed <= 0 ? null : parsed,
+      }));
+    }
+    setEditingQtyField(null);
+    setQtyInputText('');
   };
 
   const handleSubmit = async () => {
@@ -609,7 +657,41 @@ export default function ConfirmDetailsScreen() {
               <Text style={styles.fieldLabel}>Quantity Available *</Text>
               <View style={styles.stepperRow}>
                 <Button mode="outlined" onPress={() => stepQuantity(-1)} compact style={styles.stepperBtn}>−</Button>
-                <Text style={styles.stepperValue}>{marketplace.quantity_available}</Text>
+                {editingQtyField === 'quantity_available' ? (
+                  <View style={styles.qtyEditContainer}>
+                    <TextInput
+                      mode="outlined"
+                      value={qtyInputText}
+                      onChangeText={setQtyInputText}
+                      keyboardType="number-pad"
+                      autoFocus
+                      selectTextOnFocus
+                      onBlur={() => commitQty('quantity_available')}
+                      onSubmitEditing={() => commitQty('quantity_available')}
+                      style={styles.qtyTextInput}
+                      dense
+                    />
+                    <TouchableOpacity
+                      onPress={() => commitQty('quantity_available')}
+                      style={styles.qtyApplyBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Save quantity"
+                    >
+                      <MaterialCommunityIcons name="check" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => startEditingQty('quantity_available', marketplace.quantity_available)}
+                    style={styles.stepperValueContainer}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Quantity Available: ${marketplace.quantity_available}. Tap to type number.`}
+                  >
+                    <Text style={styles.stepperValue}>{marketplace.quantity_available}</Text>
+                    <MaterialCommunityIcons name="pencil-outline" size={12} color={colors.textMuted} style={styles.stepperEditIcon} />
+                  </TouchableOpacity>
+                )}
                 <Button mode="outlined" onPress={() => stepQuantity(1)} compact style={styles.stepperBtn}>+</Button>
               </View>
             </View>
@@ -624,6 +706,14 @@ export default function ConfirmDetailsScreen() {
                     <Chip
                       key={u}
                       selected={isSelected}
+                      selectedColor="#FFFFFF"
+                      theme={{
+                        colors: {
+                          onSecondaryContainer: '#FFFFFF',
+                          onSurfaceVariant: '#FFFFFF',
+                          primary: '#FFFFFF',
+                        },
+                      }}
                       onPress={() => setMarketplace((prev) => ({ ...prev, unit: u }))}
                       style={[styles.chip, isSelected && styles.chipSelected]}
                       textStyle={isSelected ? styles.chipTextSelected : styles.chipText}
@@ -640,7 +730,41 @@ export default function ConfirmDetailsScreen() {
               <Text style={styles.fieldLabel}>Minimum Order Quantity *</Text>
               <View style={styles.stepperRow}>
                 <Button mode="outlined" onPress={() => stepMinOrder(-1)} compact style={styles.stepperBtn}>−</Button>
-                <Text style={styles.stepperValue}>{marketplace.min_order_qty}</Text>
+                {editingQtyField === 'min_order_qty' ? (
+                  <View style={styles.qtyEditContainer}>
+                    <TextInput
+                      mode="outlined"
+                      value={qtyInputText}
+                      onChangeText={setQtyInputText}
+                      keyboardType="number-pad"
+                      autoFocus
+                      selectTextOnFocus
+                      onBlur={() => commitQty('min_order_qty')}
+                      onSubmitEditing={() => commitQty('min_order_qty')}
+                      style={styles.qtyTextInput}
+                      dense
+                    />
+                    <TouchableOpacity
+                      onPress={() => commitQty('min_order_qty')}
+                      style={styles.qtyApplyBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Save minimum order quantity"
+                    >
+                      <MaterialCommunityIcons name="check" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => startEditingQty('min_order_qty', marketplace.min_order_qty)}
+                    style={styles.stepperValueContainer}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Minimum Order: ${marketplace.min_order_qty}. Tap to type number.`}
+                  >
+                    <Text style={styles.stepperValue}>{marketplace.min_order_qty}</Text>
+                    <MaterialCommunityIcons name="pencil-outline" size={12} color={colors.textMuted} style={styles.stepperEditIcon} />
+                  </TouchableOpacity>
+                )}
                 <Button mode="outlined" onPress={() => stepMinOrder(1)} compact style={styles.stepperBtn}>+</Button>
               </View>
             </View>
@@ -649,7 +773,44 @@ export default function ConfirmDetailsScreen() {
               <Text style={styles.fieldLabel}>Maximum Order Quantity (optional)</Text>
               <View style={styles.stepperRow}>
                 <Button mode="outlined" onPress={() => stepMaxOrder(-1)} compact style={styles.stepperBtn}>−</Button>
-                <Text style={styles.stepperValue}>{marketplace.max_order_qty ?? 'No limit'}</Text>
+                {editingQtyField === 'max_order_qty' ? (
+                  <View style={styles.qtyEditContainer}>
+                    <TextInput
+                      mode="outlined"
+                      value={qtyInputText}
+                      onChangeText={setQtyInputText}
+                      keyboardType="number-pad"
+                      autoFocus
+                      selectTextOnFocus
+                      placeholder="No limit"
+                      onBlur={() => commitQty('max_order_qty')}
+                      onSubmitEditing={() => commitQty('max_order_qty')}
+                      style={styles.qtyTextInput}
+                      dense
+                    />
+                    <TouchableOpacity
+                      onPress={() => commitQty('max_order_qty')}
+                      style={styles.qtyApplyBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Save maximum order quantity"
+                    >
+                      <MaterialCommunityIcons name="check" size={16} color="#FFFFFF" />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => startEditingQty('max_order_qty', marketplace.max_order_qty)}
+                    style={styles.stepperValueContainer}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Maximum Order: ${marketplace.max_order_qty && marketplace.max_order_qty > 0 ? marketplace.max_order_qty : 'No limit'}. Tap to type number.`}
+                  >
+                    <Text style={styles.stepperValue}>
+                      {marketplace.max_order_qty && marketplace.max_order_qty > 0 ? marketplace.max_order_qty : 'No limit'}
+                    </Text>
+                    <MaterialCommunityIcons name="pencil-outline" size={12} color={colors.textMuted} style={styles.stepperEditIcon} />
+                  </TouchableOpacity>
+                )}
                 <Button mode="outlined" onPress={() => stepMaxOrder(1)} compact style={styles.stepperBtn}>+</Button>
               </View>
             </View>
@@ -792,11 +953,47 @@ const styles = StyleSheet.create({
     minWidth: spacing.tapTarget,
     borderRadius: 8,
   },
+  stepperValueContainer: {
+    minWidth: 80,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 4,
+  },
+  stepperEditIcon: {
+    opacity: 0.5,
+  },
+  qtyEditContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 110,
+    gap: 6,
+  },
+  qtyTextInput: {
+    minWidth: 70,
+    height: 40,
+    backgroundColor: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  qtyApplyBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   stepperValue: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-    minWidth: 72,
     textAlign: 'center',
   },
   chipRow: {

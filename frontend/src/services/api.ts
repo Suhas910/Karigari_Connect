@@ -134,6 +134,9 @@ import type {
   ArtisanProfile,
   ArtisanProfileSubmitRequest,
   ArtisanProfileReviewRequest,
+  PersonalDetailsUpdate,
+  BusinessDetailsUpdate,
+  BankDetailsUpdate,
   SupportMessage,
   SupportMessageSubmitRequest,
 } from '../types/contracts';
@@ -277,6 +280,21 @@ export const liveApi: ListingService = {
 
   submitArtisanProfile: async (payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile> => {
     const res = await api.post('/profile/artisan', payload);
+    return res.data;
+  },
+
+  submitPersonalDetails: async (payload: PersonalDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/personal', payload);
+    return res.data;
+  },
+
+  submitBusinessDetails: async (payload: BusinessDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/business', payload);
+    return res.data;
+  },
+
+  submitBankDetails: async (payload: BankDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/bank', payload);
     return res.data;
   },
 

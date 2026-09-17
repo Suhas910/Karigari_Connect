@@ -41,7 +41,7 @@
       "reactCompiler": true
     },
     "extra": {
-      "apiBaseUrl": "http://192.168.1.104:8000/api/v1",
+      "apiBaseUrl": "LOCAL_DEV_BACKEND_URL",
       "eas": {
         "projectId": "2402bd36-cd1c-45bf-8f82-57dd00d533ee"
       },

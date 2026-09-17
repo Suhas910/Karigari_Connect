@@ -69,6 +69,18 @@ class PriceResult:
     fallback_suggestion: Optional[dict] = None
 
 
+ZONE_ALIASES: dict[str, str] = {
+    "zone_a": "zone_1",
+    "zone_b": "zone_2",
+    "zone_c": "zone_3",
+    "zone_d": "zone_4",
+    "zone_1": "zone_a",
+    "zone_2": "zone_b",
+    "zone_3": "zone_c",
+    "zone_4": "zone_d",
+}
+
+
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -76,25 +88,32 @@ def _load_json(path: Path) -> dict:
 
 def get_wage_rate(state_code: str, skill_level: str, zone: str = "zone_1") -> Optional[WageRate]:
     """
-    Look up wage rate. Falls back across zones if requested zone missing
+    Looks up official wage rate for (state_code, skill_level, zone).
+    Falls back to 'statewide' if specific zone not found
     (e.g. state has no zone system, only 'statewide').
 
     Note on wage_rates.json hourly rates:
     hourly_wage_inr = ROUND_HALF_UP(daily_wage_inr / 8, 2 decimals) — not Python's round().
     Standard commercial half-up rounding protects artisans from floating-point / banker's underpayment.
     """
+    sc = "DD" if state_code.upper() == "DN" else state_code.upper()
     data = _load_json(WAGE_RATES_PATH)
     candidates = [
         r for r in data["rates"]
-        if r["state_code"] == state_code and r["skill_level"] == skill_level
+        if r["state_code"] == sc and r["skill_level"] == skill_level
     ]
     if not candidates:
         return None
 
-    # prefer exact zone match, else fall back to 'statewide', else first available
+    # prefer exact zone match, else normalized alias, else fall back to 'statewide', else first available
     for r in candidates:
         if r["zone"] == zone:
             return WageRate.from_dict(r)
+    alias = ZONE_ALIASES.get(zone)
+    if alias:
+        for r in candidates:
+            if r["zone"] == alias:
+                return WageRate.from_dict(r)
     for r in candidates:
         if r["zone"] == "statewide":
             return WageRate.from_dict(r)

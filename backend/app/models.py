@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     ForeignKey,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -34,6 +35,40 @@ class User(Base):
     verified_skill_level = Column(String(30), nullable=True)
     verified_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
+
+    # --- PROFILE-EXPANSION: personal ---
+    first_name = Column(String(100), nullable=True)
+    middle_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    name_as_per_aadhaar = Column(String(150), nullable=True)
+    gender = Column(String(20), nullable=True)  # 'male' | 'female' | 'other' | 'prefer_not_to_say'
+    profile_image_url = Column(String(500), nullable=True)
+    # NOTE: `email` already exists on this model (see top of class) — reuse it,
+    # do not add a second email column.
+
+    # --- PROFILE-EXPANSION: business ---
+    business_name = Column(String(200), nullable=True)
+    brand_name = Column(String(200), nullable=True)
+    establishment_type = Column(String(30), nullable=True)
+    pan_number = Column(String(10), nullable=True)
+    aadhaar_number = Column(String(12), nullable=True)  # TODO: encrypt at rest — no existing crypto pattern found in this repo, flagging rather than inventing one
+    gst_registered = Column(Boolean, nullable=True, default=False)
+    gst_number = Column(String(15), nullable=True)
+    enrollment_number = Column(String(50), nullable=True)
+    business_address_line = Column(String(300), nullable=True)
+    pincode = Column(String(6), nullable=True)
+    district = Column(String(100), nullable=True)
+    city = Column(String(100), nullable=True)
+    business_state_code = Column(String(5), nullable=True)  # deliberately separate from declared_zone — wage vs KYC address
+    ondc_std_code = Column(String(10), nullable=True)
+    location_type = Column(String(20), nullable=True)  # warehouse|shop|office|home
+    pickup_days = Column(JSON, nullable=True)
+
+    # --- PROFILE-EXPANSION: bank ---
+    account_holder_name = Column(String(150), nullable=True)
+    account_number = Column(String(30), nullable=True)  # TODO: encrypt at rest, same as aadhaar_number above
+    ifsc_code = Column(String(11), nullable=True)
+    bank_name = Column(String(150), nullable=True)
 
     products = relationship("Product", back_populates="owner")
     listings = relationship("ListingModel", back_populates="artisan")

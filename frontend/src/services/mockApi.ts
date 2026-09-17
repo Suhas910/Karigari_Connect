@@ -13,9 +13,13 @@ import {
   ArtisanProfile,
   ArtisanProfileSubmitRequest,
   ArtisanProfileReviewRequest,
+  PersonalDetailsUpdate,
+  BusinessDetailsUpdate,
+  BankDetailsUpdate,
   SupportMessage,
   SupportMessageSubmitRequest,
 } from '../types/contracts';
+import { getWageFloorPreview } from '../constants/wageRates';
 
 const now = () => new Date().toISOString();
 
@@ -49,6 +53,34 @@ let mockCurrentProfile: ArtisanProfile = {
   verified_skill_level: null,
   verified_by: null,
   verified_at: null,
+  // PROFILE-EXPANSION
+  first_name: null,
+  middle_name: null,
+  last_name: null,
+  name_as_per_aadhaar: null,
+  email: null,
+  gender: null,
+  profile_image_url: null,
+  business_name: null,
+  brand_name: null,
+  establishment_type: null,
+  pan_number: null,
+  aadhaar_number: null,
+  gst_registered: false,
+  gst_number: null,
+  enrollment_number: null,
+  business_address_line: null,
+  pincode: null,
+  district: null,
+  city: null,
+  business_state_code: null,
+  ondc_std_code: null,
+  location_type: null,
+  pickup_days: null,
+  account_holder_name: null,
+  account_number: null,
+  ifsc_code: null,
+  bank_name: null,
 };
 
 let mockPendingProfiles: ArtisanProfile[] = [];
@@ -219,31 +251,68 @@ export const mockApi: ListingService = {
     needs_confirmation: ['techniques', 'labour.hours', 'material_cost_paise'],
   }),
 
-  requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => ({
-    calculation_version: '1.0.0',
-    status: 'available',
-    currency: 'INR',
-    wage_source: {
-      state_code: payload?.state_code || 'KA',
-      zone: payload?.zone || 'zone_1',
-      notification_ref: 'official_ref_123',
-      effective_from: '2026-01-01',
-      source_url: 'https://official.example',
-    },
-    inputs: {
-      material_cost_paise: (payload?.material_cost_inr || 800) * 100,
-      labour_hours: payload?.labour_hours || 12,
-      hourly_wage_paise: 8704,
-      skill_level: payload?.skill_level || 'skilled',
-      skill_level_self_declared: payload?.skill_level,
-      skill_level_source: payload?.skill_level_source || 'self_declared',
-      zone: payload?.zone || 'zone_1',
-    },
-    floor_amount_paise: 184448,
-    recommended_low_paise: 202893,
-    recommended_high_paise: 295117,
-    explanation: 'The protected floor includes materials and the recorded skilled labour rate.',
-  }),
+  requestPrice: async (listingId: string, payload: any): Promise<PriceResult> => {
+    const stateCode = payload?.state_code || 'KA';
+    const zone = payload?.zone || 'zone_1';
+    const skill = payload?.skill_level || 'skilled';
+    const wageFloor = getWageFloorPreview(stateCode, zone, skill);
+    const matCostPaise = Math.round((payload?.material_cost_inr || 800) * 100);
+    const labourHours = payload?.labour_hours || 12;
+
+    if (!wageFloor) {
+      return {
+        calculation_version: '1.0.0',
+        status: 'unavailable',
+        currency: 'INR',
+        inputs: {
+          material_cost_paise: matCostPaise,
+          labour_hours: labourHours,
+          hourly_wage_paise: 0,
+          skill_level: skill,
+          skill_level_self_declared: payload?.skill_level_self_declared || skill,
+          skill_level_source: payload?.skill_level_source || 'self_declared',
+          state_code: stateCode,
+          zone: zone,
+        },
+        floor_amount_paise: 0,
+        recommended_low_paise: 0,
+        recommended_high_paise: 0,
+        explanation: `Statutory minimum wage rate is pending official gazette notification for ${stateCode} / ${skill}.`,
+      };
+    }
+
+    const hourlyWagePaise = Math.round(wageFloor.hourly * 100);
+    const floorAmountPaise = Math.round(matCostPaise + labourHours * hourlyWagePaise);
+    const recLowPaise = Math.round(floorAmountPaise * 1.10);
+    const recHighPaise = Math.round(floorAmountPaise * 1.60);
+
+    return {
+      calculation_version: '1.0.0',
+      status: 'available',
+      currency: 'INR',
+      wage_source: {
+        state_code: stateCode,
+        zone: zone,
+        notification_ref: wageFloor.notificationRef || 'Official Minimum Wages Notification',
+        effective_from: '2025-04-01',
+        source_url: 'https://labour.gov.in',
+      },
+      inputs: {
+        material_cost_paise: matCostPaise,
+        labour_hours: labourHours,
+        hourly_wage_paise: hourlyWagePaise,
+        skill_level: skill,
+        skill_level_self_declared: payload?.skill_level_self_declared || skill,
+        skill_level_source: payload?.skill_level_source || 'self_declared',
+        state_code: stateCode,
+        zone: zone,
+      },
+      floor_amount_paise: floorAmountPaise,
+      recommended_low_paise: recLowPaise,
+      recommended_high_paise: recHighPaise,
+      explanation: `Material cost: ₹${(matCostPaise / 100).toFixed(2)}. Labour: ${labourHours} hrs @ ₹${wageFloor.hourly.toFixed(2)}/hr (${skill.replace('_', ' ')} tier, ${stateCode}). Statutory floor: ₹${(floorAmountPaise / 100).toFixed(2)}.`,
+    };
+  },
 
   // Unhappy-path fixture — wire a screen toggle to test this state deliberately
   requestPrice_unavailable: async (): Promise<PriceResult> => ({
@@ -319,6 +388,21 @@ export const mockApi: ListingService = {
     } else {
       mockPendingProfiles.push({ ...mockCurrentProfile });
     }
+    return { ...mockCurrentProfile };
+  },
+
+  submitPersonalDetails: async (payload: PersonalDetailsUpdate): Promise<ArtisanProfile> => {
+    mockCurrentProfile = { ...mockCurrentProfile, ...payload };
+    return { ...mockCurrentProfile };
+  },
+
+  submitBusinessDetails: async (payload: BusinessDetailsUpdate): Promise<ArtisanProfile> => {
+    mockCurrentProfile = { ...mockCurrentProfile, ...payload };
+    return { ...mockCurrentProfile };
+  },
+
+  submitBankDetails: async (payload: BankDetailsUpdate): Promise<ArtisanProfile> => {
+    mockCurrentProfile = { ...mockCurrentProfile, ...payload };
     return { ...mockCurrentProfile };
   },
 

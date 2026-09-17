@@ -16,15 +16,21 @@ class TestGetWageRate:
         assert rate.state_code == "KA"
         assert rate.hourly_wage_inr == 87.19
 
-    def test_up_falls_back_to_statewide(self):
-        # UP has no zone system, requesting zone_1 should still resolve via statewide fallback
-        rate = get_wage_rate("UP", "unskilled", zone="zone_1")
+    def test_statewide_fallback_when_state_has_no_zones(self):
+        # MP has only a statewide schedule; requesting zone_1 should resolve via statewide fallback
+        rate = get_wage_rate("MP", "unskilled", zone="zone_1")
         assert rate is not None
         assert rate.zone == "statewide"
-        assert rate.hourly_wage_inr == 53.0
+        assert rate.hourly_wage_inr == 59.75
+
+    def test_up_resolves_notified_zones(self):
+        rate = get_wage_rate("UP", "unskilled", zone="zone_1")
+        assert rate is not None
+        assert rate.zone == "zone_1"
+        assert rate.hourly_wage_inr == 65.82
 
     def test_missing_state_returns_none(self):
-        rate = get_wage_rate("TN", "skilled")
+        rate = get_wage_rate("XX", "skilled")
         assert rate is None
 
     def test_missing_skill_level_for_known_state_returns_none(self):
@@ -34,7 +40,7 @@ class TestGetWageRate:
     def test_karnataka_carries_litigation_caution(self):
         rate = get_wage_rate("KA", "unskilled")
         assert rate.caution is not None
-        assert "legal challenge" in rate.caution.lower()
+        assert "stay" in rate.caution.lower() or "dispute" in rate.caution.lower()
 
 
 # ---------- resolve_effective_skill_level ----------
@@ -150,7 +156,7 @@ class TestCalculatePriceValid:
             state_code="UP",
             skill_level="semi_skilled",
         )
-        assert "UP Labour Dept Notification" in r.explanation
+        assert "Department of Labour, Government of Uttar Pradesh" in r.explanation
 
 
     def test_technique_multiplier_does_not_inflate_floor(self):
@@ -180,7 +186,7 @@ class TestCalculatePriceUnavailable:
         r = calculate_price(
             material_cost_inr=500,
             labour_hours=5,
-            state_code="TN",  # no fixture data for TN
+            state_code="XX",  # unsupported state XX
             skill_level="skilled",
         )
         assert r.status == "unavailable"
@@ -194,7 +200,7 @@ class TestCalculatePriceUnavailable:
         r = calculate_price(
             material_cost_inr=999999,  # even with a huge material cost, no wage -> still no price
             labour_hours=999,
-            state_code="TN",
+            state_code="XX",
             skill_level="skilled",
         )
         assert r.floor_amount_inr is None
@@ -215,7 +221,7 @@ class TestCalculatePriceUnavailable:
         assert r.recommended_high_inr is None
         assert r.fallback_suggestion is not None
         assert r.fallback_suggestion["used_tier"] == "skilled"
-        assert r.fallback_suggestion["hourly_wage_inr"] == 65.30
+        assert r.fallback_suggestion["hourly_wage_inr"] == 81.10
         assert "coordinator must confirm" in r.fallback_suggestion["note"]
 
 
@@ -257,7 +263,7 @@ class TestVersioning:
     def test_every_result_carries_calculation_version(self):
         results = [
             calculate_price(500, 5, "KA", "skilled"),
-            calculate_price(500, 5, "TN", "skilled"),  # unavailable path
+            calculate_price(500, 5, "XX", "skilled"),  # unavailable path
             calculate_price(500, 0, "KA", "skilled"),  # invalid path
         ]
         for r in results:

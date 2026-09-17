@@ -7,7 +7,13 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  LayoutAnimation,
+  UIManager,
 } from 'react-native';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { Text, TextInput, Button, Card, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +28,7 @@ export default function HelpScreen() {
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [messageText, setMessageText] = useState('');
+  const [isMessageFocused, setIsMessageFocused] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch artisan's listings to populate the dropdown
@@ -43,6 +50,7 @@ export default function HelpScreen() {
       setMessageText('');
       setSelectedListingId(null);
       setPickerOpen(false);
+      setIsMessageFocused(false);
       setFeedback({
         type: 'success',
         text: t('help.sentSuccess'),
@@ -195,13 +203,30 @@ export default function HelpScreen() {
             <TextInput
               mode="outlined"
               multiline
-              numberOfLines={5}
+              numberOfLines={isMessageFocused || messageText ? 7 : 4}
               value={messageText}
               onChangeText={setMessageText}
+              onFocus={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setIsMessageFocused(true);
+              }}
+              onBlur={() => {
+                if (!messageText.trim()) {
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  setIsMessageFocused(false);
+                }
+              }}
               placeholder={t('help.messagePlaceholder')}
               outlineColor={colors.border}
               activeOutlineColor={colors.primary}
-              style={styles.messageInput}
+              style={[
+                styles.messageInput,
+                { minHeight: isMessageFocused || messageText ? 150 : 96 },
+              ]}
+              contentStyle={[
+                styles.messageInputContent,
+                { textAlign: messageText ? 'left' : 'center' },
+              ]}
             />
 
             <Button
@@ -388,6 +413,10 @@ const styles = StyleSheet.create({
   messageInput: {
     backgroundColor: '#FFFFFF',
     marginBottom: spacing.md,
+  },
+  messageInputContent: {
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   submitBtn: {
     borderRadius: 10,
