@@ -164,7 +164,7 @@ def export_listing(
     }
     claims_data = [
         {"claim": c.claim, "verified": c.coordinator_verified, "note": c.evidence_note}
-        for c in listing.claims
+        for c in (listing.claims or [])
     ]
 
     ondc_item_payload = {
@@ -198,7 +198,7 @@ def export_listing(
                                     "long_desc": cat_data.get("description", {}).get(
                                         "local", ""
                                     ),
-                                    "images": [m.url for m in listing.media if m.url],
+                                    "images": [m.url for m in (listing.media or []) if m.url],
                                 },
                                 "price": price_data,
                                 "category_id": cat_data.get("category", "Handicrafts"),
@@ -302,7 +302,6 @@ def export_listing(
             },
         )
 
-    # simulate_network_submission is silently ignored per Bug #1 fix:
     # MVP has no live ONDC network integration; network_submission is strictly "not_attempted".
     network_submission = "not_attempted"
     status = "validated"
@@ -326,7 +325,7 @@ def export_listing(
         status=status,
         payload_hash=payload_hash,
         contract_validation=schemas.ContractValidation(
-            passed=True, schema_source=validation_info["schema_source"]
+            passed=passed, schema_source=validation_info["schema_source"]
         ),
         network_submission=network_submission,
     )
