@@ -19,7 +19,8 @@ def _mask_tail(value: Optional[str], visible: int = 4) -> Optional[str]:
     return "*" * (len(value) - visible) + value[-visible:]
 
 
-def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse:
+def format_profile_response(user: models.User, requester: models.User) -> schemas.ArtisanProfileResponse:
+    is_self = requester.user_id == user.user_id
     return schemas.ArtisanProfileResponse(
         user_id=user.user_id,
         username=user.username,
@@ -45,8 +46,8 @@ def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse
         business_name=user.business_name,
         brand_name=user.brand_name,
         establishment_type=user.establishment_type,
-        pan_number=user.pan_number,
-        aadhaar_number=_mask_tail(user.aadhaar_number),
+        pan_number=user.pan_number if is_self else None,
+        aadhaar_number=_mask_tail(user.aadhaar_number) if is_self else None,
         gst_registered=user.gst_registered,
         gst_number=user.gst_number,
         enrollment_number=user.enrollment_number,
@@ -59,10 +60,10 @@ def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse
         location_type=user.location_type,
         pickup_days=user.pickup_days,
         # PROFILE-EXPANSION: bank
-        account_holder_name=user.account_holder_name,
-        account_number=_mask_tail(user.account_number),
-        ifsc_code=user.ifsc_code,
-        bank_name=user.bank_name,
+        account_holder_name=user.account_holder_name if is_self else None,
+        account_number=_mask_tail(user.account_number) if is_self else None,
+        ifsc_code=user.ifsc_code if is_self else None,
+        bank_name=user.bank_name if is_self else None,
     )
 
 
@@ -91,7 +92,7 @@ def submit_artisan_profile(
 
     db.commit()
     db.refresh(current_user)
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.post("/artisan/personal", response_model=schemas.ArtisanProfileResponse)
@@ -110,7 +111,7 @@ def submit_personal_details(
         setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.post("/artisan/business", response_model=schemas.ArtisanProfileResponse)
@@ -125,7 +126,7 @@ def submit_business_details(
         setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.post("/artisan/bank", response_model=schemas.ArtisanProfileResponse)
@@ -140,12 +141,14 @@ def submit_bank_details(
         setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.get("/artisan/pending", response_model=List[schemas.ArtisanProfileResponse])
 @router.get("/artisans/pending", response_model=List[schemas.ArtisanProfileResponse])
 def get_pending_artisan_profiles(
+    limit: Optional[int] = 100,
+    offset: Optional[int] = 0,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
@@ -155,13 +158,16 @@ def get_pending_artisan_profiles(
     if current_user.role not in ["coordinator", "admin"]:
         raise HTTPException(status_code=403, detail="Coordinator access required")
 
+    effective_limit = min(limit, 200) if limit is not None else 100
     pending_users = (
         db.query(models.User)
         .filter(models.User.profile_status == "pending_verification")
         .order_by(models.User.user_id.desc())
+        .offset(offset or 0)
+        .limit(effective_limit)
         .all()
     )
-    return [format_profile_response(u) for u in pending_users]
+    return [format_profile_response(u, current_user) for u in pending_users]
 
 
 @router.get("/artisan/me", response_model=schemas.ArtisanProfileResponse)
@@ -172,7 +178,7 @@ def get_my_artisan_profile(
     """
     Current user reads their own profile.
     """
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.get("/artisan/{user_id}", response_model=schemas.ArtisanProfileResponse)
@@ -191,7 +197,7 @@ def get_artisan_profile(
     if not user:
         raise HTTPException(status_code=404, detail="Artisan user not found")
 
-    return format_profile_response(user)
+    return format_profile_response(user, current_user)
 
 
 @router.post("/artisan/{user_id}/review", response_model=schemas.ArtisanProfileResponse)
@@ -234,4 +240,4 @@ def review_artisan_profile(
 
     db.commit()
     db.refresh(target_user)
-    return format_profile_response(target_user)
+    return format_profile_response(target_user, current_user)

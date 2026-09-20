@@ -110,3 +110,103 @@ def test_malformed_gemini_output_fails(mock_extract):
             payload={"transcript": "test"},
             db=db_mock
         )
+
+
+# 5. Audio Upload Direct Bytes & Multimodal Fallback Test
+@patch("app.ai.bhashini_client.transcribe_audio")
+@patch("app.ai.service.gemini_client.transcribe_audio_bytes")
+def test_audio_direct_bytes_gemini_multimodal_fallback(mock_gemini_audio, mock_bhashini):
+    # Simulate Bhashini failure
+    mock_bhashini.side_effect = RuntimeError("Bhashini rate limit exceeded")
+
+    # Mock Gemini multimodal returning real transcribed craft audio
+    mock_gemini_audio.return_value = {
+        "status": "complete",
+        "declared_language": "kn",
+        "transcript": "ಇದು ಸಾಂಪ್ರದಾಯಿಕ ಮರದ ಆಟಿಕೆ",
+        "translated_text": "This is a traditional wooden toy",
+        "asr_confidence": 0.95,
+        "detected_language": "kn"
+    }
+
+    db_mock = MagicMock()
+    mock_listing = models.ListingModel(id="test_listing_audio", preferred_language="kn")
+    db_mock.query().filter().first.return_value = mock_listing
+
+    dummy_audio = b"FAKE_AUDIO_DATA_FOR_MULTIMODAL_TEST" * 20  # > 200 bytes
+
+    job = ai_service.create_transcription_job(
+        listing_id="test_listing_audio",
+        audio_bytes=dummy_audio,
+        audio_filename="voice_note.m4a",
+        declared_language="kn",
+        db=db_mock
+    )
+
+    result = json.loads(job.result_data)
+    assert result["asr_provider"] == "gemini_multimodal"
+    assert result["transcript"] == "ಇದು ಸಾಂಪ್ರದಾಯಿಕ ಮರದ ಆಟಿಕೆ"
+    assert result["translated_text"] == "This is a traditional wooden toy"
+    assert result["asr_confidence"] == 0.95
+
+
+# 6. Audio Conversion Utility Test
+def test_audio_conversion_to_16k_mono():
+    from app.ai.audio_utils import convert_audio_to_wav_16k_mono
+    import io
+    from pydub import AudioSegment
+    from pydub.generators import Sine
+
+    # Generate a stereo 44.1kHz tone
+    sine = Sine(440).to_audio_segment(duration=200)
+    buf = io.BytesIO()
+    sine.export(buf, format="wav")
+    raw_wav = buf.getvalue()
+
+    converted = convert_audio_to_wav_16k_mono(raw_wav)
+    assert isinstance(converted, bytes)
+    assert len(converted) > 0
+
+    # Inspect converted segment
+    seg = AudioSegment.from_file(io.BytesIO(converted))
+    assert seg.frame_rate == 16000
+    assert seg.channels == 1
+    assert seg.sample_width == 2
+
+
+# 7. Bhashini Client Response Parsing Test
+@patch("app.ai.bhashini_client.requests.post")
+@patch("app.ai.bhashini_client._get_pipeline_config")
+def test_bhashini_transcribe_audio_success(mock_config, mock_post):
+    from app.ai.bhashini_client import transcribe_audio
+    mock_config.return_value = {
+        "pipelineResponseConfig": [
+            {
+                "config": [
+                    {
+                        "language": {"sourceLanguage": "kn"},
+                        "serviceId": "bhashini_asr_kn"
+                    }
+                ]
+            }
+        ],
+        "pipelineInferenceAPIEndPoint": {
+            "callbackUrl": "https://bhashini.example.com/infer",
+            "inferenceApiKey": {"name": "Authorization", "value": "test_token"}
+        }
+    }
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "pipelineResponse": [
+            {
+                "output": [
+                    {"source": "ಇದು ಸಾಂಪ್ರದಾಯಿಕ ಕರಕುಶಲ ವಸ್ತು"}
+                ]
+            }
+        ]
+    }
+    mock_post.return_value = mock_response
+
+    result = transcribe_audio(b"FAKE_WAV_BYTES", source_language="kn")
+    assert result == "ಇದು ಸಾಂಪ್ರದಾಯಿಕ ಕರಕುಶಲ ವಸ್ತು"

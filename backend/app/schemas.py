@@ -4,12 +4,6 @@ from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 import re
 
-# --- Legacy Product schemas for backwards compatibility ---
-class ProductCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
-
 # --- Error Schemas ---
 class ApiErrorDetail(BaseModel):
     code: str
@@ -27,7 +21,14 @@ class UserRegister(BaseModel):
     password: str
     phone_number: Optional[str] = None
     email: Optional[str] = None
-    role: Optional[str] = "artisan"  # 'artisan' | 'coordinator' | 'admin'
+    role: Optional[str] = "artisan"  # Public self-registration strictly grants 'artisan'
+
+class AdminUserCreate(BaseModel):
+    username: str
+    password: str
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    role: str = "coordinator"  # 'coordinator' | 'admin' | 'artisan'
 
 class UserLogin(BaseModel):
     username: str  # Accepts either username or phone_number
@@ -408,6 +409,7 @@ class PriceRequest(BaseModel):
 # --- Listing Schemas ---
 class CreateListingRequest(BaseModel):
     preferred_language: str = "en"
+    idempotency_key: Optional[str] = None
 
 class CreateListingResponse(BaseModel):
     id: str
@@ -427,6 +429,9 @@ class ListingResponse(BaseModel):
     catalogue: Optional[CatalogueResult] = None
     price: Optional[PriceResult] = None
     claims: List[ClaimSchema] = Field(default_factory=list)
+    rejection_categories: Optional[List[str]] = None
+    rejection_flags: Optional[List[str]] = None
+    rejection_reason: Optional[str] = None
     created_at: Optional[str] = ""
     updated_at: Optional[str] = ""
 
@@ -443,12 +448,14 @@ class ClaimReviewRequest(BaseModel):
 class ListingDecisionRequest(BaseModel):
     decision: str  # 'approve' | 'reject'
     reason: Optional[str] = None
+    rejection_categories: Optional[List[str]] = Field(default_factory=list)
 
 # --- Export Schemas ---
 class ExportRequest(BaseModel):
     target: str = "ondc"
     schema_version: str = "1.0"
     simulate_network_submission: Optional[bool] = False
+    idempotency_key: Optional[str] = None
 
 class ContractValidation(BaseModel):
     passed: bool
@@ -466,6 +473,7 @@ class ExportResult(BaseModel):
 class SupportMessageCreate(BaseModel):
     listing_id: Optional[str] = None
     message: str
+    idempotency_key: Optional[str] = None
 
 class SupportMessageResponse(BaseModel):
     id: str
@@ -476,3 +484,14 @@ class SupportMessageResponse(BaseModel):
     created_at: str
     artisan_name: Optional[str] = None
     listing_title: Optional[str] = None
+
+class SupportMessageReplyCreate(BaseModel):
+    body: str
+
+class SupportMessageReplyResponse(BaseModel):
+    id: str
+    message_id: str
+    sender_role: str
+    sender_name: str
+    body: str
+    created_at: str

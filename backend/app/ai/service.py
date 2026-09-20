@@ -11,56 +11,14 @@ from fastapi import HTTPException
 from .. import models, schemas
 from . import birefnet, studio
 from .gemini_client import gemini_client
+from .audio_utils import convert_audio_to_wav_16k_mono
+from ..ssrf_protection import safe_fetch_media
 
 logger = logging.getLogger(__name__)
 
 # Uploaded and enhanced listing photos; served by main.py at /media.
 MEDIA_ROOT = Path(__file__).resolve().parents[2] / "media_store"
 
-STATUTORY_WAGES: Dict[str, Dict[str, Any]] = {
-    "KA": {
-        "state_code": "KA",
-        "notification_ref": "KLS-2025-WAGE-44",
-        "effective_from": "2025-04-01",
-        "source_url": "https://labour.karnataka.gov.in/notifications/2025/crafts",
-        "hourly_wage_paise": 7850,  # ₹78.50/hr
-    },
-    "UP": {
-        "state_code": "UP",
-        "notification_ref": "UP-MINWAGE-89",
-        "effective_from": "2025-04-01",
-        "source_url": "https://uplabour.gov.in/orders/minimum-wages-handicrafts",
-        "hourly_wage_paise": 6800,  # ₹68.00/hr
-    },
-    "RJ": {
-        "state_code": "RJ",
-        "notification_ref": "RJ-MINWAGE-102",
-        "effective_from": "2025-05-01",
-        "source_url": "https://rajlabour.nic.in/notifications/heritage-crafts",
-        "hourly_wage_paise": 7200,  # ₹72.00/hr
-    },
-    "TN": {
-        "state_code": "TN",
-        "notification_ref": "TN-HANDLOOM-81",
-        "effective_from": "2025-06-01",
-        "source_url": "https://tn.gov.in/handlooms/wages",
-        "hourly_wage_paise": 8200,  # ₹82.00/hr
-    },
-    "MP": {
-        "state_code": "MP",
-        "notification_ref": "MP-WAGE-07",
-        "effective_from": "2025-04-01",
-        "source_url": "https://labour.mp.gov.in/wages",
-        "hourly_wage_paise": 6600,  # ₹66.00/hr
-    },
-    "IN": {
-        "state_code": "IN",
-        "notification_ref": "CENTRAL-FLOOR-WAGE-2025",
-        "effective_from": "2025-01-01",
-        "source_url": "https://labour.gov.in/national-floor-level-minimum-wage",
-        "hourly_wage_paise": 7500,  # ₹75.00/hr
-    },
-}
 
 class AIService:
     @staticmethod
@@ -79,7 +37,22 @@ class AIService:
             models.MediaAssetModel.listing_id == listing_id
         ).first()
 
-        original_url = media.url if media and media.url else "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800"
+        if not media or not media.url:
+            # Fallback: find any existing image media for this listing (prefer original variant)
+            media = (
+                db.query(models.MediaAssetModel)
+                .filter(
+                    models.MediaAssetModel.listing_id == listing_id,
+                    models.MediaAssetModel.kind == "image",
+                )
+                .order_by(
+                    # Prefer 'original' over 'enhanced' for audit
+                    models.MediaAssetModel.variant.asc()
+                )
+                .first()
+            )
+
+        original_url = media.url if media and media.url else "https://images.unsplash.com/photo-1590736969955-71cc94801759?w=800"
         
         audit = gemini_client.audit_image_quality(original_url)
 
@@ -209,9 +182,28 @@ class AIService:
             try:
                 enhanced, studio_results = [], []
                 for original in originals:
-                    studio_result = studio.enhance(
-                        (MEDIA_ROOT / original.storage_path).read_bytes(), engine=engine, background=background
-                    )
+                    if not original:
+                        continue
+                    photo_path = MEDIA_ROOT / original.storage_path
+                    if not photo_path.exists():
+                        logger.warning("Original media file %s not found on disk", photo_path)
+                        continue
+
+                    raw_bytes = photo_path.read_bytes()
+                    try:
+                        studio_result = studio.enhance(
+                            raw_bytes, engine=engine, background=background
+                        )
+                    except Exception as enh_exc:
+                        logger.warning("Studio enhancement error on photo %s: %s. Preserving original photo.", original.id, enh_exc)
+                        studio_result = studio.StudioResult(
+                            image_bytes=raw_bytes,
+                            engine=engine,
+                            transformations=["original_preserved"],
+                            details={"fallback_reason": str(enh_exc)},
+                            human_review_required=True,
+                        )
+
                     content = studio_result.image_bytes
                     media_id = str(uuid.uuid4())
                     filename = f"{media_id}.jpg"
@@ -226,7 +218,7 @@ class AIService:
                         storage_path=f"{original.listing_id}/{filename}",
                         metadata_json=json.dumps({
                             "source_media_id": original.id,
-                            "model": birefnet.MODEL_ID,
+                            "model": studio_result.details.get("segmentation_model", birefnet.MODEL_ID),
                             "engine": studio_result.engine,
                             "ai_generated": studio_result.engine == "ai",
                             "transformations": studio_result.transformations,
@@ -236,6 +228,9 @@ class AIService:
                     db.add(media)
                     enhanced.append(media)
                     studio_results.append(studio_result)
+
+                if not enhanced:
+                    raise RuntimeError("No valid photos could be loaded or processed for enhancement.")
             except Exception as exc:
                 logger.error("BiRefNet enhancement failed for job %s: %s", job_id, exc, exc_info=True)
                 db.rollback()
@@ -244,13 +239,15 @@ class AIService:
                 db.commit()
                 return
 
-            audit = gemini_client.audit_image_quality(originals[0].url)
+            valid_originals = [orig for orig in originals if orig is not None and getattr(orig, "url", None)]
+            original_url = valid_originals[0].url if valid_originals else (enhanced[0].url if enhanced and getattr(enhanced[0], "url", None) else None)
+            audit = gemini_client.audit_image_quality(original_url)
             job.status = "complete"
             job.result_data = json.dumps({
                 "job_id": job_id,
                 "status": "complete",
                 "quality": audit,
-                "original_url": originals[0].url,
+                "original_url": original_url,
                 "enhanced_media_id": enhanced[0].id,
                 "enhanced_url": enhanced[0].url,
                 "enhanced_urls": [media.url for media in enhanced],
@@ -279,47 +276,142 @@ class AIService:
     @staticmethod
     def create_transcription_job(
         listing_id: str,
-        audio_media_id: str,
-        declared_language: str,
-        db: Session
+        audio_media_id: Optional[str] = None,
+        declared_language: str = "en",
+        audio_bytes: Optional[bytes] = None,
+        audio_filename: Optional[str] = None,
+        db: Session = None
     ) -> models.JobModel:
         listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
-        audio_media = db.query(models.MediaAssetModel).filter(
-            models.MediaAssetModel.id == audio_media_id,
-            models.MediaAssetModel.listing_id == listing_id
-        ).first()
+        if declared_language and listing.preferred_language != declared_language:
+            listing.preferred_language = declared_language
+            db.commit()
 
-        audio_url = audio_media.url if audio_media and audio_media.url else "sample_audio.wav"
+        audio_url = None
 
-        # Primary Bhashini ASR path with fallback and explicit logging
-        transcription_res = None
-        try:
-            import requests
-            from .bhashini_client import transcribe_audio
+        # 1. If audio_bytes is directly provided (e.g. multipart/form-data upload)
+        if audio_bytes:
+            media_id = str(uuid.uuid4())
+            ext = (audio_filename.split(".")[-1] if audio_filename and "." in audio_filename else "m4a").lower()
+            safe_name = f"{media_id}_{audio_filename or f'audio.{ext}'}"
+            target_dir = MEDIA_ROOT / listing_id
+            target_dir.mkdir(parents=True, exist_ok=True)
+            storage_path = target_dir / safe_name
+            storage_path.write_bytes(audio_bytes)
+            audio_url = f"/media/{listing_id}/{safe_name}"
 
+            media_asset = models.MediaAssetModel(
+                id=media_id,
+                listing_id=listing_id,
+                kind="audio",
+                variant="original",
+                status="complete",
+                url=audio_url,
+                storage_path=str(storage_path)
+            )
+            db.add(media_asset)
+            db.commit()
+            db.refresh(media_asset)
+            audio_media_id = media_asset.id
+
+        # 2. If audio_media_id is provided, retrieve audio_bytes from asset
+        elif audio_media_id:
+            audio_media = db.query(models.MediaAssetModel).filter(
+                models.MediaAssetModel.id == audio_media_id,
+                models.MediaAssetModel.listing_id == listing_id
+            ).first()
+
+            if audio_media:
+                audio_url = audio_media.url
+                if audio_media.storage_path and Path(audio_media.storage_path).exists():
+                    audio_bytes = Path(audio_media.storage_path).read_bytes()
+                elif audio_url and audio_url.startswith("http"):
+                    try:
+                        audio_bytes = safe_fetch_media(audio_url, timeout=10)
+                    except Exception as req_err:
+                        logger.warning(f"Failed to fetch audio safely from {audio_url}: {req_err}")
+                elif audio_url and audio_url.startswith("/media/"):
+                    rel = audio_url.replace("/media/", "", 1)
+                    local_p = MEDIA_ROOT / rel
+                    if local_p.exists():
+                        audio_bytes = local_p.read_bytes()
+            else:
+                audio_url = "sample_audio.wav"
+
+        # 3. Default / Fallback audio_bytes if none could be loaded
+        if not audio_bytes:
+            if not audio_url:
+                audio_url = "sample_audio.wav"
             if audio_url.startswith("http"):
-                res = requests.get(audio_url, timeout=10)
-                res.raise_for_status()
-                audio_bytes = res.content
+                try:
+                    audio_bytes = safe_fetch_media(audio_url, timeout=10)
+                except Exception:
+                    audio_bytes = b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80\x3e\x00\x00\x00\x7d\x00\x00\x02\x00\x10\x00data\x00\x00\x00\x00"
             else:
                 audio_bytes = b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80\x3e\x00\x00\x00\x7d\x00\x00\x02\x00\x10\x00data\x00\x00\x00\x00"
 
-            transcript = transcribe_audio(audio_bytes, source_language=declared_language)
+        # 4. Convert to 16kHz mono WAV for Bhashini pipeline
+        wav_bytes = convert_audio_to_wav_16k_mono(audio_bytes)
+
+        # 5. Primary Bhashini ASR path with fallback and explicit logging
+        transcription_res = None
+        try:
+            from .bhashini_client import transcribe_audio
+            transcript = transcribe_audio(wav_bytes, source_language=declared_language)
+            cleaned = (transcript or "").strip().lower()
+            if not cleaned or cleaned in {"you", "you.", ".", "..", "..."}:
+                raise ValueError(f"Bhashini returned empty or silence hallucination: '{transcript}'")
+
+            translated_text = transcript
+            if declared_language != "en":
+                try:
+                    if gemini_client.client:
+                        from .gemini_client import _generate_with_retry, GEMINI_MODEL as _GM
+                        tr_prompt = f"Translate the following Indian craft voice transcript into English. Return ONLY the translated English text:\n\"{transcript}\""
+                        tr_resp = _generate_with_retry(
+                            gemini_client.client,
+                            model=_GM,
+                            contents=tr_prompt
+                        )
+                        translated_text = tr_resp.text.strip() or transcript
+                except Exception as tr_err:
+                    logger.warning(f"Translation of Bhashini transcript failed: {tr_err}")
+                    translated_text = transcript
+
             transcription_res = {
                 "status": "complete",
                 "asr_provider": "bhashini",
                 "declared_language": declared_language,
                 "transcript": transcript,
-                "translated_text": transcript,
+                "translated_text": translated_text,
                 "asr_confidence": 0.94
             }
         except Exception as e:
             logger.warning(f"Bhashini ASR failed, using fallback: {e}")
-            transcription_res = gemini_client.transcribe_and_translate(audio_url, declared_language=declared_language)
-            transcription_res["asr_provider"] = "fallback_fixture"
+            # Multimodal Gemini transcription with real audio bytes
+            if audio_bytes and len(audio_bytes) > 200:
+                gemini_res = gemini_client.transcribe_audio_bytes(
+                    audio_bytes=wav_bytes or audio_bytes,
+                    mime_type="audio/wav",
+                    declared_language=declared_language
+                )
+                if gemini_res.get("transcript"):
+                    transcription_res = {
+                        "status": "complete",
+                        "asr_provider": "gemini_multimodal",
+                        "declared_language": gemini_res.get("detected_language", declared_language),
+                        "transcript": gemini_res["transcript"],
+                        "translated_text": gemini_res.get("translated_text") or gemini_res["transcript"],
+                        "asr_confidence": gemini_res.get("asr_confidence", 0.94)
+                    }
+
+            if not transcription_res:
+                audio_ref = audio_url or audio_media_id or "sample_audio.wav"
+                transcription_res = gemini_client.transcribe_and_translate(audio_ref, declared_language=declared_language)
+                transcription_res["asr_provider"] = "fallback_fixture"
 
         job = models.JobModel(
             job_id=str(uuid.uuid4()),
@@ -344,23 +436,88 @@ class AIService:
         if not listing:
             raise HTTPException(status_code=404, detail="Listing not found")
 
-        trans_job = db.query(models.JobModel).filter(
-            models.JobModel.listing_id == listing_id,
-            models.JobModel.type == "transcription"
-        ).order_by(models.JobModel.created_at.desc()).first()
+        requested_transcript_id = payload.get("transcript_id") if payload and isinstance(payload, dict) else None
+        trans_job = None
+        if requested_transcript_id:
+            trans_job = db.query(models.JobModel).filter(
+                models.JobModel.job_id == requested_transcript_id,
+                models.JobModel.listing_id == listing_id
+            ).first()
+        if not trans_job:
+            trans_job = db.query(models.JobModel).filter(
+                models.JobModel.listing_id == listing_id,
+                models.JobModel.type == "transcription"
+            ).order_by(models.JobModel.created_at.desc()).first()
 
-        declared_lang = listing.preferred_language or "kn"
+        # Resolve declared language:
+        # Priority 1: Language declared when speaking (from transcription job result)
+        # Priority 2: Language passed in payload
+        # Priority 3: Listing preferred language
+        # Priority 4: Default "en"
+        declared_lang = "en"
+        trans_job_data = {}
+        if trans_job and trans_job.result_data:
+            try:
+                trans_job_data = json.loads(trans_job.result_data)
+                if trans_job_data.get("declared_language"):
+                    declared_lang = trans_job_data["declared_language"]
+            except Exception:
+                pass
+
+        if declared_lang == "en" and payload and isinstance(payload, dict):
+            declared_lang = payload.get("declared_language") or payload.get("preferred_language") or declared_lang
+
+        if declared_lang == "en" and listing.preferred_language:
+            declared_lang = listing.preferred_language
+
+        if listing.preferred_language != declared_lang:
+            listing.preferred_language = declared_lang
+            db.commit()
+
+        # Check existing catalogue cache to prevent redundant Gemini re-extractions on page refresh
+        existing_cat = db.query(models.CatalogueModel).filter(models.CatalogueModel.listing_id == listing_id).first()
+        force_regen = payload.get("force_regenerate", False) if payload and isinstance(payload, dict) else False
+        if (
+            existing_cat
+            and isinstance(existing_cat, models.CatalogueModel)
+            and getattr(existing_cat, "catalogue_data", None)
+            and not force_regen
+        ):
+            try:
+                saved_cat_dict = json.loads(existing_cat.catalogue_data) if isinstance(existing_cat.catalogue_data, str) else existing_cat.catalogue_data
+                saved_source = saved_cat_dict.get("source", {})
+                saved_lang = saved_cat_dict.get("title", {}).get("local_language")
+                # Only return cached catalogue if transcript matches AND the language matches
+                if requested_transcript_id and saved_source.get("transcript_id") == requested_transcript_id and (not saved_lang or saved_lang == declared_lang):
+                    saved_conf = json.loads(existing_cat.field_confidence) if isinstance(existing_cat.field_confidence, str) else existing_cat.field_confidence
+                    saved_needs = json.loads(existing_cat.needs_confirmation) if isinstance(existing_cat.needs_confirmation, str) else existing_cat.needs_confirmation
+                    logger.info("Returning cached catalogue for listing %s (transcript %s)", listing_id, requested_transcript_id)
+                    return schemas.CatalogueResult(
+                        schema_version=existing_cat.schema_version or "1.0",
+                        catalogue=schemas.CatalogueDraft(**saved_cat_dict),
+                        field_confidence=saved_conf or {},
+                        needs_confirmation=saved_needs or []
+                    )
+            except Exception as cache_err:
+                logger.warning(f"Error loading cached catalogue, regenerating: {cache_err}")
+
         sample_text = ""
         asr_conf = 0.95
-        transcript_id = str(uuid.uuid4())
+        transcript_id = requested_transcript_id or str(uuid.uuid4())
 
         if trans_job and trans_job.result_data:
-            data = json.loads(trans_job.result_data)
-            sample_text = data.get("translated_text", "")
+            data = trans_job_data or json.loads(trans_job.result_data)
+            transcript_text = (data.get("transcript") or "").strip()
+            translated_text = (data.get("translated_text") or "").strip()
             asr_conf = data.get("asr_confidence", 0.95)
             transcript_id = trans_job.job_id
-        elif payload and isinstance(payload, dict) and payload.get("transcript"):
-            sample_text = payload.get("transcript")
+
+            if transcript_text and translated_text and transcript_text != translated_text:
+                sample_text = f"Artisan Speech ({declared_lang}): {transcript_text}\nEnglish Translation: {translated_text}"
+            else:
+                sample_text = translated_text or transcript_text
+        elif payload and isinstance(payload, dict) and (payload.get("transcript") or payload.get("translated_text")):
+            sample_text = payload.get("transcript") or payload.get("translated_text") or ""
         else:
             sample_text = ""
 
@@ -412,12 +569,12 @@ class AIService:
             techniques=raw_cat.get("techniques", []),
             title=schemas.MultilingualText(
                 en=raw_cat.get("title_en", "Handcrafted Artisan Product"),
-                local=raw_cat.get("title_local", "ಕೈಯಿಂದ ಮಾಡಿದ ಉತ್ಪನ್ನ"),
+                local=raw_cat.get("title_local") or raw_cat.get("title_en", "Handcrafted Artisan Product"),
                 local_language=declared_lang
             ),
             description=schemas.MultilingualDesc(
                 en=raw_cat.get("description_en", "Authentic handcrafted product."),
-                local=raw_cat.get("description_local", "ಅಧಿಕೃತ ಕರಕುಶಲ ಉತ್ಪನ್ನ.")
+                local=raw_cat.get("description_local") or raw_cat.get("description_en", "Authentic handcrafted product.")
             ),
             labour=schemas.LabourInfo(
                 hours=float(raw_cat.get("labour_hours", 6.0)),
@@ -512,7 +669,18 @@ class AIService:
                 state_code = state_code or "KA"
 
         state_code = (state_code or "KA").upper()
-        if state_code not in STATUTORY_WAGES:
+        material_cost_inr = float(material_cost_paise or 0) / 100.0
+
+        from ..services.pricing_service import calculate_price, round_half_up, WageRateUnavailable
+
+        try:
+            p_res = calculate_price(
+                material_cost_inr=material_cost_inr,
+                labour_hours=float(labour_hours or 0.0),
+                state_code=state_code,
+                skill_level=skill_level or "skilled",
+            )
+        except WageRateUnavailable:
             raise HTTPException(
                 status_code=422,
                 detail={
@@ -523,26 +691,32 @@ class AIService:
                 }
             )
 
-        wage_data = STATUTORY_WAGES[state_code]
-        hourly_wage = wage_data["hourly_wage_paise"]
+        if p_res.status == "unavailable" or p_res.error_code == "WAGE_RATE_UNAVAILABLE":
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "WAGE_RATE_UNAVAILABLE",
+                    "message": f"Statutory craft minimum wage is not officially notified for state code: {state_code}",
+                    "recoverable": True,
+                    "action": "Select a recognized state code (e.g. KA, UP, RJ, TN, MP, IN) or input verified artisan rate."
+                }
+            )
 
-        floor_paise = int(material_cost_paise + (labour_hours * hourly_wage))
-        rec_low_paise = int(floor_paise * 1.25)
-        rec_high_paise = int(floor_paise * 1.55)
+        floor_paise = round_half_up(p_res.floor_amount_inr * 100) if p_res.floor_amount_inr is not None else 0
+        rec_low_paise = round_half_up(p_res.recommended_low_inr * 100) if p_res.recommended_low_inr is not None else 0
+        rec_high_paise = round_half_up(p_res.recommended_high_inr * 100) if p_res.recommended_high_inr is not None else 0
+        hourly_wage_inr = p_res.inputs.get("hourly_wage_inr", 0.0) if p_res.inputs else 0.0
+        hourly_wage = round_half_up(hourly_wage_inr * 100) if hourly_wage_inr else 0
 
-        explanation = (
-            f"Statutory Fair Wage Protection Floor: ₹{floor_paise / 100:.2f} "
-            f"(Raw Materials: ₹{material_cost_paise / 100:.2f} + {labour_hours} hrs skilled labor @ "
-            f"₹{hourly_wage / 100:.2f}/hr per {wage_data['notification_ref']}). "
-            f"Suggested e-commerce market band: ₹{rec_low_paise / 100:.2f} – ₹{rec_high_paise / 100:.2f}."
-        )
-
-        wage_source = schemas.WageSourceInfo(
-            state_code=wage_data["state_code"],
-            notification_ref=wage_data["notification_ref"],
-            effective_from=wage_data["effective_from"],
-            source_url=wage_data["source_url"]
-        )
+        wage_source = None
+        if p_res.wage_source:
+            ws = p_res.wage_source
+            wage_source = schemas.WageSourceInfo(
+                state_code=ws.get("state_code", state_code) if isinstance(ws, dict) else getattr(ws, "state_code", state_code),
+                notification_ref=ws.get("notification_ref", "") if isinstance(ws, dict) else getattr(ws, "notification_ref", ""),
+                effective_from=ws.get("effective_from", "") if isinstance(ws, dict) else getattr(ws, "effective_from", ""),
+                source_url=ws.get("source_url", "") if isinstance(ws, dict) else getattr(ws, "source_url", ""),
+            )
 
         price_inputs = schemas.PriceInputs(
             material_cost_paise=material_cost_paise,
@@ -552,26 +726,30 @@ class AIService:
         )
 
         price_result = schemas.PriceResult(
-            calculation_version="1.0",
-            status="available",
-            currency="INR",
+            calculation_version=p_res.calculation_version,
+            status=p_res.status,
+            currency=p_res.currency,
             wage_source=wage_source,
             inputs=price_inputs,
             floor_amount_paise=floor_paise,
             recommended_low_paise=rec_low_paise,
             recommended_high_paise=rec_high_paise,
-            explanation=explanation
+            explanation=p_res.explanation
         )
 
         existing_price = db.query(models.PriceCalculationModel).filter(
             models.PriceCalculationModel.listing_id == listing_id
         ).first()
 
+        notification_ref = wage_source.notification_ref if wage_source else ""
+        effective_from = wage_source.effective_from if wage_source else ""
+        source_url = wage_source.source_url if wage_source else ""
+
         if existing_price:
             existing_price.state_code = state_code
-            existing_price.notification_ref = wage_data["notification_ref"]
-            existing_price.effective_from = wage_data["effective_from"]
-            existing_price.source_url = wage_data["source_url"]
+            existing_price.notification_ref = notification_ref
+            existing_price.effective_from = effective_from
+            existing_price.source_url = source_url
             existing_price.material_cost_paise = material_cost_paise
             existing_price.labour_hours = labour_hours
             existing_price.hourly_wage_paise = hourly_wage
@@ -579,17 +757,17 @@ class AIService:
             existing_price.floor_amount_paise = floor_paise
             existing_price.recommended_low_paise = rec_low_paise
             existing_price.recommended_high_paise = rec_high_paise
-            existing_price.explanation = explanation
+            existing_price.explanation = p_res.explanation
         else:
             new_price = models.PriceCalculationModel(
                 listing_id=listing_id,
-                calculation_version="1.0",
-                status="available",
-                currency="INR",
+                calculation_version=p_res.calculation_version,
+                status=p_res.status,
+                currency=p_res.currency,
                 state_code=state_code,
-                notification_ref=wage_data["notification_ref"],
-                effective_from=wage_data["effective_from"],
-                source_url=wage_data["source_url"],
+                notification_ref=notification_ref,
+                effective_from=effective_from,
+                source_url=source_url,
                 material_cost_paise=material_cost_paise,
                 labour_hours=labour_hours,
                 hourly_wage_paise=hourly_wage,
@@ -597,7 +775,7 @@ class AIService:
                 floor_amount_paise=floor_paise,
                 recommended_low_paise=rec_low_paise,
                 recommended_high_paise=rec_high_paise,
-                explanation=explanation
+                explanation=p_res.explanation
             )
             db.add(new_price)
 

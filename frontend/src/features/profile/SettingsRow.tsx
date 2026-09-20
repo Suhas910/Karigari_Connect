@@ -3,7 +3,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
 
 interface SettingsRowProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -13,6 +13,8 @@ interface SettingsRowProps {
   subtitle: string;
   badgeText?: string;
   showDivider?: boolean;
+  /** Optional element rendered on the right side (replaces chevron when provided). */
+  rightElement?: React.ReactNode;
   onPress: () => void;
 }
 
@@ -24,8 +26,11 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
   subtitle,
   badgeText,
   showDivider = true,
+  rightElement,
   onPress,
 }) => {
+  const { colors } = useAppTheme();
+
   return (
     <View>
       <TouchableOpacity
@@ -35,33 +40,32 @@ export const SettingsRow: React.FC<SettingsRowProps> = ({
         accessibilityRole="button"
         accessibilityLabel={`${title}, ${subtitle}`}
       >
-        {/* Icon in rounded colored square */}
         <View style={[styles.iconSquare, { backgroundColor: iconBgColor }]}>
           <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
         </View>
 
-        {/* Text stack */}
         <View style={styles.textStack}>
-          <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
             {title}
           </Text>
-          <Text style={styles.subtitle} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[styles.subtitle, { color: colors.textMuted }]} numberOfLines={1} ellipsizeMode="tail">
             {subtitle}
           </Text>
         </View>
 
-        {/* Optional Chip + Chevron */}
         <View style={styles.rightContainer}>
           {badgeText ? (
-            <View style={styles.badgeChip}>
-              <Text style={styles.badgeChipText}>{badgeText}</Text>
+            <View style={[styles.badgeChip, { backgroundColor: colors.badgeNeutral, borderColor: colors.border }]}>
+              <Text style={[styles.badgeChipText, { color: colors.text }]}>{badgeText}</Text>
             </View>
           ) : null}
-          <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+          {rightElement ?? (
+            <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+          )}
         </View>
       </TouchableOpacity>
 
-      {showDivider && <View style={styles.divider} />}
+      {showDivider && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
     </View>
   );
 };
@@ -89,12 +93,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.text,
     letterSpacing: -0.1,
   },
   subtitle: {
     fontSize: 12,
-    color: colors.textMuted,
     fontWeight: '500',
     marginTop: 2,
   },
@@ -104,21 +106,17 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   badgeChip: {
-    backgroundColor: colors.badgeNeutral,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: colors.border,
   },
   badgeChipText: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.text,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.border,
     marginLeft: 42 + spacing.md + (spacing.sm + 4),
   },
 });

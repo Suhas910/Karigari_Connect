@@ -1,17 +1,16 @@
-# backend/app/main.py
+import os
 import uuid
 import logging
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
-from .database import engine, Base, init_db
+from .database import init_db
 from .ai.service import MEDIA_ROOT
-from .routers import auth as auth_router, listings, ai, coordinator, products, images, price_router, profile, support
+from .routers import auth as auth_router, listings, ai, coordinator, price_router, profile, support
 from .validation_handler import register_validation_handler
 
 # Initialize Database Schema & Seed Demo Accounts (resilient on both primary and fallback)
@@ -27,10 +26,23 @@ app = FastAPI(
 
 register_validation_handler(app)
 
-# CORS Middleware for React Native / Web Clients
+# Safe CORS Middleware: Explicit origin allowlist with regex fallback for mobile/dev
+raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [o.strip() for o in raw_origins.split(",") if o.strip()]
+if not allowed_origins:
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8081",
+        "http://127.0.0.1:19006",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,6 +71,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             message = detail.get("message", str(detail))
             recoverable = detail.get("recoverable", True)
             action = detail.get("action", "")
+    elif exc.status_code == 400:
+        code = "INVALID_INPUT"
+        message = str(detail)
+        action = "Check request parameters and try again."
     elif exc.status_code == 401:
         code = "PROVIDER_UNAVAILABLE"
         message = str(detail)
@@ -72,7 +88,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         message = str(detail)
         action = "Check the requested resource identifier."
     elif exc.status_code == 422:
-        code = "CATALOGUE_SCHEMA_INVALID"
+        code = "INVALID_INPUT"
 
     return JSONResponse(
         status_code=exc.status_code,
@@ -97,7 +113,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
             "request_id": request_id,
             "error": {
                 "code": "INTERNAL_SERVER_ERROR",
-                "message": str(exc),
+                "message": "An unexpected internal error occurred. Please retry shortly or contact support.",
                 "recoverable": True,
                 "action": "Please retry shortly or contact support."
             }
@@ -131,15 +147,15 @@ app.include_router(profile.router, prefix="/api/v1")
 app.include_router(support.router, prefix="/api/v1")
 
 # --- ROOT & BACKWARDS COMPATIBILITY ROUTERS ---
-app.include_router(auth_router.router)
-app.include_router(listings.router)
-app.include_router(ai.router)
-app.include_router(coordinator.router)
-app.include_router(price_router.router)
-app.include_router(profile.router)
-app.include_router(support.router)
-app.include_router(products.router)
-app.include_router(images.router)
+# Note: Unprefixed root routes are legacy compatibility mirrors slated for deprecation.
+# All new clients and integrations should target the canonical /api/v1 endpoints.
+app.include_router(auth_router.router, include_in_schema=False)
+app.include_router(listings.router, include_in_schema=False)
+app.include_router(ai.router, include_in_schema=False)
+app.include_router(coordinator.router, include_in_schema=False)
+app.include_router(price_router.router, include_in_schema=False)
+app.include_router(profile.router, include_in_schema=False)
+app.include_router(support.router, include_in_schema=False)
 
 # Uploaded and BiRefNet-enhanced listing photos
 MEDIA_ROOT.mkdir(parents=True, exist_ok=True)

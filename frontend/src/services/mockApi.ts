@@ -18,6 +18,7 @@ import {
   BankDetailsUpdate,
   SupportMessage,
   SupportMessageSubmitRequest,
+  SupportMessageReply,
 } from '../types/contracts';
 import { getWageFloorPreview } from '../constants/wageRates';
 
@@ -33,12 +34,72 @@ interface MockJobRecord {
 interface MockListingOverride {
   state?: ListingState;
   claims?: Claim[];
+  rejection_flags?: string[];
+  rejection_categories?: string[];
+  rejection_reason?: string | null;
 }
 
 const activeJobRegistry = new Map<string, MockJobRecord>();
 const mockListingRegistry = new Map<string, MockListingOverride>();
 const mockSupportMessages: SupportMessage[] = [];
-let mockListings: Listing[] = [];
+const mockSupportThreads = new Map<string, SupportMessageReply[]>();
+let mockListings: Listing[] = [
+  {
+    id: 'mock_listing_123',
+    artisan_id: 'user_uuid_artisan',
+    state: 'awaiting_approval',
+    preferred_language: 'kn',
+    media: [
+      {
+        id: 'media_mock_1',
+        kind: 'image',
+        variant: 'enhanced',
+        status: 'complete',
+        url: 'https://images.unsplash.com/photo-1590736969955-71cc94801759?w=800',
+      },
+    ],
+    catalogue: {
+      schema_version: '1.0',
+      catalogue: {
+        listing_id: 'mock_listing_123',
+        category: 'Woodcraft & Toys',
+        materials: ['Ivory wood', 'Natural lacquer', 'Vegetable dyes'],
+        techniques: ['handloom_weave', 'natural_dye'],
+        title: { en: 'Channapatna Handcrafted Natural Lacquer Toy', local: 'ಚನ್ನಪಟ್ಟಣದ ನೈಸರ್ಗಿಕ ಲಕ್ಕರ್ ಆಟಿಕೆ', local_language: 'kn' },
+        description: { en: 'Handcrafted traditional wooden toy made with vegetable dyes and ivory wood.', local: 'ಸಾಂಪ್ರದಾಯಿಕ ಚನ್ನಪಟ್ಟಣ ಮರದ ಆಟಿಕೆ.' },
+        labour: { hours: 6, skill_level: 'skilled', state_code: 'KA' },
+        material_cost_paise: 25000,
+        provenance: {
+          claims: [
+            { claim: 'handloom_weave', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
+            { claim: 'natural_dye', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
+          ],
+          gi_tag: 'GI-241',
+        },
+        source: { transcript_id: 'mock_transcript_1', asr_confidence: 0.94 },
+      },
+      field_confidence: { 'title.en': 0.95, category: 0.98 },
+      needs_confirmation: [],
+    },
+    price: {
+      calculation_version: '1.0',
+      status: 'available',
+      currency: 'INR',
+      wage_source: { state_code: 'KA', notification_ref: 'KA-MW-2024', effective_from: '2024-04-01', source_url: '' },
+      inputs: { material_cost_paise: 25000, labour_hours: 6, hourly_wage_paise: 7338, skill_level: 'skilled' },
+      floor_amount_paise: 69028,
+      recommended_low_paise: 89900,
+      recommended_high_paise: 119900,
+      explanation: 'Statutory wage floor calculated based on Karnataka skilled craftsmanship rates.',
+    },
+    claims: [
+      { claim: 'handloom_weave', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
+      { claim: 'natural_dye', asserted_by_artisan: true, coordinator_verified: false, evidence_note: null },
+    ],
+    created_at: now(),
+    updated_at: now(),
+  },
+];
 
 let mockCurrentProfile: ArtisanProfile = {
   user_id: 1,
@@ -109,7 +170,24 @@ export const mockApi: ListingService = {
     };
   },
 
-  listListings: async (): Promise<Listing[]> => mockListings,
+  listListings: async (state?: string): Promise<Listing[]> => {
+    const mapped = mockListings.map((l) => {
+      const override = mockListingRegistry.get(l.id);
+      if (!override) return l;
+      return {
+        ...l,
+        state: override.state ?? l.state,
+        claims: override.claims ?? l.claims,
+        rejection_flags: override.rejection_flags ?? l.rejection_flags,
+        rejection_categories: override.rejection_categories ?? l.rejection_categories,
+        rejection_reason: override.rejection_reason ?? l.rejection_reason,
+      };
+    });
+    if (state) {
+      return mapped.filter((l) => l.state === state);
+    }
+    return mapped;
+  },
 
   confirmListing: async (
   listingId: string,
@@ -119,8 +197,9 @@ export const mockApi: ListingService = {
     corrections: { field: string; old_value: any; new_value: any; source: string }[];
   }
 ) => ({
-  status: 'awaiting_approval',
+  status: 'confirmed',
   listing_id: listingId,
+  state: 'awaiting_confirmation',
 }),
 
   getListing: async (listingId: string): Promise<Listing> => {
@@ -131,6 +210,9 @@ export const mockApi: ListingService = {
         ...existing,
         state: override?.state ?? existing.state,
         claims: override?.claims ?? existing.claims,
+        rejection_flags: override?.rejection_flags ?? existing.rejection_flags,
+        rejection_categories: override?.rejection_categories ?? existing.rejection_categories,
+        rejection_reason: override?.rejection_reason ?? existing.rejection_reason,
       };
     }
     return {
@@ -142,6 +224,9 @@ export const mockApi: ListingService = {
       catalogue: null,
       price: null,
       claims: override?.claims ?? [],
+      rejection_flags: override?.rejection_flags ?? [],
+      rejection_categories: override?.rejection_categories ?? [],
+      rejection_reason: override?.rejection_reason ?? null,
       created_at: now(),
       updated_at: now(),
     };
@@ -174,7 +259,7 @@ export const mockApi: ListingService = {
     return { job_id: jobId };
   },
 
-  requestTranscription: async (listingId: string, payload: { audio_media_id: string; declared_language: string }) => {
+  requestTranscription: async (listingId: string, payload: { audio_media_id?: string; audioUri?: string; declared_language: string } | FormData) => {
     const jobId = `job_audio_${Date.now()}`;
     activeJobRegistry.set(jobId, {
       type: 'transcription',
@@ -346,13 +431,28 @@ export const mockApi: ListingService = {
 
   submitForApproval: async (listingId: string) => ({ status: 'awaiting_approval' }),
 
-  decideApproval: async (listingId: string, payload: { decision: string; reason: string }) => {
-    const nextState = (payload.decision === 'approved' ? 'approved' : 'rejected') as ListingState;
+  decideApproval: async (
+    listingId: string,
+    payload: { decision: string; reason: string; rejection_categories?: string[] }
+  ) => {
+    const isApproved = payload.decision === 'approved' || payload.decision === 'approve';
+    const nextState = (isApproved ? 'approved' : 'rejected') as ListingState;
     const existing = mockListingRegistry.get(listingId) || {};
-    mockListingRegistry.set(listingId, { ...existing, state: nextState });
+    const rejection_flags = isApproved ? [] : (payload.rejection_categories || []);
+    const rejection_reason = isApproved ? null : payload.reason;
+    mockListingRegistry.set(listingId, {
+      ...existing,
+      state: nextState,
+      rejection_flags,
+      rejection_categories: rejection_flags,
+      rejection_reason,
+    });
     return {
       status: nextState,
       reason: payload.reason,
+      rejection_categories: rejection_flags,
+      rejection_flags,
+      rejection_reason,
     };
   },
 
@@ -365,6 +465,10 @@ export const mockApi: ListingService = {
     // Build guide: Never use 'syncing to ONDC' theatre for local gateway. Default: 'not_attempted'
     network_submission: payload.simulate_network_submission ? 'success' : 'not_attempted',
   }),
+
+  deleteListing: async (listingId: string): Promise<void> => {
+    mockListings = mockListings.filter((l) => l.id !== listingId);
+  },
 
   getArtisanProfile: async (_userId?: number): Promise<ArtisanProfile> => ({
     ...mockCurrentProfile,
@@ -407,7 +511,15 @@ export const mockApi: ListingService = {
   },
 
   getPendingArtisanProfiles: async (): Promise<ArtisanProfile[]> => [
-    ...mockPendingProfiles,
+    ...mockPendingProfiles.map((p) => ({
+      ...p,
+      account_holder_name: undefined,
+      account_number: undefined,
+      ifsc_code: undefined,
+      bank_name: undefined,
+      pan_number: undefined,
+      aadhaar_number: undefined,
+    })),
   ],
 
   reviewArtisanProfile: async (userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile> => {
@@ -459,6 +571,80 @@ export const mockApi: ListingService = {
 
   getSupportMessages: async (): Promise<SupportMessage[]> => {
     return [...mockSupportMessages];
+  },
+
+  // TODO: Replace mock with backend API integration. Real-time updates pending Supabase
+  // table + subscription from backend team — this UI polls/refetches on send for now,
+  // swap to a live subscription once that table exists.
+  getSupportThread: async (messageId: string): Promise<SupportMessageReply[]> => {
+    if (!mockSupportThreads.has(messageId)) {
+      mockSupportThreads.set(messageId, [
+        {
+          id: `reply_seed_1_${messageId}`,
+          message_id: messageId,
+          sender_role: 'coordinator',
+          sender_name: 'Coordinator Sharma',
+          body: 'Namaste! We received your inquiry regarding the craft details and credentials.',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: `reply_seed_2_${messageId}`,
+          message_id: messageId,
+          sender_role: 'artisan',
+          sender_name: 'Meera Bai',
+          body: 'Thank you coordinator ji. Please verify the GI tag and natural dye claims.',
+          created_at: new Date(Date.now() - 1800000).toISOString(),
+        },
+        {
+          id: `reply_seed_3_${messageId}`,
+          message_id: messageId,
+          sender_role: 'coordinator',
+          sender_name: 'Coordinator Sharma',
+          body: 'Noted. Reviewing the cluster certificate now.',
+          created_at: new Date(Date.now() - 600000).toISOString(),
+        },
+      ]);
+    }
+    return [...(mockSupportThreads.get(messageId) || [])];
+  },
+
+  replyToSupportMessage: async (messageId: string, body: string): Promise<SupportMessageReply> => {
+    const currentReplies = await mockApi.getSupportThread(messageId);
+    const newReply: SupportMessageReply = {
+      id: `reply_${Date.now()}`,
+      message_id: messageId,
+      sender_role: 'artisan',
+      sender_name: 'You',
+      body: body.trim(),
+      created_at: now(),
+    };
+    currentReplies.push(newReply);
+    mockSupportThreads.set(messageId, currentReplies);
+    return newReply;
+  },
+
+  closeSupportMessage: async (messageId: string): Promise<SupportMessage> => {
+    const msg = mockSupportMessages.find((m) => m.id === messageId);
+    if (msg) {
+      msg.status = 'resolved';
+      return { ...msg };
+    }
+    return {
+      id: messageId,
+      artisan_id: 1,
+      listing_id: null,
+      message: 'Support conversation',
+      status: 'resolved',
+      created_at: now(),
+    };
+  },
+
+  deleteSupportMessage: async (messageId: string): Promise<void> => {
+    const idx = mockSupportMessages.findIndex((m) => m.id === messageId);
+    if (idx !== -1) {
+      mockSupportMessages.splice(idx, 1);
+    }
+    mockSupportThreads.delete(messageId);
   },
 
   // TODO: Send Voice Feedback stub for artisan profile/coordinator idea notes

@@ -1,7 +1,7 @@
 // src/features/image-review/ImageReviewScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, Button, ProgressBar, IconButton } from 'react-native-paper';
+import { Text, Button, ProgressBar, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
@@ -9,14 +9,17 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
 
 export default function ImageReviewScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'ImageReview'>>();
-  const { draftId } = route.params;
+  const { draftId, reviewOnly } = route.params;
+
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
   const [jobId, setJobId] = useState<string | null>(null);
   const [kickoffError, setKickoffError] = useState<string | null>(null);
@@ -24,18 +27,57 @@ export default function ImageReviewScreen() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [coverIndex, setCoverIndex] = useState<number>(0);
+  const [cachedResult, setCachedResult] = useState<{
+    status: 'complete';
+    enhanced_url?: string;
+    enhanced_urls?: string[];
+    quality?: any;
+  } | null>(null);
+  const [initDone, setInitDone] = useState(false);
 
-  // 1. Load photos from draft on mount
+  // 1. Initialize photos and enhancement status from draft on mount
   useEffect(() => {
     if (!draftId) return;
+    let isMounted = true;
     (async () => {
       try {
         const draft = await getDraft(draftId);
-        if (draft?.payload?.photos && Array.isArray(draft.payload.photos) && draft.payload.photos.length > 0) {
-          setPhotos(draft.payload.photos);
-          if (typeof draft.payload.coverIndex === 'number' && draft.payload.coverIndex < draft.payload.photos.length) {
+        if (!isMounted) return;
+
+        let currentPhotos: string[] = draft?.payload?.photos || [];
+        let existingEnhanced: string[] = draft?.payload?.enhancedPhotos || [];
+
+        // Also check if server listing has media
+        if (currentPhotos.length === 0 || existingEnhanced.length === 0) {
+          try {
+            const serverListing = await service.getListing(draftId);
+            if (serverListing?.media && serverListing.media.length > 0) {
+              const enhancedFromMedia = serverListing.media
+                .filter((m: any) => m.variant === 'enhanced' && m.url)
+                .map((m: any) => m.url);
+              const originalFromMedia = serverListing.media
+                .filter((m: any) => m.variant === 'original' && m.url)
+                .map((m: any) => m.url);
+
+              if (existingEnhanced.length === 0 && enhancedFromMedia.length > 0) {
+                existingEnhanced = enhancedFromMedia;
+              }
+              if (currentPhotos.length === 0) {
+                currentPhotos = originalFromMedia.length > 0 ? originalFromMedia : enhancedFromMedia;
+              }
+            }
+          } catch (listErr) {
+            // ignore
+          }
+        }
+
+        if (currentPhotos.length > 0) {
+          setPhotos(currentPhotos);
+          if (typeof draft?.payload?.coverIndex === 'number' && draft.payload.coverIndex < currentPhotos.length) {
             setCoverIndex(draft.payload.coverIndex);
           }
+        } else if (existingEnhanced.length > 0) {
+          setPhotos(existingEnhanced);
         } else {
           // Fallback placeholders if launched directly without camera
           setPhotos([
@@ -44,29 +86,39 @@ export default function ImageReviewScreen() {
             'https://placehold.co/400x400/F2EDE4/2B2320?text=Angle+3+(Border)',
           ]);
         }
-      } catch (err) {
-        console.error('Failed to load photos in ImageReviewScreen', err);
-      }
-    })();
-  }, [draftId]);
 
-  // 2. Kick off image analysis once photos are loaded or on screen mount
-  useEffect(() => {
-    if (!draftId) return;
-    (async () => {
-      try {
-        const draft = await getDraft(draftId);
-        const currentPhotos: string[] = draft?.payload?.photos || [];
-        // Captured photos are uploaded and enhanced with BiRefNet; with none, there is nothing to upload.
+        // Check if images were already enhanced OR if reviewOnly is requested OR if draft has accepted/enhanced photos
+        if (reviewOnly || draft?.payload?.imageAccepted || existingEnhanced.length > 0) {
+          const finalEnhancedList = existingEnhanced.length > 0 ? existingEnhanced : (currentPhotos.length > 0 ? currentPhotos : []);
+          setCachedResult({
+            status: 'complete',
+            enhanced_url: finalEnhancedList[0],
+            enhanced_urls: finalEnhancedList,
+            quality: draft?.payload?.qualityMetrics || { blur_score: 0.95, contrast_score: 0.95, lighting_score: 0.95, resolution_ok: true },
+          });
+          setInitDone(true);
+          return; // Skip re-requesting image analysis/enhancement
+        }
+
+        // Otherwise, kick off image enhancement job
         const result = currentPhotos.length > 0
           ? await service.requestImageEnhancement(draftId, currentPhotos)
           : await service.requestImageAnalysis(draftId, { media_id: 'media_photo_batch' });
-        setJobId(result.job_id);
+        if (isMounted) {
+          setJobId(result.job_id);
+          setInitDone(true);
+        }
       } catch (err) {
-        setKickoffError('imageReview.kickoffError');
+        if (isMounted) {
+          setKickoffError('imageReview.kickoffError');
+          setInitDone(true);
+        }
       }
     })();
-  }, [draftId]);
+    return () => {
+      isMounted = false;
+    };
+  }, [draftId, reviewOnly]);
 
   // 3. Poll job status — simulates upload (queued) -> AI studio processing -> complete
   const { data: job } = useQuery({
@@ -117,9 +169,10 @@ export default function ImageReviewScreen() {
     }
   }, [jobResult, draftId, photos, coverIndex]);
 
-  const isJobRunning = !kickoffError && (!job || job.status === 'processing' || job.status === 'queued');
-  const isProcessing = isJobRunning || (job?.status === 'complete' && isFetchingResult && !jobResult);
-  const isFailed = kickoffError || job?.status === 'failed' || isResultError;
+  const effectiveResult = jobResult || cachedResult;
+  const isJobRunning = !cachedResult && !kickoffError && !!jobId && (!job || job.status === 'processing' || job.status === 'queued');
+  const isProcessing = isJobRunning || (!cachedResult && job?.status === 'complete' && isFetchingResult && !jobResult);
+  const isFailed = !cachedResult && (kickoffError || job?.status === 'failed' || isResultError);
 
   const handleRetake = () => {
     navigation.goBack();
@@ -175,6 +228,9 @@ export default function ImageReviewScreen() {
   const handleContinue = async () => {
     try {
       const existing = await getDraft(draftId);
+      const finalEnhanced =
+        effectiveResult?.enhanced_urls ||
+        (effectiveResult?.enhanced_url ? [effectiveResult.enhanced_url] : photos);
       await saveDraft({
         id: draftId,
         listing_id: existing?.listing_id ?? draftId,
@@ -185,14 +241,30 @@ export default function ImageReviewScreen() {
           photos,
           coverIndex,
           imageAccepted: true,
-          enhancedPhotos: jobResult?.enhanced_urls || (jobResult?.enhanced_url ? [jobResult.enhanced_url] : []),
+          enhancedPhotos: finalEnhanced,
         },
       });
+
+      if (reviewOnly || existing?.payload?.priceReviewed || existing?.payload?.catalogue) {
+        if (navigation.canGoBack()) {
+          navigation.goBack();
+          return;
+        }
+      }
     } catch (dbErr) {
       console.error('Failed to update draft payload in handleContinue', dbErr);
     }
     navigation.navigate('Speak', { draftId });
   };
+
+  // --- Initial loading spinner while reading draft ---
+  if (!initDone) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.secondary} />
+      </View>
+    );
+  }
 
   // --- Processing Screen ---
   if (isProcessing) {
@@ -283,12 +355,12 @@ export default function ImageReviewScreen() {
   }
 
   // --- Results Screen ---
-  const enhancedPhotos = jobResult?.enhanced_urls && jobResult.enhanced_urls.length > 0
-    ? jobResult.enhanced_urls
-    : (jobResult?.enhanced_url ? [jobResult.enhanced_url] : []);
+  const enhancedPhotos = effectiveResult?.enhanced_urls && effectiveResult.enhanced_urls.length > 0
+    ? effectiveResult.enhanced_urls
+    : (effectiveResult?.enhanced_url ? [effectiveResult.enhanced_url] : []);
 
   const activeOriginalUri = photos[selectedIndex] || 'https://placehold.co/400x400/EDE7DD/2B2320?text=Angle';
-  const activeEnhancedUri = (enhancedPhotos[selectedIndex] || jobResult?.enhanced_url || '').trim();
+  const activeEnhancedUri = (enhancedPhotos[selectedIndex] || effectiveResult?.enhanced_url || '').trim();
   const hasEnhancedPhoto = activeEnhancedUri.length > 0;
   const isCurrentCover = selectedIndex === coverIndex;
 
@@ -444,7 +516,7 @@ export default function ImageReviewScreen() {
             <IconButton
               icon={isCurrentCover ? 'star' : 'star-outline'}
               size={20}
-              iconColor={isCurrentCover ? '#FFFFFF' : colors.secondary}
+              iconColor={isCurrentCover ? colors.onPrimary : colors.secondary}
               style={{ margin: 0 }}
             />
           </View>
@@ -501,7 +573,7 @@ export default function ImageReviewScreen() {
             onPress={handleContinue}
             style={styles.primaryContinueBtn}
             buttonColor={colors.primary}
-            textColor="#FFFFFF"
+            textColor={colors.onPrimary}
             contentStyle={{ height: 48 }}
             labelStyle={styles.primaryContinueText}
           >
@@ -523,7 +595,8 @@ export default function ImageReviewScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
   container: {
     backgroundColor: colors.background,
     flexGrow: 1,
@@ -668,7 +741,7 @@ const styles = StyleSheet.create({
   stripThumbImage: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#EDE7DD',
+    backgroundColor: colors.badgeNeutral,
   },
   coverPill: {
     position: 'absolute',
@@ -680,7 +753,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   coverPillText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 8,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -692,7 +765,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: 'rgba(28, 25, 23, 0.75)',
+    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.75)' : 'rgba(28, 25, 23, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -700,12 +773,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   indexPillText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 9,
     fontWeight: '700',
   },
   indexPillTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -747,13 +820,13 @@ const styles = StyleSheet.create({
   mainImage: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   emptyPlaceholder: {
     height: 280,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     padding: spacing.lg,
   },
   emptyPlaceholderTitle: {
@@ -784,7 +857,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   sideHeader: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     paddingVertical: 5,
     alignItems: 'center',
     borderBottomWidth: 1,
@@ -798,13 +871,13 @@ const styles = StyleSheet.create({
   sideImage: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
   },
   sideEmptyPlaceholder: {
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     padding: spacing.xs,
   },
   sideEmptyText: {
@@ -823,7 +896,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 10,
-    backgroundColor: 'rgba(36, 51, 84, 0.88)',
+    backgroundColor: isDark ? 'rgba(30, 42, 61, 0.92)' : 'rgba(36, 51, 84, 0.88)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -831,7 +904,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   previewCoverFloatingText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -888,7 +961,7 @@ const styles = StyleSheet.create({
   activeCoverBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.indigoBorder,
     paddingVertical: 4,
@@ -909,7 +982,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   setCoverBtnText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 12,
     fontWeight: '700',
   },
@@ -939,6 +1012,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     letterSpacing: 0.3,
+    color: '#FFFFFF',
   },
   secondaryAddBtn: {
     width: '100%',
@@ -947,4 +1021,5 @@ const styles = StyleSheet.create({
   },
   hint: { color: colors.text, marginTop: spacing.md, textAlign: 'center' },
   retakeBtn: { marginTop: spacing.md, borderRadius: 8 },
-});
+  });
+}

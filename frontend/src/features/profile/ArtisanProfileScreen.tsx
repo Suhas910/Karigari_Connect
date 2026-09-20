@@ -9,14 +9,16 @@
 // 3. Detailed form inputs (Skill Tier picker, State pills, Zone cards, ID proof radios, ID number input)
 //    are encapsulated in SkillTierEditModal to avoid structural changes to navigation stacks.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { Text, ActivityIndicator, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { service } from '../../services';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
+import type { ThemeMode } from '../../store/themeStore';
 import { type SkillOption, OPTION_TO_STATUTORY_SKILL, STATUTORY_SKILL_TO_OPTION } from '../../components';
 import { PILOT_STATES, useDraftStore } from '../../store/draftStore';
 import { useAuthStore } from '../../store/authStore';
@@ -53,21 +55,30 @@ const ID_PROOF_LABEL_MAP: Record<IdProofType, string> = {
 
 export default function ArtisanProfileScreen() {
   const { t, i18n } = useTranslation();
+  const { colors, isDark, themeMode, toggleTheme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [profile, setProfile] = useState<ArtisanProfile | null>(null);
 
-  // Draft store jurisdictions
+  // Draft store jurisdictions (global committed values)
   const selectedState = useDraftStore((s) => s.selectedState);
   const setSelectedState = useDraftStore((s) => s.setSelectedState);
   const selectedZone = useDraftStore((s) => s.selectedZone);
   const setSelectedZone = useDraftStore((s) => s.setSelectedZone);
 
-  // Form states
-  const [selectedSkill, setSelectedSkill] = useState<SkillOption | null>('skilled');
-  const [idProofType, setIdProofType] = useState<IdProofType>('none');
-  const [idProofNumber, setIdProofNumber] = useState('');
+  // Committed profile display states
+  const [savedSkill, setSavedSkill] = useState<SkillOption>('skilled');
+  const [savedIdProofType, setSavedIdProofType] = useState<IdProofType>('none');
+  const [savedIdProofNumber, setSavedIdProofNumber] = useState('');
+
+  // Staging edit states (isolated strictly to SkillTierEditModal until submitted)
+  const [editState, setEditState] = useState<string>('KA');
+  const [editZone, setEditZone] = useState<string>('zone_1');
+  const [editSkill, setEditSkill] = useState<SkillOption | null>('skilled');
+  const [editIdProofType, setEditIdProofType] = useState<IdProofType>('none');
+  const [editIdProofNumber, setEditIdProofNumber] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Modal display states
@@ -80,6 +91,43 @@ export default function ArtisanProfileScreen() {
   const [personalSubmitting, setPersonalSubmitting] = useState(false);
   const [businessSubmitting, setBusinessSubmitting] = useState(false);
   const [bankSubmitting, setBankSubmitting] = useState(false);
+
+  const openEditModal = () => {
+    const activeState = selectedState || (profile?.declared_zone ? profile.declared_zone.split('/')[0] : 'KA');
+    const activeZone = selectedZone || (profile?.declared_zone ? profile.declared_zone.split('/')[1] : 'zone_1');
+    setEditState(activeState);
+    setEditZone(activeZone);
+    setEditSkill(savedSkill);
+    setEditIdProofType(savedIdProofType);
+    setEditIdProofNumber(savedIdProofNumber);
+    setMessage(null);
+    setEditModalVisible(true);
+  };
+
+  const handleDismissEditModal = () => {
+    if (submitting) return;
+    setEditModalVisible(false);
+    setMessage(null);
+    const activeState = selectedState || (profile?.declared_zone ? profile.declared_zone.split('/')[0] : 'KA');
+    const activeZone = selectedZone || (profile?.declared_zone ? profile.declared_zone.split('/')[1] : 'zone_1');
+    setEditState(activeState);
+    setEditZone(activeZone);
+    setEditSkill(savedSkill);
+    setEditIdProofType(savedIdProofType);
+    setEditIdProofNumber(savedIdProofNumber);
+  };
+
+  const handleEditSelectState = (stateCode: string) => {
+    setEditState(stateCode);
+    const targetState = PILOT_STATES.find((s) => s.code === stateCode);
+    if (targetState && targetState.zones.length > 0) {
+      setEditZone(targetState.zones[0].code);
+    }
+  };
+
+  const handleEditSelectZone = (zoneCode: string) => {
+    setEditZone(zoneCode);
+  };
 
   const handlePersonalSubmit = async (payload: PersonalDetailsUpdate) => {
     setPersonalSubmitting(true);
@@ -121,14 +169,6 @@ export default function ArtisanProfileScreen() {
     await useAuthStore.getState().logout();
   };
 
-  const handleSelectState = (stateCode: string) => {
-    setSelectedState(stateCode);
-    const targetState = PILOT_STATES.find((s) => s.code === stateCode);
-    if (targetState && targetState.zones.length > 0) {
-      setSelectedZone(targetState.zones[0].code);
-    }
-  };
-
   // Load profile on mount
   useEffect(() => {
     (async () => {
@@ -137,13 +177,13 @@ export default function ArtisanProfileScreen() {
         const p = await service.getArtisanProfile();
         setProfile(p);
         if (p.declared_skill_level && STATUTORY_SKILL_TO_OPTION[p.declared_skill_level]) {
-          setSelectedSkill(STATUTORY_SKILL_TO_OPTION[p.declared_skill_level]);
+          setSavedSkill(STATUTORY_SKILL_TO_OPTION[p.declared_skill_level]);
         }
         if (p.id_proof_type) {
-          setIdProofType(p.id_proof_type);
+          setSavedIdProofType(p.id_proof_type);
         }
         if (p.id_proof_number) {
-          setIdProofNumber(p.id_proof_number);
+          setSavedIdProofNumber(p.id_proof_number);
         }
         if (p.declared_zone) {
           const [state, zone] = p.declared_zone.split('/');
@@ -172,15 +212,15 @@ export default function ArtisanProfileScreen() {
   }, []);
 
   const handleSubmit = async () => {
-    if (!selectedSkill) {
+    if (!editSkill) {
       setMessage({ type: 'error', text: t('profile.selectSkill') });
       return;
     }
-    if (!selectedZone) {
+    if (!editZone) {
       setMessage({ type: 'error', text: t('profile.selectZone') });
       return;
     }
-    if (idProofType !== 'none' && !idProofNumber.trim()) {
+    if (editIdProofType !== 'none' && !editIdProofNumber.trim()) {
       setMessage({ type: 'error', text: t('profile.enterIdNumber') });
       return;
     }
@@ -189,22 +229,27 @@ export default function ArtisanProfileScreen() {
     setMessage(null);
     try {
       const updated = await service.submitArtisanProfile({
-        declared_skill_level: OPTION_TO_STATUTORY_SKILL[selectedSkill],
-        declared_zone: `${selectedState}/${selectedZone}`,
-        id_proof_type: idProofType,
-        id_proof_number: idProofType !== 'none' ? idProofNumber.trim() : null,
+        declared_skill_level: OPTION_TO_STATUTORY_SKILL[editSkill],
+        declared_zone: `${editState}/${editZone}`,
+        id_proof_type: editIdProofType,
+        id_proof_number: editIdProofType !== 'none' ? editIdProofNumber.trim() : null,
       });
       setProfile(updated);
-      useDraftStore.getState().setSelectedState(selectedState, selectedZone);
+      setSavedSkill(editSkill);
+      setSavedIdProofType(editIdProofType);
+      setSavedIdProofNumber(editIdProofNumber.trim());
+
+      // Commit to global useDraftStore now that it has been saved & submitted
+      setSelectedState(editState, editZone);
       useDraftStore.getState().setSkillDeclaration({
-        skillLevelSelfDeclared: OPTION_TO_STATUTORY_SKILL[selectedSkill],
-        hasArtisanCard: idProofType === 'pehchan_card' || idProofType === 'pm_vishwakarma',
+        skillLevelSelfDeclared: OPTION_TO_STATUTORY_SKILL[editSkill],
+        hasArtisanCard: editIdProofType === 'pehchan_card' || editIdProofType === 'pm_vishwakarma',
         source:
-          idProofType === 'pehchan_card' || idProofType === 'pm_vishwakarma'
+          editIdProofType === 'pehchan_card' || editIdProofType === 'pm_vishwakarma'
             ? 'artisan_card_elevation'
             : 'self_declared',
-        stateCode: selectedState,
-        zone: selectedZone,
+        stateCode: editState,
+        zone: editZone,
       });
       setMessage({
         type: 'success',
@@ -251,8 +296,8 @@ export default function ArtisanProfileScreen() {
   const stateSubtitle = `${currentStateObj.name} • ${currentZoneObj?.name || t('listings.zone1')}`;
 
   // Row 1 subtitle: Declared Tier + Credential
-  const tierName = selectedSkill ? t(SKILL_LABEL_MAP[selectedSkill]) : t('profile.declaredTier');
-  const idProofName = t(ID_PROOF_LABEL_MAP[idProofType]);
+  const tierName = savedSkill ? t(SKILL_LABEL_MAP[savedSkill]) : t('profile.declaredTier');
+  const idProofName = t(ID_PROOF_LABEL_MAP[savedIdProofType]);
   const skillSubtitle = `${tierName} • ${idProofName}`;
 
   // Row 2 subtitle: Current active language
@@ -283,7 +328,7 @@ export default function ArtisanProfileScreen() {
           {/* Row 1: Personal Details */}
           <SettingsRow
             icon="account-details-outline"
-            iconBgColor="#FAF5F2"
+            iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
             title={t('profile.personalDetailsTitle')}
             subtitle={personalSubtitle}
@@ -295,19 +340,19 @@ export default function ArtisanProfileScreen() {
           {/* Row 2: State & Jurisdiction */}
           <SettingsRow
             icon="map-marker-outline"
-            iconBgColor="#FAF5F2"
+            iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
             title={t('profile.stateJurisdictionTitle')}
             subtitle={stateSubtitle}
             badgeText={selectedState && selectedZone ? t('profile.configured') : undefined}
             showDivider={true}
-            onPress={() => setEditModalVisible(true)}
+            onPress={openEditModal}
           />
 
           {/* Row 3: Business Details */}
           <SettingsRow
             icon="briefcase-outline"
-            iconBgColor="#FAF5F2"
+            iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
             title={t('profile.businessDetailsTitle')}
             subtitle={businessSubtitle}
@@ -319,7 +364,7 @@ export default function ArtisanProfileScreen() {
           {/* Row 4: Bank Details */}
           <SettingsRow
             icon="bank-outline"
-            iconBgColor="#FAF5F2"
+            iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
             title={t('profile.bankDetailsTitle')}
             subtitle={bankSubtitle}
@@ -338,12 +383,12 @@ export default function ArtisanProfileScreen() {
           {/* Row 1: Skill Tier & Official ID */}
           <SettingsRow
             icon="certificate-outline"
-            iconBgColor="#FAF5F2"
+            iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
             title={t('profile.skillTierTitle')}
             subtitle={skillSubtitle}
             showDivider={true}
-            onPress={() => setEditModalVisible(true)}
+            onPress={openEditModal}
           />
 
           {/* Row 2: App Language / भाषा */}
@@ -354,8 +399,32 @@ export default function ArtisanProfileScreen() {
             title={t('profile.appLanguage')}
             subtitle={langSubtitle}
             badgeText={currentLang.shortCode}
-            showDivider={false}
+            showDivider={true}
             onPress={() => setLanguageModalVisible(true)}
+          />
+
+          {/* Row 3: App Theme (light/dark toggle) */}
+          <SettingsRow
+            icon={isDark ? 'weather-night' : 'weather-sunny'}
+            iconBgColor={isDark ? colors.indigoLight : colors.primaryLight}
+            iconColor={isDark ? colors.secondary : colors.primary}
+            title={t('profile.appTheme')}
+            subtitle={isDark ? t('profile.darkMode') : t('profile.lightMode')}
+            showDivider={false}
+            onPress={() => {
+              const { setTheme, themeMode } = require('../../store/themeStore').useThemeStore.getState();
+              setTheme(themeMode === 'dark' ? 'light' : 'dark');
+            }}
+            rightElement={
+              <Switch
+                value={isDark}
+                onValueChange={(val) => {
+                  const { setTheme } = require('../../store/themeStore').useThemeStore.getState();
+                  setTheme(val ? 'dark' : 'light');
+                }}
+                color={colors.primary}
+              />
+            }
           />
         </View>
 
@@ -408,23 +477,20 @@ export default function ArtisanProfileScreen() {
       <SkillTierEditModal
         visible={editModalVisible}
         profile={profile}
-        selectedSkill={selectedSkill}
-        onSelectSkill={setSelectedSkill}
-        selectedState={selectedState}
-        onSelectState={handleSelectState}
-        selectedZone={selectedZone}
-        onSelectZone={setSelectedZone}
-        idProofType={idProofType}
-        onChangeIdProofType={setIdProofType}
-        idProofNumber={idProofNumber}
-        onChangeIdProofNumber={setIdProofNumber}
+        selectedSkill={editSkill}
+        onSelectSkill={setEditSkill}
+        selectedState={editState}
+        onSelectState={handleEditSelectState}
+        selectedZone={editZone}
+        onSelectZone={handleEditSelectZone}
+        idProofType={editIdProofType}
+        onChangeIdProofType={setEditIdProofType}
+        idProofNumber={editIdProofNumber}
+        onChangeIdProofNumber={setEditIdProofNumber}
         submitting={submitting}
         onSubmit={handleSubmit}
         message={message}
-        onDismiss={() => {
-          setEditModalVisible(false);
-          setMessage(null);
-        }}
+        onDismiss={handleDismissEditModal}
       />
 
       <LanguagePickerModal
@@ -435,78 +501,80 @@ export default function ArtisanProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    padding: spacing.md,
-    gap: spacing.md,
-    paddingBottom: 100,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4,
-    marginTop: spacing.xs,
-  },
-  sectionHeaderTitle: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    color: colors.textMuted,
-  },
-  sectionHeaderCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  settingsCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  logoutPillButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.badgeNeutral,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    height: spacing.tapTarget,
-    marginTop: spacing.sm,
-  },
-  logoutLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoutText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  logoutHandle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-    maxWidth: 120,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    outerContainer: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      padding: spacing.md,
+      gap: spacing.md,
+      paddingBottom: 100,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+      marginTop: spacing.xs,
+    },
+    sectionHeaderTitle: {
+      fontSize: 11,
+      fontWeight: '800',
+      letterSpacing: 1.2,
+      color: colors.textMuted,
+    },
+    sectionHeaderCount: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    settingsCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    logoutPillButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.badgeNeutral,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: spacing.md,
+      height: spacing.tapTarget,
+      marginTop: spacing.sm,
+    },
+    logoutLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    logoutText: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    logoutHandle: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textMuted,
+      maxWidth: 120,
+    },
+  });
+}

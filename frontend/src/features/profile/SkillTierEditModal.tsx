@@ -17,7 +17,7 @@
 // 4. Sticky Bottom Action Dock:
 //    - Submit button anchored at the bottom with safe area insets so artisans don't have to scroll.
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -33,7 +33,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import { type SkillOption } from '../../components';
 import { PILOT_STATES } from '../../store/draftStore';
 import { getWageFloorPreview } from '../../constants/wageRates';
@@ -147,6 +148,8 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
   onDismiss,
 }) => {
   const { t } = useTranslation();
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
 
@@ -180,7 +183,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
       animationType="slide"
       transparent={true}
       statusBarTranslucent={true}
-      onRequestClose={onDismiss}
+      onRequestClose={submitting ? () => {} : onDismiss}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -206,7 +209,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
               },
             ]}
             activeOpacity={1}
-            onPress={onDismiss}
+            onPress={submitting ? undefined : onDismiss}
             accessibilityLabel={t('skillTierModal.dismiss')}
           />
 
@@ -231,7 +234,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                 </Text>
               </View>
               <TouchableOpacity
-                onPress={onDismiss}
+                onPress={submitting ? undefined : onDismiss}
                 style={styles.closeBtn}
                 accessibilityRole="button"
                 accessibilityLabel={t('common.close')}
@@ -269,7 +272,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                 </View>
                 <View style={styles.wageFloorDivider} />
                 <View style={styles.wageFooterRow}>
-                  <MaterialCommunityIcons name="shield-check" size={15} color="#059669" />
+                  <MaterialCommunityIcons name="shield-check" size={15} color={colors.successGreen} />
                   <Text style={styles.wageFooterText}>
                     {t('skillTierModal.protectedUnder', { state: currentStateObj.name, zone: currentZoneObj?.name || t('listings.zone1') })}
                   </Text>
@@ -615,7 +618,7 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
                 <MaterialCommunityIcons
                   name={message.type === 'error' ? 'alert-circle-outline' : 'check-circle-outline'}
                   size={18}
-                  color={message.type === 'error' ? colors.error : '#065F46'}
+                  color={message.type === 'error' ? colors.error : colors.successGreen}
                 />
                 <Text
                   style={[
@@ -650,551 +653,553 @@ export const SkillTierEditModal: React.FC<SkillTierEditModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  keyboardAvoid: {
-    flex: 1,
-  },
-  modalRoot: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    justifyContent: 'flex-end',
-  },
-  topBackdrop: {
-    width: '100%',
-  },
-  sheetContainer: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-  },
-  dragHandleContainer: {
-    alignItems: 'center',
-    paddingTop: 10,
-    paddingBottom: 4,
-    backgroundColor: colors.surface,
-  },
-  dragHandle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D1D5DB',
-  },
-  headerBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm + 2,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTextGroup: {
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  scrollContent: {
-    padding: spacing.md,
-    gap: spacing.lg,
-    paddingBottom: 24,
-  },
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
+    keyboardAvoid: {
+      flex: 1,
+    },
+    modalRoot: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    topBackdrop: {
+      width: '100%',
+    },
+    sheetContainer: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      overflow: 'hidden',
+    },
+    dragHandleContainer: {
+      alignItems: 'center',
+      paddingTop: 10,
+      paddingBottom: 4,
+      backgroundColor: colors.surface,
+    },
+    dragHandle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.inputBorder,
+    },
+    headerBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.sm + 2,
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTextGroup: {
+      flex: 1,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    headerSubtitle: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    closeBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.surfaceElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 8,
+    },
+    scrollContent: {
+      padding: spacing.md,
+      gap: spacing.lg,
+      paddingBottom: 24,
+    },
 
-  // Live Wage Floor Callout Card
-  wageFloorCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#FDE68A',
-    padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  wageFloorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  wageIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#FAF5F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#FDE8E1',
-  },
-  wageHeaderDetails: {
-    flex: 1,
-  },
-  wageEyebrow: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: colors.primary,
-  },
-  wageRateRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: 2,
-    gap: 4,
-  },
-  wageRateNumber: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  wageRateUnit: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  wageDailyPill: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  wageFloorDivider: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-    marginVertical: 10,
-  },
-  wageFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  wageFooterText: {
-    fontSize: 11,
-    color: '#059669',
-    fontWeight: '600',
-  },
-  wageFloorPendingCard: {
-    borderColor: colors.indigoBorder,
-    backgroundColor: '#FAF8F6',
-  },
-  wageIconBadgePending: {
-    backgroundColor: colors.indigoLight,
-    borderColor: colors.indigoBorder,
-  },
-  wagePendingNoticeText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 17,
-    marginTop: 4,
-  },
+    // Live Wage Floor Callout Card
+    wageFloorCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.warningBorder,
+      padding: 14,
+      shadowColor: colors.shadow,
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    wageFloorHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    wageIconBadge: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: colors.primaryLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: isDark ? colors.border : '#FDE8E1',
+    },
+    wageHeaderDetails: {
+      flex: 1,
+    },
+    wageEyebrow: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1,
+      color: colors.primary,
+    },
+    wageRateRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      marginTop: 2,
+      gap: 4,
+    },
+    wageRateNumber: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    wageRateUnit: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    wageDailyPill: {
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '500',
+      marginLeft: 4,
+    },
+    wageFloorDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: 10,
+    },
+    wageFooterRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    wageFooterText: {
+      fontSize: 11,
+      color: colors.successGreen,
+      fontWeight: '600',
+    },
+    wageFloorPendingCard: {
+      borderColor: colors.indigoBorder,
+      backgroundColor: isDark ? colors.surfaceElevated : '#FAF8F6',
+    },
+    wageIconBadgePending: {
+      backgroundColor: colors.indigoLight,
+      borderColor: colors.indigoBorder,
+    },
+    wagePendingNoticeText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      lineHeight: 17,
+      marginTop: 4,
+    },
 
-  // Section Grouping
-  sectionContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 14,
-    gap: 12,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
-  },
-  sectionStepBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionStepBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    color: colors.text,
-  },
-  sectionSubtitle: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  subFieldGroup: {
-    gap: 8,
-  },
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  cardsStack: {
-    gap: 8,
-  },
+    // Section Grouping
+    sectionContainer: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      gap: 12,
+    },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 4,
+    },
+    sectionStepBadge: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sectionStepBadgeText: {
+      color: colors.onPrimary,
+      fontSize: 12,
+      fontWeight: '800',
+    },
+    sectionTitle: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.8,
+      color: colors.text,
+    },
+    sectionSubtitle: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 1,
+    },
+    subFieldGroup: {
+      gap: 8,
+    },
+    fieldLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    cardsStack: {
+      gap: 8,
+    },
 
-  // Tier Card
-  tierCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FAFAFA',
-    gap: 12,
-  },
-  tierCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FAF5F2',
-  },
-  tierIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tierIconBoxSelected: {
-    backgroundColor: '#FFFFFF',
-  },
-  tierEmoji: {
-    fontSize: 20,
-  },
-  tierInfo: {
-    flex: 1,
-  },
-  tierTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6,
-  },
-  tierTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-    flex: 1,
-  },
-  tierTitleSelected: {
-    color: colors.primary,
-  },
-  tierStatutoryBadge: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.textMuted,
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  tierStatutoryBadgeSelected: {
-    color: colors.primary,
-    backgroundColor: '#FDE8E1',
-  },
-  tierExperience: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
+    // Tier Card
+    tierCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceElevated,
+      gap: 12,
+    },
+    tierCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    tierIconBox: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: colors.badgeNeutral,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tierIconBoxSelected: {
+      backgroundColor: colors.surface,
+    },
+    tierEmoji: {
+      fontSize: 20,
+    },
+    tierInfo: {
+      flex: 1,
+    },
+    tierTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 6,
+    },
+    tierTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+      flex: 1,
+    },
+    tierTitleSelected: {
+      color: colors.primary,
+    },
+    tierStatutoryBadge: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.textMuted,
+      backgroundColor: colors.badgeNeutral,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+    },
+    tierStatutoryBadgeSelected: {
+      color: colors.primary,
+      backgroundColor: isDark ? 'rgba(212, 115, 79, 0.2)' : '#FDE8E1',
+    },
+    tierExperience: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
 
-  // State Dropdown
-  stateDropdownTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    minHeight: 50,
-  },
-  stateDropdownValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  stateDropdownSelectedName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  stateDropdownContainer: {
-    marginTop: 8,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    padding: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  stateSearchInput: {
-    backgroundColor: colors.surface,
-    marginBottom: spacing.xs,
-  },
-  stateDropdownScroll: {
-    maxHeight: 220,
-  },
-  stateDropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: spacing.sm,
-    borderRadius: 8,
-  },
-  stateDropdownItemSelected: {
-    backgroundColor: colors.indigoLight,
-  },
-  stateItemLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  stateItemName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  stateItemNameSelected: {
-    color: colors.secondary,
-    fontWeight: '700',
-  },
-  stateItemNote: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  stateEmptyRow: {
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  stateEmptyText: {
-    fontSize: 13,
-    color: colors.textMuted,
-  },
-  statePillNameSelected: {
-    color: colors.primary,
-  },
-  stateCodeBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    backgroundColor: '#E5E7EB',
-  },
-  stateCodeBadgeSelected: {
-    backgroundColor: '#FDE8E1',
-  },
-  stateCodeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: colors.textMuted,
-  },
-  stateCodeTextSelected: {
-    color: colors.primary,
-  },
+    // State Dropdown
+    stateDropdownTrigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      minHeight: 50,
+    },
+    stateDropdownValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    stateDropdownSelectedName: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    stateDropdownContainer: {
+      marginTop: 8,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      padding: spacing.sm,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    stateSearchInput: {
+      backgroundColor: colors.surface,
+      marginBottom: spacing.xs,
+    },
+    stateDropdownScroll: {
+      maxHeight: 220,
+    },
+    stateDropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 10,
+      paddingHorizontal: spacing.sm,
+      borderRadius: 8,
+    },
+    stateDropdownItemSelected: {
+      backgroundColor: colors.indigoLight,
+    },
+    stateItemLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    stateItemName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    stateItemNameSelected: {
+      color: colors.secondary,
+      fontWeight: '700',
+    },
+    stateItemNote: {
+      fontSize: 12,
+      color: colors.textMuted,
+    },
+    stateEmptyRow: {
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    stateEmptyText: {
+      fontSize: 13,
+      color: colors.textMuted,
+    },
+    statePillNameSelected: {
+      color: colors.primary,
+    },
+    stateCodeBadge: {
+      paddingHorizontal: 5,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: colors.badgeNeutral,
+    },
+    stateCodeBadgeSelected: {
+      backgroundColor: isDark ? 'rgba(212, 115, 79, 0.2)' : '#FDE8E1',
+    },
+    stateCodeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: colors.textMuted,
+    },
+    stateCodeTextSelected: {
+      color: colors.primary,
+    },
 
-  // Zone Card
-  zoneCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FAFAFA',
-    gap: 10,
-  },
-  zoneCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FAF5F2',
-  },
-  zoneCardText: {
-    flex: 1,
-  },
-  zoneName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  zoneNameSelected: {
-    color: colors.primary,
-  },
-  zoneNote: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
+    // Zone Card
+    zoneCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceElevated,
+      gap: 10,
+    },
+    zoneCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    zoneCardText: {
+      flex: 1,
+    },
+    zoneName: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    zoneNameSelected: {
+      color: colors.primary,
+    },
+    zoneNote: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
 
-  // Credential Cards (Fixed: Radio Circle on Right, Icon on Left)
-  proofCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FAFAFA',
-    gap: 12,
-  },
-  proofCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FAF5F2',
-  },
-  proofIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proofIconBoxSelected: {
-    backgroundColor: '#FDE8E1',
-  },
-  proofTextContainer: {
-    flex: 1,
-  },
-  proofLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  proofLabelSelected: {
-    color: colors.primary,
-  },
-  proofHelper: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-    lineHeight: 15,
-  },
+    // Credential Cards (Fixed: Radio Circle on Right, Icon on Left)
+    proofCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceElevated,
+      gap: 12,
+    },
+    proofCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    proofIconBox: {
+      width: 40,
+      height: 40,
+      borderRadius: 10,
+      backgroundColor: colors.badgeNeutral,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    proofIconBoxSelected: {
+      backgroundColor: isDark ? 'rgba(212, 115, 79, 0.2)' : '#FDE8E1',
+    },
+    proofTextContainer: {
+      flex: 1,
+    },
+    proofLabel: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    proofLabelSelected: {
+      color: colors.primary,
+    },
+    proofHelper: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+      lineHeight: 15,
+    },
 
-  // Dynamic ID input
-  idInputSection: {
-    marginTop: 4,
-    gap: 4,
-  },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  textInput: {
-    backgroundColor: '#FFFFFF',
-    fontSize: 14,
-  },
-  inputHelpText: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
+    // Dynamic ID input
+    idInputSection: {
+      marginTop: 4,
+      gap: 4,
+    },
+    inputLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    textInput: {
+      backgroundColor: colors.surface,
+      fontSize: 14,
+    },
+    inputHelpText: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
 
-  // Radio Circle
-  radioCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  radioCircleSelected: {
-    borderColor: colors.primary,
-  },
-  radioInnerDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
+    // Radio Circle
+    radioCircle: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      borderWidth: 2,
+      borderColor: colors.inputBorder,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.surface,
+    },
+    radioCircleSelected: {
+      borderColor: colors.primary,
+    },
+    radioInnerDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.primary,
+    },
 
-  // Sticky Bottom Dock
-  bottomDock: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingTop: 12,
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  messageBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 8,
-  },
-  messageError: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#FCA5A5',
-  },
-  messageSuccess: {
-    backgroundColor: '#D1FAE5',
-    borderColor: '#A7F3D0',
-  },
-  messageText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  messageTextError: {
-    color: colors.error,
-    fontWeight: '600',
-  },
-  messageTextSuccess: {
-    color: '#065F46',
-    fontWeight: '600',
-  },
-  submitBtn: {
-    borderRadius: 14,
-    paddingVertical: 4,
-  },
-  submitBtnLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-});
+    // Sticky Bottom Dock
+    bottomDock: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingHorizontal: spacing.md,
+      paddingTop: 12,
+      gap: 8,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    messageBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      borderRadius: 10,
+      borderWidth: 1,
+      gap: 8,
+    },
+    messageError: {
+      backgroundColor: colors.errorLight,
+      borderColor: colors.errorBorder,
+    },
+    messageSuccess: {
+      backgroundColor: colors.successLight,
+      borderColor: colors.successBorder,
+    },
+    messageText: {
+      flex: 1,
+      fontSize: 12,
+      lineHeight: 16,
+    },
+    messageTextError: {
+      color: colors.error,
+      fontWeight: '600',
+    },
+    messageTextSuccess: {
+      color: colors.successGreen,
+      fontWeight: '600',
+    },
+    submitBtn: {
+      borderRadius: 14,
+      paddingVertical: 4,
+    },
+    submitBtnLabel: {
+      fontSize: 15,
+      fontWeight: '800',
+      letterSpacing: 0.2,
+    },
+  });
+}

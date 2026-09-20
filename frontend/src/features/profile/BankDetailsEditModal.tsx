@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Modal, ScrollView, Platform, StatusBar, KeyboardAvoidingView, TouchableOpacity } from 'react-native';
 import { Text, Button, TextInput } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import type { ArtisanProfile, BankDetailsUpdate } from '../../types/contracts';
 import { useKeyboardHeight } from '../../hooks/useKeyboardHeight';
 
@@ -20,6 +21,8 @@ const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 
 export const BankDetailsEditModal: React.FC<Props> = ({ visible, profile, submitting, onSubmit, onDismiss }) => {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
   const [accountHolderName, setAccountHolderName] = useState(profile?.account_holder_name ?? '');
@@ -134,16 +137,18 @@ export const BankDetailsEditModal: React.FC<Props> = ({ visible, profile, submit
   );
 };
 
-const styles = StyleSheet.create({
-  keyboardAvoid: { flex: 1 },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  topBackdrop: { flex: 1 },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%' },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.sm },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  heading: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
-  input: { marginBottom: spacing.sm, backgroundColor: colors.surface },
-  error: { color: colors.error, fontSize: 13, marginTop: spacing.xs },
-  footer: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  footerButton: { flex: 1 },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    keyboardAvoid: { flex: 1 },
+    backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+    topBackdrop: { flex: 1 },
+    sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%' },
+    dragHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.sm },
+    scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+    heading: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
+    input: { marginBottom: spacing.sm, backgroundColor: colors.surface },
+    error: { color: colors.error, fontSize: 13, marginTop: spacing.xs },
+    footer: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+    footerButton: { flex: 1 },
+  });
+}

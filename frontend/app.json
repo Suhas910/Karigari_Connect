@@ -12,8 +12,13 @@
       "backgroundColor": "#FFFFFF",
       "translucent": false
     },
+    "splash": {
+      "image": "./src/assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FCF4E9"
+    },
     "ios": {
-      "icon": "./src/assets/expo.icon",
+      "icon": "./src/assets/images/icon.png",
       "bundleIdentifier": "com.avinavkaushal.karigariconnect",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -50,6 +55,11 @@
     },
     "android": {
       "package": "com.avinavkaushal.karigariconnect",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/android-icon-foreground.png",
+        "backgroundImage": "./src/assets/images/android-icon-background.png",
+        "backgroundColor": "#FCF4E9"
+      },
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",

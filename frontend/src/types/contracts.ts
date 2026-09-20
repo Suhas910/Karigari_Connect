@@ -21,7 +21,9 @@ export type ErrorCode =
   | 'WAGE_RATE_UNAVAILABLE'
   | 'LISTING_STATE_INVALID'
   | 'EXPORT_CONTRACT_INVALID'
-  | 'PROVIDER_UNAVAILABLE';
+  | 'PROVIDER_UNAVAILABLE'
+  | 'INVALID_INPUT'
+  | 'INTERNAL_SERVER_ERROR';
 
 export interface ApiError {
   request_id: string;
@@ -146,6 +148,9 @@ export interface Listing {
   catalogue: CatalogueResult | null; 
   price: PriceResult | null;
   claims: Claim[];
+  rejection_flags?: string[];
+  rejection_categories?: string[];
+  rejection_reason?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -308,6 +313,15 @@ export interface SupportMessageSubmitRequest {
   message: string;
 }
 
+export interface SupportMessageReply {
+  id: string;
+  message_id: string;
+  sender_role: 'artisan' | 'coordinator';
+  sender_name: string;
+  body: string;
+  created_at: string;
+}
+
 // --- 9. SERVICE INTERFACE ---
 export interface ListingService {
   createListing(payload: { preferred_language: string }): Promise<{
@@ -317,12 +331,12 @@ export interface ListingService {
     preferred_language: string;
     upload_instructions?: any;
   }>;
-  listListings(): Promise<Listing[]>;
+  listListings(state?: string): Promise<Listing[]>;
   getListing(listingId: string): Promise<Listing>;
   completeMediaUpload(listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }): Promise<{ status: string; media_id: string }>;
   requestImageAnalysis(listingId: string, payload: { media_id: string; photos?: string[] }): Promise<{ job_id: string }>;
   requestImageEnhancement(listingId: string, photoUris: string[]): Promise<{ job_id: string }>;
-  requestTranscription(listingId: string, payload: { audio_media_id: string; declared_language: string }): Promise<{ job_id: string }>;
+  requestTranscription(listingId: string, payload: { audio_media_id?: string; audioUri?: string; declared_language: string } | FormData): Promise<{ job_id: string }>;
   getJobStatus(jobId: string): Promise<JobStatus>;
   getImageJobResult(jobId: string): Promise<ImageJobResult>;
   requestCatalogueGeneration(listingId: string, payload: any): Promise<CatalogueResult>;
@@ -331,8 +345,9 @@ export interface ListingService {
   requestPrice_unavailable?(): Promise<PriceResult>;
   reviewClaim(listingId: string, claim: string, payload: { decision: string; evidence_note: string; reason: string | null }): Promise<{ claim: string; coordinator_verified: boolean; evidence_note: string }>;
   submitForApproval(listingId: string): Promise<{ status: string }>;
-  decideApproval(listingId: string, payload: { decision: string; reason: string }): Promise<{ status: string; reason: string }>;
+  decideApproval(listingId: string, payload: { decision: string; reason: string; rejection_categories?: string[] }): Promise<{ status: string; reason: string; rejection_categories?: string[]; rejection_flags?: string[]; rejection_reason?: string | null }>;
   requestExport(listingId: string, payload: { target: string; schema_version: string; simulate_network_submission?: boolean }): Promise<ExportResult>;
+  deleteListing(listingId: string): Promise<void>;
   getArtisanProfile(userId?: number): Promise<ArtisanProfile>;
   submitArtisanProfile(payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile>;
   submitPersonalDetails(payload: PersonalDetailsUpdate): Promise<ArtisanProfile>;
@@ -342,6 +357,10 @@ export interface ListingService {
   reviewArtisanProfile(userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile>;
   submitSupportMessage(payload: SupportMessageSubmitRequest): Promise<SupportMessage>;
   getSupportMessages(): Promise<SupportMessage[]>;
+  getSupportThread(messageId: string): Promise<SupportMessageReply[]>;
+  replyToSupportMessage(messageId: string, body: string): Promise<SupportMessageReply>;
+  closeSupportMessage(messageId: string): Promise<SupportMessage>;
+  deleteSupportMessage(messageId: string): Promise<void>;
   submitVoiceFeedback?(audioUri?: string, note?: string): Promise<{ success: boolean; message: string }>;
   login(role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }>;
   loginWithCredentials(identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }>;

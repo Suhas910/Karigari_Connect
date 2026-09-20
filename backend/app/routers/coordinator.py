@@ -4,7 +4,7 @@ import uuid
 import hashlib
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -99,9 +99,52 @@ def decide_approval(
                     }
                 },
             )
+        if listing.state != "awaiting_approval":
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": {
+                        "code": "LISTING_STATE_INVALID",
+                        "message": f"Listing must be in 'awaiting_approval' state to approve. Current state: '{listing.state}'",
+                        "recoverable": False,
+                        "action": "submit_for_approval",
+                    }
+                },
+            )
         listing.state = "approved"
+        listing.rejection_categories = []
+        listing.rejection_reason = None
     elif decision in ["reject", "rejected"]:
+        if listing.state not in ["awaiting_approval", "approved"]:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": {
+                        "code": "LISTING_STATE_INVALID",
+                        "message": f"Listing must be in 'awaiting_approval' state to reject. Current state: '{listing.state}'",
+                        "recoverable": False,
+                        "action": "submit_for_approval",
+                    }
+                },
+            )
+        valid_categories = {"catalogue", "image", "price", "claims"}
+        cats = payload.rejection_categories or []
+        invalid = [c for c in cats if c not in valid_categories]
+        if invalid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": {
+                        "code": "CATALOGUE_SCHEMA_INVALID",
+                        "message": f"Invalid rejection categories: {invalid}. Allowed: {sorted(list(valid_categories))}",
+                        "recoverable": False,
+                        "action": "fix_categories",
+                    }
+                },
+            )
         listing.state = "rejected"
+        listing.rejection_categories = cats
+        listing.rejection_reason = payload.reason
     else:
         raise HTTPException(
             status_code=400,
@@ -114,14 +157,18 @@ def decide_approval(
         "status": listing.state,
         "reason": payload.reason
         or f"Decision {listing.state} recorded by {current_user.username}",
+        "rejection_categories": listing.rejection_categories or [],
+        "rejection_flags": listing.rejection_categories or [],
+        "rejection_reason": listing.rejection_reason,
     }
 
 
 @router.post("/listings/{listing_id}/exports", response_model=schemas.ExportResult)
-@router.post("/listings/{listing_id}/export", response_model=schemas.ExportResult)
+@router.post("/listings/{listing_id}/export", response_model=schemas.ExportResult, deprecated=True)
 def export_listing(
     listing_id: str,
     payload: schemas.ExportRequest,
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
@@ -132,6 +179,36 @@ def export_listing(
     )
     if not listing:
         raise HTTPException(status_code=404, detail="Listing not found")
+
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to export this listing")
+
+    idem_key = idempotency_key or getattr(payload, "idempotency_key", None)
+    if idem_key:
+        existing_export = (
+            db.query(models.ExportRecordModel)
+            .filter(
+                models.ExportRecordModel.listing_id == listing_id,
+                models.ExportRecordModel.idempotency_key == idem_key,
+            )
+            .first()
+        )
+        if existing_export:
+            val_info = json.loads(existing_export.contract_validation) if existing_export.contract_validation else {}
+            return schemas.ExportResult(
+                export_id=existing_export.export_id,
+                target=existing_export.target,
+                status=existing_export.status,
+                payload_hash=existing_export.payload_hash,
+                contract_validation=schemas.ContractValidation(
+                    passed=(existing_export.status != "failed"),
+                    schema_source=val_info.get(
+                        "schema_source",
+                        f"https://ondc.org/protocol/v{payload.schema_version}/retail/catalog.json",
+                    ),
+                ),
+                network_submission=existing_export.network_submission,
+            )
 
     # The provenance guard must run again immediately before any export
     unverified = get_unverified_claims(db, listing_id)
@@ -150,8 +227,29 @@ def export_listing(
             },
         )
 
+    # State validation: Only approved listings can be exported
+    if listing.state != "approved":
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": {
+                    "code": "LISTING_STATE_INVALID",
+                    "message": f"Only approved listings can be exported. Current state: '{listing.state}'",
+                    "recoverable": False,
+                    "action": "obtain_coordinator_approval",
+                }
+            },
+        )
+
     # Construct verifiable ONDC/GeM contract payload
-    cat_data = json.loads(listing.catalogue.catalogue_data) if listing.catalogue else {}
+    cat_data = {}
+    if listing.catalogue and listing.catalogue.catalogue_data:
+        try:
+            parsed = json.loads(listing.catalogue.catalogue_data)
+            if isinstance(parsed, dict):
+                cat_data = parsed
+        except Exception:
+            cat_data = {}
     price_data = {
         "floor_amount_paise": listing.price.floor_amount_paise if listing.price else 0,
         "recommended_low_paise": listing.price.recommended_low_paise
@@ -287,6 +385,7 @@ def export_listing(
             payload_hash=payload_hash,
             contract_validation=json.dumps(validation_info),
             network_submission="not_attempted",
+            idempotency_key=idem_key,
         )
         db.add(export_record)
         db.commit()
@@ -314,6 +413,7 @@ def export_listing(
         payload_hash=payload_hash,
         contract_validation=json.dumps(validation_info),
         network_submission=network_submission,
+        idempotency_key=idem_key,
     )
     db.add(export_record)
     listing.state = "export_queued"

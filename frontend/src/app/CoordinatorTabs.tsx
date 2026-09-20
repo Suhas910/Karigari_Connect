@@ -10,12 +10,14 @@ import CoordinatorAccountScreen from '../features/coordinator-review/Coordinator
 import GlassTabBar from '../components/GlassTabBar';
 
 import { service, USE_LIVE_BACKEND } from '../services';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 import type { CoordinatorTabParamList } from '../types/navigation';
 
 const Tab = createBottomTabNavigator<CoordinatorTabParamList>();
 
 export default function CoordinatorTabs() {
+  const { colors } = useAppTheme();
+
   // Query pending listings count for Tab 1 badge
   const { data: dbListings } = useQuery({
     queryKey: ['coordinatorListings'],
@@ -73,8 +75,8 @@ export default function CoordinatorTabs() {
           tabBarLabel: 'Profiles',
           tabBarBadge: pendingProfilesCount > 0 ? pendingProfilesCount : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: '#F59E0B',
-            color: '#FFFFFF',
+            backgroundColor: colors.warningAmber,
+            color: colors.onPrimary,
             fontSize: 10,
             fontWeight: '700',
           },
@@ -99,4 +101,3 @@ export default function CoordinatorTabs() {
     </Tab.Navigator>
   );
 }
-

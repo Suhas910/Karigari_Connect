@@ -1,13 +1,16 @@
-# backend/app/routers/ai.py
 import json
+import logging
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
 from ..database import get_db
 from .. import models, schemas, auth
 from ..ai.service import ai_service
 from ..ai import studio
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["AI Pipeline"])
 
@@ -69,13 +72,19 @@ def request_image_enhancement(
 
 # --- IMAGE STUDIO ENDPOINTS ---
 @router.post("/listings/{listing_id}/jobs/image-studio")
-@router.post("/listings/{listing_id}/ai/image-studio")
+@router.post("/listings/{listing_id}/ai/image-studio", deprecated=True)
 def request_image_studio(
     listing_id: str,
     payload: schemas.ImageStudioRequest,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this listing")
+
     job = ai_service.create_image_job(
         listing_id=listing_id,
         media_id=payload.media_id,
@@ -84,20 +93,68 @@ def request_image_studio(
     )
     return {"job_id": job.job_id}
 
+MAX_AUDIO_BYTES = 15 * 1024 * 1024  # 15 MB limit (~1 min recording)
+
 # --- TRANSCRIPTION ENDPOINTS ---
 @router.post("/listings/{listing_id}/jobs/transcription")
-@router.post("/listings/{listing_id}/ai/transcription")
-def request_transcription(
+@router.post("/listings/{listing_id}/ai/transcription", deprecated=True)
+async def request_transcription(
     listing_id: str,
-    payload: schemas.TranscriptionRequest,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
-    job = ai_service.create_transcription_job(
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this listing")
+
+    content_type = request.headers.get("content-type", "")
+    audio_bytes = None
+    audio_filename = None
+    audio_media_id = None
+    declared_language = listing.preferred_language or "en"
+
+    if "multipart/form-data" in content_type:
+        try:
+            form = await request.form()
+            file_obj = form.get("file") or form.get("audio") or form.get("audio_file")
+            if file_obj and hasattr(file_obj, "read"):
+                audio_bytes = await file_obj.read()
+                if len(audio_bytes) > MAX_AUDIO_BYTES:
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Audio file exceeds maximum size of 15 MB (maximum 1 minute recording)."
+                    )
+                audio_filename = getattr(file_obj, "filename", "audio.m4a")
+            raw_media_id = form.get("audio_media_id")
+            if raw_media_id:
+                audio_media_id = str(raw_media_id)
+            raw_lang = form.get("declared_language")
+            if raw_lang:
+                declared_language = str(raw_lang)
+        except HTTPException:
+            raise
+        except Exception as form_err:
+            logger.warning("Error reading multipart audio data: %s", form_err)
+    else:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                audio_media_id = body.get("audio_media_id")
+                declared_language = body.get("declared_language") or listing.preferred_language or "en"
+        except Exception:
+            pass
+
+    job = await run_in_threadpool(
+        ai_service.create_transcription_job,
         listing_id=listing_id,
-        audio_media_id=payload.audio_media_id,
-        declared_language=payload.declared_language,
-        db=db
+        audio_media_id=audio_media_id,
+        declared_language=declared_language,
+        audio_bytes=audio_bytes,
+        audio_filename=audio_filename,
+        db=db,
     )
     return {"job_id": job.job_id}
 
@@ -111,6 +168,9 @@ def get_job_status(
     job = db.query(models.JobModel).filter(models.JobModel.job_id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    if current_user.role == "artisan" and job.listing and job.listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this job")
 
     return schemas.JobStatus(
         job_id=job.job_id,
@@ -131,6 +191,9 @@ def get_job_result(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
+    if current_user.role == "artisan" and job.listing and job.listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to view this job")
+
     if not job.result_data:
         raise HTTPException(status_code=400, detail="Job result not yet available")
 
@@ -138,13 +201,19 @@ def get_job_result(
 
 # --- CATALOGUE GENERATION ENDPOINTS ---
 @router.post("/listings/{listing_id}/jobs/catalogue", response_model=schemas.CatalogueResult)
-@router.post("/listings/{listing_id}/ai/catalogue", response_model=schemas.CatalogueResult)
+@router.post("/listings/{listing_id}/ai/catalogue", response_model=schemas.CatalogueResult, deprecated=True)
 def request_catalogue_generation(
     listing_id: str,
     payload: Optional[Dict[str, Any]] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
+    listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this listing")
+
     return ai_service.generate_catalogue(
         listing_id=listing_id,
         payload=payload,

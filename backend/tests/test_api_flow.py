@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 client = TestClient(app)
+ADMIN_SECRET_HEADER = {"X-Admin-Secret": "karigari-connect-admin-bootstrap-dev-2026"}
 
 def test_health_check():
     response = client.get("/api/v1/health")
@@ -117,7 +118,7 @@ def test_full_artisan_and_coordinator_lifecycle():
         "password": "CoordinatorPassword123!",
         "role": "coordinator"
     }
-    res_coord = client.post("/api/v1/auth/register", json=coordinator_payload)
+    res_coord = client.post("/api/v1/auth/admin/users", json=coordinator_payload, headers=ADMIN_SECRET_HEADER)
     assert res_coord.status_code == 200, res_coord.text
     coordinator_token = res_coord.json()["access_token"]
     coord_headers = {"Authorization": f"Bearer {coordinator_token}"}
@@ -142,7 +143,7 @@ def test_full_artisan_and_coordinator_lifecycle():
     # 5. Upload Media Assets (Photo + Voice Note)
     media_img_req = {
         "kind": "image",
-        "url": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800",
+        "url": "https://images.unsplash.com/photo-1590736969955-71cc94801759?w=800",
         "client_checksum": "sha256:img_channapatna_001"
     }
     res_img = client.post(f"/api/v1/listings/{listing_id}/media", json=media_img_req, headers=artisan_headers)
@@ -334,7 +335,7 @@ def test_master_craftsman_self_declared_claim_gating():
         "password": "Password123!",
         "role": "coordinator"
     }
-    res_coord = client.post("/api/v1/auth/register", json=coord_payload)
+    res_coord = client.post("/api/v1/auth/admin/users", json=coord_payload, headers=ADMIN_SECRET_HEADER)
     assert res_coord.status_code == 200
     coord_headers = {"Authorization": f"Bearer {res_coord.json()['access_token']}"}
 
@@ -438,7 +439,7 @@ def test_artisan_profile_lifecycle():
         "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'art_prof_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()['access_token']}"
     }
     coord_headers = {
-        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_prof_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+        "Authorization": f"Bearer {client.post('/api/v1/auth/admin/users', json={'username': f'coord_prof_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()['access_token']}"
     }
 
     # 1. Initially profile is incomplete
@@ -487,7 +488,7 @@ def test_verified_profile_skips_per_listing_claim_gate():
     artisan_user_id = artisan_res["user_id"]
 
     coord_headers = {
-        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_v_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+        "Authorization": f"Bearer {client.post('/api/v1/auth/admin/users', json={'username': f'coord_v_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()['access_token']}"
     }
 
     # Submit and verify profile as highly_skilled
@@ -565,7 +566,7 @@ def test_profile_verified_at_lower_tier_does_not_auto_approve_higher_claim():
     artisan_user_id = artisan_res["user_id"]
 
     coord_headers = {
-        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_sk_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+        "Authorization": f"Bearer {client.post('/api/v1/auth/admin/users', json={'username': f'coord_sk_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()['access_token']}"
     }
 
     # Verify profile at 'skilled'
@@ -607,7 +608,7 @@ def test_profile_verification_rejects_missing_skill_level():
     artisan_user_id = artisan_res["user_id"]
 
     coord_headers = {
-        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_empty_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+        "Authorization": f"Bearer {client.post('/api/v1/auth/admin/users', json={'username': f'coord_empty_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()['access_token']}"
     }
 
     # Artisan user exists but has NOT declared a skill level (declared_skill_level is None)
@@ -629,7 +630,7 @@ def test_support_messages_lifecycle():
     artisan_res = client.post('/api/v1/auth/register', json={'username': f'art_supp_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()
     artisan_headers = {"Authorization": f"Bearer {artisan_res['access_token']}"}
 
-    coord_res = client.post('/api/v1/auth/register', json={'username': f'coord_supp_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()
+    coord_res = client.post('/api/v1/auth/admin/users', json={'username': f'coord_supp_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()
     coord_headers = {"Authorization": f"Bearer {coord_res['access_token']}"}
 
     # 1. Submit general message (listing_id is None)
@@ -686,7 +687,7 @@ def test_generic_provenance_gate_blocks_natural_dye_and_gi_tag():
         "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'art_prov_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()['access_token']}"
     }
     coord_headers = {
-        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'coord_prov_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}).json()['access_token']}"
+        "Authorization": f"Bearer {client.post('/api/v1/auth/admin/users', json={'username': f'coord_prov_{suffix}', 'password': 'Password123!', 'role': 'coordinator'}, headers=ADMIN_SECRET_HEADER).json()['access_token']}"
     }
 
     # Create listing
@@ -759,11 +760,370 @@ def test_export_contract_invalid_on_missing_fields():
     res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=artisan_headers)
     listing_id = res_listing.json()["id"]
 
+    # Set listing state to approved so export state check passes and contract validation runs
+    from app.database import SessionLocal
+    from app.models import ListingModel
+    db = SessionLocal()
+    try:
+        l = db.query(ListingModel).filter(ListingModel.id == listing_id).first()
+        l.state = "approved"
+        db.commit()
+    finally:
+        db.close()
+
     res_exp = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
     assert res_exp.status_code == 400
     err = res_exp.json()["error"]
     assert err["code"] == "EXPORT_CONTRACT_INVALID"
 
+
+def test_multipart_form_data_audio_upload_transcription():
+    """Verify that posting audio file directly via multipart/form-data triggers transcription and catalogue generation."""
+    import io
+    from pydub.generators import Sine
+
+    suffix = uuid.uuid4().hex[:6]
+    artisan_headers = {
+        "Authorization": f"Bearer {client.post('/api/v1/auth/register', json={'username': f'art_audio_{suffix}', 'password': 'Password123!', 'role': 'artisan'}).json()['access_token']}"
+    }
+
+    # 1. Create listing
+    res_listing = client.post("/api/v1/listings", json={"preferred_language": "kn"}, headers=artisan_headers)
+    assert res_listing.status_code == 200
+    listing_id = res_listing.json()["id"]
+
+    # 2. Generate a valid WAV audio file in memory
+    sine = Sine(440).to_audio_segment(duration=500)
+    wav_buf = io.BytesIO()
+    sine.export(wav_buf, format="wav")
+    audio_bytes = wav_buf.getvalue()
+
+    # 3. Post multipart/form-data to /listings/{id}/jobs/transcription
+    res_trans = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/transcription",
+        files={"file": ("recording.m4a", audio_bytes, "audio/m4a")},
+        data={"declared_language": "kn"},
+        headers=artisan_headers
+    )
+    assert res_trans.status_code == 200, res_trans.text
+    job_id = res_trans.json()["job_id"]
+
+    # 4. Fetch job result
+    res_result = client.get(f"/api/v1/jobs/{job_id}/result", headers=artisan_headers)
+    assert res_result.status_code == 200, res_result.text
+    data = res_result.json()
+    assert "transcript" in data
+    assert "translated_text" in data
+
+    # 5. Generate catalogue from the transcription
+    res_cat = client.post(
+        f"/api/v1/listings/{listing_id}/jobs/catalogue",
+        json={"transcript_id": job_id},
+        headers=artisan_headers
+    )
+    assert res_cat.status_code == 200, res_cat.text
+    cat = res_cat.json()["catalogue"]
+    assert cat["category"] != ""
+    assert len(cat["materials"]) > 0
+
+
+def test_auth_and_ownership_enforcement_price_and_ai():
+    # 1. Register Artisan 1
+    artisan1_uname = f"artisan_own1_{uuid.uuid4().hex[:6]}"
+    res1 = client.post("/api/v1/auth/register", json={
+        "username": artisan1_uname,
+        "email": f"{artisan1_uname}@test.com",
+        "password": "Password123!",
+        "role": "artisan"
+    })
+    assert res1.status_code == 200
+    token1 = res1.json()["access_token"]
+    headers1 = {"Authorization": f"Bearer {token1}"}
+
+    # Create listing under Artisan 1
+    res_l1 = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers1)
+    assert res_l1.status_code == 200
+    listing1_id = res_l1.json()["id"]
+
+    # 2. Verify unauthenticated calls are rejected with 401
+    res_noauth_price = client.post(f"/api/v1/listings/{listing1_id}/price", json={})
+    assert res_noauth_price.status_code == 401
+
+    res_noauth_studio = client.post(f"/api/v1/listings/{listing1_id}/jobs/image-studio", json={"media_id": "m1", "photos": []})
+    assert res_noauth_studio.status_code == 401
+
+    res_noauth_trans = client.post(f"/api/v1/listings/{listing1_id}/jobs/transcription", json={})
+    assert res_noauth_trans.status_code == 401
+
+    res_noauth_cat = client.post(f"/api/v1/listings/{listing1_id}/jobs/catalogue", json={})
+    assert res_noauth_cat.status_code == 401
+
+    # 3. Register Artisan 2
+    artisan2_uname = f"artisan_own2_{uuid.uuid4().hex[:6]}"
+    res2 = client.post("/api/v1/auth/register", json={
+        "username": artisan2_uname,
+        "email": f"{artisan2_uname}@test.com",
+        "password": "Password123!",
+        "role": "artisan"
+    })
+    assert res2.status_code == 200
+    token2 = res2.json()["access_token"]
+    headers2 = {"Authorization": f"Bearer {token2}"}
+
+    # 4. Verify Artisan 2 cannot access Artisan 1's listing (403 Forbidden)
+    res_forbidden_price = client.post(
+        f"/api/v1/listings/{listing1_id}/price",
+        json={"state_code": "KA", "labour_hours": 2.0},
+        headers=headers2
+    )
+    assert res_forbidden_price.status_code == 403
+
+    res_forbidden_studio = client.post(
+        f"/api/v1/listings/{listing1_id}/jobs/image-studio",
+        json={"media_id": "m1", "photos": []},
+        headers=headers2
+    )
+    assert res_forbidden_studio.status_code == 403
+
+    res_forbidden_trans = client.post(
+        f"/api/v1/listings/{listing1_id}/jobs/transcription",
+        json={},
+        headers=headers2
+    )
+    assert res_forbidden_trans.status_code == 403
+
+    res_forbidden_cat = client.post(
+        f"/api/v1/listings/{listing1_id}/jobs/catalogue",
+        json={},
+        headers=headers2
+    )
+    assert res_forbidden_cat.status_code == 403
+
+    # 5. Non-existent listing returns 404
+    non_existent = str(uuid.uuid4())
+    res_notfound_price = client.post(f"/api/v1/listings/{non_existent}/price", json={}, headers=headers1)
+    assert res_notfound_price.status_code == 404
+
+
+def test_state_machine_bypass_guards():
+    """Verify state machine prerequisites on confirm, approve, and export."""
+    suffix = uuid.uuid4().hex[:6]
+    artisan_res = client.post("/api/v1/auth/register", json={
+        "username": f"art_sm_{suffix}",
+        "email": f"art_sm_{suffix}@test.com",
+        "password": "Password123!",
+        "role": "artisan"
+    })
+    artisan_headers = {"Authorization": f"Bearer {artisan_res.json()['access_token']}"}
+
+    coord_res = client.post("/api/v1/auth/admin/users", json={
+        "username": f"coord_sm_{suffix}",
+        "email": f"coord_sm_{suffix}@test.com",
+        "password": "Password123!",
+        "role": "coordinator"
+    }, headers=ADMIN_SECRET_HEADER)
+    coord_headers = {"Authorization": f"Bearer {coord_res.json()['access_token']}"}
+
+    # 1. Create a draft listing
+    res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=artisan_headers)
+    assert res_listing.status_code == 200
+    listing_id = res_listing.json()["id"]
+
+    # 2. Cannot export unapproved draft -> 400 LISTING_STATE_INVALID
+    res_exp_draft = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
+    assert res_exp_draft.status_code == 400
+    assert res_exp_draft.json()["error"]["code"] == "LISTING_STATE_INVALID"
+
+    # 3. Cannot approve a listing that is not awaiting_approval -> 400 LISTING_STATE_INVALID
+    res_app_draft = client.post(f"/api/v1/listings/{listing_id}/approval", json={"decision": "approve"}, headers=coord_headers)
+    assert res_app_draft.status_code == 400
+    assert res_app_draft.json()["error"]["code"] == "LISTING_STATE_INVALID"
+
+    # 4. Confirm listing -> state transitions to awaiting_confirmation (NOT awaiting_approval)
+    confirm_payload = {
+        "catalogue": {"category": "woodwork", "title": {"en": "Wooden Toy"}},
+        "confirmed_fields": ["title.en"],
+        "corrections": []
+    }
+    res_confirm = client.post(f"/api/v1/listings/{listing_id}/confirm", json=confirm_payload, headers=artisan_headers)
+    assert res_confirm.status_code == 200
+    assert res_confirm.json()["state"] == "awaiting_confirmation"
+
+    # Still cannot export from awaiting_confirmation
+    res_exp_conf = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
+    assert res_exp_conf.status_code == 400
+    assert res_exp_conf.json()["error"]["code"] == "LISTING_STATE_INVALID"
+
+    # 5. Submit for approval -> transitions to awaiting_approval
+    res_sub = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
+    assert res_sub.status_code == 200
+    assert res_sub.json()["state"] == "awaiting_approval"
+
+    # 6. Now coordinator can approve
+    res_app = client.post(f"/api/v1/listings/{listing_id}/approval", json={"decision": "approve"}, headers=coord_headers)
+    assert res_app.status_code == 200
+    assert res_app.json()["status"] == "approved"
+
+    # 7. Cannot re-confirm or re-submit once approved -> 400 LISTING_STATE_INVALID
+    res_reconfirm = client.post(f"/api/v1/listings/{listing_id}/confirm", json=confirm_payload, headers=artisan_headers)
+    assert res_reconfirm.status_code == 400
+    assert res_reconfirm.json()["error"]["code"] == "LISTING_STATE_INVALID"
+
+    res_resubmit = client.post(f"/api/v1/listings/{listing_id}/submit-for-approval", headers=artisan_headers)
+    assert res_resubmit.status_code == 400
+    assert res_resubmit.json()["error"]["code"] == "LISTING_STATE_INVALID"
+
+
+def test_idempotency_enforcement_on_mutations():
+    """BLOCKER-07: Verify Idempotency-Key header and payload deduplication on mutations."""
+    suffix = uuid.uuid4().hex[:6]
+    artisan_res = client.post("/api/v1/auth/register", json={
+        "username": f"art_idem_{suffix}",
+        "email": f"art_idem_{suffix}@test.com",
+        "password": "Password123!",
+        "role": "artisan"
+    })
+    artisan_headers = {"Authorization": f"Bearer {artisan_res.json()['access_token']}"}
+
+    coord_res = client.post("/api/v1/auth/admin/users", json={
+        "username": f"coord_idem_{suffix}",
+        "email": f"coord_idem_{suffix}@test.com",
+        "password": "Password123!",
+        "role": "coordinator"
+    }, headers=ADMIN_SECRET_HEADER)
+    coord_headers = {"Authorization": f"Bearer {coord_res.json()['access_token']}"}
+
+    # 1. Listing creation idempotency via Header
+    idem_listing_key = f"idem-list-{suffix}"
+    headers_with_idem = {**artisan_headers, "Idempotency-Key": idem_listing_key}
+    res_list1 = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers_with_idem)
+    assert res_list1.status_code == 200
+    listing_id1 = res_list1.json()["id"]
+
+    res_list2 = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers_with_idem)
+    assert res_list2.status_code == 200
+    listing_id2 = res_list2.json()["id"]
+    assert listing_id1 == listing_id2, "Duplicate listing was created despite identical Idempotency-Key header!"
+
+    # Listing creation idempotency via JSON payload
+    idem_payload_key = f"idem-pay-{suffix}"
+    res_list3 = client.post("/api/v1/listings", json={"preferred_language": "hi", "idempotency_key": idem_payload_key}, headers=artisan_headers)
+    assert res_list3.status_code == 200
+    listing_id3 = res_list3.json()["id"]
+
+    res_list4 = client.post("/api/v1/listings", json={"preferred_language": "hi", "idempotency_key": idem_payload_key}, headers=artisan_headers)
+    assert res_list4.status_code == 200
+    assert res_list4.json()["id"] == listing_id3, "Duplicate listing was created despite identical idempotency_key in payload!"
+
+    # 2. Media upload deduplication via client_checksum and Idempotency-Key
+    checksum_val = f"sha256:testchecksum{suffix}"
+    media_payload = {"kind": "image", "client_checksum": checksum_val, "url": "https://example.com/art.jpg"}
+    res_media1 = client.post(f"/api/v1/listings/{listing_id1}/media", json=media_payload, headers=artisan_headers)
+    assert res_media1.status_code == 200
+    media_id1 = res_media1.json()["media_id"]
+
+    # Retry media upload with same checksum
+    res_media2 = client.post(f"/api/v1/listings/{listing_id1}/media", json=media_payload, headers=artisan_headers)
+    assert res_media2.status_code == 200
+    assert res_media2.json()["media_id"] == media_id1, "Duplicate media asset created despite matching client_checksum!"
+
+    # Media upload with Idempotency-Key header
+    media_idem_key = f"media-idem-{suffix}"
+    media_headers = {**artisan_headers, "Idempotency-Key": media_idem_key}
+    res_media3 = client.post(f"/api/v1/listings/{listing_id1}/media", json={"kind": "image", "url": "https://example.com/art2.jpg"}, headers=media_headers)
+    assert res_media3.status_code == 200
+    media_id3 = res_media3.json()["media_id"]
+
+    res_media4 = client.post(f"/api/v1/listings/{listing_id1}/media", json={"kind": "image", "url": "https://example.com/art2.jpg"}, headers=media_headers)
+    assert res_media4.status_code == 200
+    assert res_media4.json()["media_id"] == media_id3, "Duplicate media asset created despite matching Idempotency-Key!"
+
+    # 3. Support message idempotency
+    support_idem_key = f"support-idem-{suffix}"
+    support_headers = {**artisan_headers, "Idempotency-Key": support_idem_key}
+    msg_payload = {"listing_id": listing_id1, "message": "Need help with verification"}
+    res_sup1 = client.post("/api/v1/support/messages", json=msg_payload, headers=support_headers)
+    assert res_sup1.status_code == 200
+    msg_id1 = res_sup1.json()["id"]
+
+    res_sup2 = client.post("/api/v1/support/messages", json=msg_payload, headers=support_headers)
+    assert res_sup2.status_code == 200
+    assert res_sup2.json()["id"] == msg_id1, "Duplicate support message created despite identical Idempotency-Key!"
+
+    # 4. Export idempotency
+    # Setup listing for valid export: compute price, confirm, submit, approve
+    client.post(f"/api/v1/listings/{listing_id1}/price", json={
+        "material_cost_paise": 50000,
+        "labour_hours": 10,
+        "skill_level": "skilled",
+        "state_code": "KA"
+    }, headers=artisan_headers)
+
+    client.post(f"/api/v1/listings/{listing_id1}/confirm", json={
+        "catalogue": {
+            "title": {"en": "Handmade Clay Pot"},
+            "description": {"en": "Handcrafted clay pot with traditional terracotta finish."},
+            "category": "Pottery",
+            "dimensions": {"product": {"length_cm": 15, "width_cm": 15, "height_cm": 20}},
+            "marketplace": {"quantity_available": 10, "unit": "piece", "returnable": False, "cancellable": True, "cod_available": True}
+        },
+        "confirmed_fields": ["title.en", "category"],
+        "corrections": []
+    }, headers=artisan_headers)
+
+    client.post(f"/api/v1/listings/{listing_id1}/submit-for-approval", headers=artisan_headers)
+    client.post(f"/api/v1/listings/{listing_id1}/approval", json={"decision": "approve"}, headers=coord_headers)
+
+    export_idem_key = f"export-idem-{suffix}"
+    exp_headers = {**artisan_headers, "Idempotency-Key": export_idem_key}
+    res_exp1 = client.post(f"/api/v1/listings/{listing_id1}/exports", json={"target": "ondc"}, headers=exp_headers)
+    assert res_exp1.status_code == 200
+    export_id1 = res_exp1.json()["export_id"]
+
+    # Retry export with same Idempotency-Key: should succeed and return exact same export_id without state conflict
+    res_exp2 = client.post(f"/api/v1/listings/{listing_id1}/exports", json={"target": "ondc"}, headers=exp_headers)
+    assert res_exp2.status_code == 200
+    assert res_exp2.json()["export_id"] == export_id1, "Duplicate export record or failure on Idempotency-Key retry!"
+
+
+def test_export_handler_safe_on_empty_catalogue_data():
+    """BUG-06: Verify export handler does not crash with 500 on empty/malformed catalogue_data."""
+    from app.database import SessionLocal
+    from app.models import ListingModel, CatalogueModel
+
+    suffix = uuid.uuid4().hex[:6]
+    artisan_res = client.post("/api/v1/auth/register", json={
+        "username": f"art_safe_{suffix}",
+        "email": f"art_safe_{suffix}@test.com",
+        "password": "Password123!",
+        "role": "artisan"
+    })
+    artisan_headers = {"Authorization": f"Bearer {artisan_res.json()['access_token']}"}
+
+    res_list = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=artisan_headers)
+    listing_id = res_list.json()["id"]
+
+    # Directly set state to approved and inject empty catalogue_data to simulate corrupted/empty catalogue
+    db = SessionLocal()
+    listing = db.query(ListingModel).filter(ListingModel.id == listing_id).first()
+    listing.state = "approved"
+    cat = CatalogueModel(
+        listing_id=listing_id,
+        schema_version="1.0",
+        catalogue_data="",
+        field_confidence="{}",
+        needs_confirmation="[]"
+    )
+    db.add(cat)
+    db.commit()
+    db.close()
+
+    # Attempt export: must NOT raise an unhandled 500 Internal Server Error
+    res_exp = client.post(f"/api/v1/listings/{listing_id}/exports", json={"target": "ondc"}, headers=artisan_headers)
+    assert res_exp.status_code in [400, 422], f"Expected 400 validation error, got {res_exp.status_code}"
+    assert res_exp.status_code != 500
+    if res_exp.status_code == 400:
+        assert res_exp.json()["error"]["code"] == "EXPORT_CONTRACT_INVALID"
 
 
 

@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Modal, ScrollView, Platform, StatusBar, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { Text, Button, TextInput, Switch } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import { PILOT_STATES } from '../../store/draftStore';
 import { lookupPincode } from '../../services/pincodeLookup';
 import type { ArtisanProfile, BusinessDetailsUpdate } from '../../types/contracts';
@@ -33,6 +34,8 @@ const ALL_ESTABLISHMENT_TYPE_KEYS: { value: NonNullable<BusinessDetailsUpdate['e
 
 export const BusinessDetailsEditModal: React.FC<Props> = ({ visible, profile, submitting, onSubmit, onDismiss }) => {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
   const keyboardHeight = useKeyboardHeight();
   const [businessName, setBusinessName] = useState(profile?.business_name ?? '');
@@ -239,75 +242,77 @@ export const BusinessDetailsEditModal: React.FC<Props> = ({ visible, profile, su
   );
 };
 
-const styles = StyleSheet.create({
-  keyboardAvoid: { flex: 1 },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  topBackdrop: { flex: 1 },
-  sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%' },
-  dragHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.sm },
-  scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
-  heading: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
-  sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: spacing.xs, marginTop: spacing.sm },
-  input: { marginBottom: spacing.sm, backgroundColor: colors.surface },
-  dropdownTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    minHeight: 50,
-    marginBottom: spacing.sm,
-  },
-  dropdownValueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
-  dropdownSelectedText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  dropdownContainer: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 14,
-    padding: spacing.xs,
-    marginBottom: spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  dropdownItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 11,
-    paddingHorizontal: spacing.md,
-    borderRadius: 8,
-  },
-  dropdownItemSelected: {
-    backgroundColor: colors.indigoLight,
-  },
-  dropdownItemText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  dropdownItemTextSelected: {
-    color: colors.secondary,
-    fontWeight: '700',
-  },
-  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm },
-  error: { color: colors.error, fontSize: 13, marginTop: spacing.xs },
-  footer: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
-  footerButton: { flex: 1 },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    keyboardAvoid: { flex: 1 },
+    backdrop: { flex: 1, backgroundColor: colors.overlay, justifyContent: 'flex-end' },
+    topBackdrop: { flex: 1 },
+    sheet: { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '92%' },
+    dragHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border, alignSelf: 'center', marginBottom: spacing.sm },
+    scrollContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg },
+    heading: { fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
+    sectionLabel: { fontSize: 13, fontWeight: '600', color: colors.textMuted, marginBottom: spacing.xs, marginTop: spacing.sm },
+    input: { marginBottom: spacing.sm, backgroundColor: colors.surface },
+    dropdownTrigger: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+      minHeight: 50,
+      marginBottom: spacing.sm,
+    },
+    dropdownValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flex: 1,
+    },
+    dropdownSelectedText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    dropdownContainer: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      padding: spacing.xs,
+      marginBottom: spacing.sm,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    dropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 11,
+      paddingHorizontal: spacing.md,
+      borderRadius: 8,
+    },
+    dropdownItemSelected: {
+      backgroundColor: colors.indigoLight,
+    },
+    dropdownItemText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    dropdownItemTextSelected: {
+      color: colors.secondary,
+      fontWeight: '700',
+    },
+    switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm },
+    error: { color: colors.error, fontSize: 13, marginTop: spacing.xs },
+    footer: { flexDirection: 'row', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border },
+    footerButton: { flex: 1 },
+  });
+}

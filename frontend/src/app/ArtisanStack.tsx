@@ -13,8 +13,11 @@ import PriceScreen from '../features/price/PriceScreen';
 import SubmitApprovalScreen from '../features/submit-approval/SubmitApprovalScreen';
 import ArtisanProfileScreen from '../features/profile/ArtisanProfileScreen';
 import ListingStatusScreen from '../features/listing-status/ListingStatusScreen';
+import SupportThreadScreen from '../features/support-chat/SupportThreadScreen';
+import ApprovedCraftDetailScreen from '../features/approved-craft/ApprovedCraftDetailScreen';
+import PublishExportScreen from '../features/publish-export/PublishExportScreen';
 
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,11 +25,12 @@ export const APP_HEADER_TITLE = 'Karigari Connect';
 
 export default function ArtisanStack() {
   const { t } = useTranslation();
+  const { colors, isDark } = useAppTheme();
   return (
     <Stack.Navigator
       initialRouteName="HomeTabs"
       screenOptions={{
-        statusBarStyle: 'dark',
+        statusBarStyle: isDark ? 'light' : 'dark',
         headerTitle: APP_HEADER_TITLE,
         headerTintColor: colors.text,
         headerStyle: {
@@ -42,12 +46,6 @@ export default function ArtisanStack() {
     >
       <Stack.Screen
         name="HomeTabs"
-        component={ArtisanTabs}
-        options={{ headerShown: false }}
-      />
-
-      <Stack.Screen
-        name="MyListings"
         component={ArtisanTabs}
         options={{ headerShown: false }}
       />
@@ -113,6 +111,24 @@ export default function ArtisanStack() {
         name="ArtisanProfile"
         component={ArtisanProfileScreen}
         options={{ title: t('tabs.artisanProfile') }}
+      />
+
+      <Stack.Screen
+        name="SupportThread"
+        component={SupportThreadScreen}
+        options={{ title: 'Support Conversation' }}
+      />
+
+      <Stack.Screen
+        name="ApprovedCraftDetail"
+        component={ApprovedCraftDetailScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="PublishExport"
+        component={PublishExportScreen}
+        options={{ title: 'Publish to ONDC' }}
       />
     </Stack.Navigator>
   );

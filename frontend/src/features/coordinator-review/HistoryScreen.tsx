@@ -1,17 +1,20 @@
 // src/features/coordinator-review/HistoryScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { service } from '../../services';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import { ProcessingIndicator } from '../../components';
 import type { Listing } from '../../types/contracts';
 import { formatSkillTier } from './formatters';
 
-const DECIDED_STATES = new Set(['approved', 'rejected', 'exported']);
+const DECIDED_STATES = new Set(['approved', 'rejected', 'export_queued', 'exported']);
 
 export default function HistoryScreen() {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'exported' | 'rejected'>('all');
   const [expandedListingId, setExpandedListingId] = useState<string | null>(null);
 
@@ -30,11 +33,12 @@ export default function HistoryScreen() {
   const decidedListings = (dbListings || []).filter((l) => DECIDED_STATES.has(l.state));
   const filteredListings = decidedListings.filter((l) => {
     if (statusFilter === 'all') return true;
+    if (statusFilter === 'exported') return l.state === 'exported' || l.state === 'export_queued';
     return l.state === statusFilter;
   });
 
   const countApproved = (dbListings || []).filter((l) => l.state === 'approved').length;
-  const countExported = (dbListings || []).filter((l) => l.state === 'exported').length;
+  const countExported = (dbListings || []).filter((l) => l.state === 'exported' || l.state === 'export_queued').length;
   const countRejected = (dbListings || []).filter((l) => l.state === 'rejected').length;
 
   const handleRefresh = async () => {
@@ -130,7 +134,7 @@ export default function HistoryScreen() {
           const isExpanded = expandedListingId === listing.id;
 
           const isApproved = listing.state === 'approved';
-          const isExported = listing.state === 'exported';
+          const isExported = listing.state === 'exported' || listing.state === 'export_queued';
           const isRejected = listing.state === 'rejected';
 
           return (
@@ -246,289 +250,291 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    padding: spacing.lg,
-    paddingBottom: 100,
-    backgroundColor: colors.background,
-    flexGrow: 1,
-  },
-  header: {
-    marginBottom: spacing.lg,
-  },
-  kicker: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    marginBottom: spacing.lg,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statCardMiddle: {
-    marginHorizontal: spacing.sm,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  sectionHeader: {
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  emptyCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.md,
-  },
-  emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.badgeNeutral,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyCardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  emptyCardSubtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 18,
-    maxWidth: 340,
-  },
-  historyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    elevation: 1,
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  cardLocalTitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  badgeApproved: {
-    backgroundColor: '#DCFCE7',
-  },
-  badgeTextApproved: {
-    color: '#166534',
-  },
-  badgeExported: {
-    backgroundColor: '#DBEAFE',
-  },
-  badgeTextExported: {
-    color: '#1E40AF',
-  },
-  badgeRejected: {
-    backgroundColor: '#FEE2E2',
-  },
-  badgeTextRejected: {
-    color: '#991B1B',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: spacing.sm,
-  },
-  categoryPill: {
-    backgroundColor: colors.surface,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.secondary,
-  },
-  priceFloorText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  claimsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
-  },
-  verifiedClaimPill: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  verifiedClaimText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#1E40AF',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  footerDate: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
-  footerArtisan: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.xs,
-    marginBottom: spacing.md,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  filterChipActive: {
-    backgroundColor: colors.secondary,
-    borderColor: colors.secondary,
-  },
-  filterChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  filterChipTextActive: {
-    color: '#FFFFFF',
-  },
-  retailPriceText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  expandedDetails: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  expandedHeading: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  detailLine: {
-    fontSize: 11,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  detailBold: {
-    fontWeight: '700',
-    color: colors.text,
-  },
-  rejectionNotice: {
-    backgroundColor: '#FEE2E2',
-    padding: 6,
-    borderRadius: 4,
-    marginTop: 6,
-  },
-  rejectionTitle: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.error,
-  },
-  rejectionText: {
-    fontSize: 11,
-    color: '#991B1B',
-  },
-  expandHint: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.secondary,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      padding: spacing.lg,
+      paddingBottom: 100,
+      backgroundColor: colors.background,
+      flexGrow: 1,
+    },
+    header: {
+      marginBottom: spacing.lg,
+    },
+    kicker: {
+      fontSize: 11,
+      fontWeight: '700',
+      letterSpacing: 1.2,
+      color: colors.textMuted,
+      marginBottom: 4,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: colors.textMuted,
+      lineHeight: 18,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      marginBottom: spacing.lg,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statCardMiddle: {
+      marginHorizontal: spacing.sm,
+    },
+    statNumber: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    sectionHeader: {
+      marginBottom: spacing.sm,
+    },
+    sectionTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    emptyCard: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: spacing.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.md,
+    },
+    emptyIconCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: colors.badgeNeutral,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    emptyCardTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+    emptyCardSubtitle: {
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: 'center',
+      lineHeight: 18,
+      maxWidth: 340,
+    },
+    historyCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+      elevation: 1,
+    },
+    cardHeaderRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 4,
+    },
+    cardTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    cardLocalTitle: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 1,
+    },
+    statusBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    statusBadgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    badgeApproved: {
+      backgroundColor: colors.successLight,
+    },
+    badgeTextApproved: {
+      color: colors.successGreen,
+    },
+    badgeExported: {
+      backgroundColor: colors.indigoLight,
+    },
+    badgeTextExported: {
+      color: colors.secondary,
+    },
+    badgeRejected: {
+      backgroundColor: colors.errorLight,
+    },
+    badgeTextRejected: {
+      color: colors.error,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 6,
+      gap: spacing.sm,
+    },
+    categoryPill: {
+      backgroundColor: colors.surface,
+      borderRadius: 6,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    categoryText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.secondary,
+    },
+    priceFloorText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    claimsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8,
+    },
+    verifiedClaimPill: {
+      backgroundColor: colors.indigoLight,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: colors.indigoBorder,
+    },
+    verifiedClaimText: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.secondary,
+    },
+    cardFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 10,
+      paddingTop: 8,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    footerDate: {
+      fontSize: 11,
+      color: colors.textMuted,
+    },
+    footerArtisan: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 20,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    filterChipActive: {
+      backgroundColor: colors.secondary,
+      borderColor: colors.secondary,
+    },
+    filterChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.textMuted,
+    },
+    filterChipTextActive: {
+      color: colors.onPrimary,
+    },
+    retailPriceText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    expandedDetails: {
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    expandedHeading: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    detailLine: {
+      fontSize: 11,
+      color: colors.textMuted,
+      marginBottom: 2,
+    },
+    detailBold: {
+      fontWeight: '700',
+      color: colors.text,
+    },
+    rejectionNotice: {
+      backgroundColor: colors.errorLight,
+      padding: 6,
+      borderRadius: 4,
+      marginTop: 6,
+    },
+    rejectionTitle: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.error,
+    },
+    rejectionText: {
+      fontSize: 11,
+      color: colors.error,
+    },
+    expandHint: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.secondary,
+    },
+  });
+}

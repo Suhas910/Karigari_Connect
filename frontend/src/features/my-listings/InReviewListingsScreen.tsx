@@ -1,5 +1,5 @@
 // src/features/my-listings/InReviewListingsScreen.tsx
-import React, { useCallback, useState, useLayoutEffect } from 'react';
+import React, { useCallback, useState, useLayoutEffect, useMemo } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Platform } from 'react-native';
 import { Text, FAB, IconButton, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDb } from '../../services/database';
 import { processOutbox } from '../../services/outbox';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import type { Listing } from '../../types/contracts';
 import { useDraftStore, PILOT_STATES } from '../../store/draftStore';
 import { ProcessingIndicator } from '../../components';
@@ -29,6 +29,8 @@ export default function InReviewListingsScreen() {
   const queryClient = useQueryClient();
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
   const selectedState = useDraftStore((s) => s.selectedState);
   const selectedZone = useDraftStore((s) => s.selectedZone);
@@ -59,7 +61,7 @@ export default function InReviewListingsScreen() {
         </View>
       ),
     });
-  }, [navigation, selectedState, selectedZone, currentZoneObj, t]);
+  }, [navigation, selectedState, selectedZone, currentZoneObj, t, colors, styles]);
 
   const {
     data: listings,
@@ -119,8 +121,6 @@ export default function InReviewListingsScreen() {
   const handleCardPress = (listing: Listing) => {
     switch (listing.state) {
       case 'draft':
-      case 'rejected':
-      case 'failed':
         useDraftStore.getState().setActiveDraft(listing.id);
         navigation.navigate('Capture');
         break;
@@ -131,7 +131,14 @@ export default function InReviewListingsScreen() {
         });
         break;
       case 'awaiting_approval':
-        navigation.navigate('Price', { draftId: listing.id });
+      case 'rejected':
+      case 'failed':
+        navigation.navigate('SubmitApproval', { draftId: listing.id });
+        break;
+      case 'approved':
+      case 'export_queued':
+      case 'exported':
+        navigation.navigate('ApprovedCraftDetail', { draftId: listing.id });
         break;
       default:
         navigation.navigate('Price', { draftId: listing.id });
@@ -195,7 +202,7 @@ export default function InReviewListingsScreen() {
                 : 'card-account-details-outline'
             }
             size={22}
-            color={profile?.profile_status === 'verified' ? '#1E40AF' : colors.primary}
+            color={profile?.profile_status === 'verified' ? colors.secondary : colors.primary}
           />
         </View>
         <View style={styles.profileBannerTextContainer}>
@@ -212,7 +219,7 @@ export default function InReviewListingsScreen() {
               : t('listings.unverifiedProfileSub')}
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.placeholder} />
       </TouchableOpacity>
 
       <FlatList
@@ -240,7 +247,7 @@ export default function InReviewListingsScreen() {
               mode="contained"
               onPress={handleStartNewListing}
               buttonColor={colors.primary}
-              textColor="#FFFFFF"
+              textColor={colors.onPrimary}
               style={styles.emptyActionBtn}
               icon="plus"
             >
@@ -257,161 +264,163 @@ export default function InReviewListingsScreen() {
         icon="plus"
         label={t('listings.newCraft')}
         style={styles.fab}
-        color="#FFFFFF"
+        color={colors.onPrimary}
         onPress={handleStartNewListing}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerRightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  locationPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  locationPillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 4,
-  },
-  syncNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.badgeNeutral,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  syncNoticeText: {
-    fontSize: 12,
-    color: colors.secondary,
-    fontWeight: '500',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statCardMiddle: {
-    marginHorizontal: spacing.sm,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  profileBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EFF6FF',
-    marginHorizontal: spacing.md,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-  },
-  profileBannerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#DBEAFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
-  },
-  profileBannerTextContainer: {
-    flex: 1,
-  },
-  profileBannerTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#1E3A8A',
-  },
-  profileBannerSub: {
-    fontSize: 11,
-    color: '#3B82F6',
-    marginTop: 1,
-    lineHeight: 15,
-  },
-  listContent: {
-    padding: spacing.md,
-    paddingBottom: 90,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
-    paddingHorizontal: spacing.xl,
-  },
-  emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.badgeNeutral,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 19,
-    marginBottom: spacing.lg,
-  },
-  emptyActionBtn: {
-    borderRadius: 10,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: Platform.OS === 'ios' ? 96 : 88,
-    backgroundColor: colors.primary,
-    borderRadius: 28,
-  },
-});
+function createStyles(colors: ColorPalette, isDark: boolean) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    headerRightRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    locationPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    locationPillText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginLeft: 4,
+    },
+    syncNotice: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.badgeNeutral,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    syncNoticeText: {
+      fontSize: 12,
+      color: colors.secondary,
+      fontWeight: '500',
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statCardMiddle: {
+      marginHorizontal: spacing.sm,
+    },
+    statNumber: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    profileBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.indigoLight,
+      marginHorizontal: spacing.md,
+      marginTop: spacing.xs,
+      marginBottom: spacing.xs,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.indigoBorder,
+    },
+    profileBannerIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: isDark ? colors.indigoBorder : '#DBEAFE',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    profileBannerTextContainer: {
+      flex: 1,
+    },
+    profileBannerTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.secondary,
+    },
+    profileBannerSub: {
+      fontSize: 11,
+      color: isDark ? colors.textMuted : colors.secondary,
+      marginTop: 1,
+      lineHeight: 15,
+    },
+    listContent: {
+      padding: spacing.md,
+      paddingBottom: 90,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 60,
+      paddingHorizontal: spacing.xl,
+    },
+    emptyIconCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: colors.badgeNeutral,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: 'center',
+      lineHeight: 19,
+      marginBottom: spacing.lg,
+    },
+    emptyActionBtn: {
+      borderRadius: 10,
+    },
+    fab: {
+      position: 'absolute',
+      margin: 16,
+      right: 0,
+      bottom: Platform.OS === 'ios' ? 96 : 88,
+      backgroundColor: colors.primary,
+      borderRadius: 28,
+    },
+  });
+}

@@ -4,6 +4,7 @@ from app.services.pricing_service import (
     get_wage_rate,
     resolve_effective_skill_level,
     get_technique_multiplier,
+    round_half_up,
 )
 
 
@@ -268,3 +269,42 @@ class TestVersioning:
         ]
         for r in results:
             assert r.calculation_version == "1.0.0"
+
+
+class TestRoundingHalfUp:
+    def test_half_up_vs_bankers_rounding(self):
+        # Python built-in round(2.5) == 2 (banker's round-half-to-even), round_half_up(2.5) == 3
+        assert round(2.5) == 2
+        assert round_half_up(2.5) == 3
+        assert round(4.5) == 4
+        assert round_half_up(4.5) == 5
+
+        # Decimal precision: round(1.125, 2) == 1.12, round_half_up(1.125, 2) == 1.13
+        assert round(1.125, 2) == 1.12
+        assert round_half_up(1.125, 2) == 1.13
+
+    def test_paise_conversion_uses_half_up(self):
+        assert round_half_up(0.5) == 1
+        assert round_half_up(1.5) == 2
+        assert round_half_up(2.5) == 3
+        assert round_half_up(3.5) == 4
+
+
+class TestTechniqueFloorElevation:
+    def test_technique_floor_sets_source_and_explanation(self):
+        # artisan declared unskilled with skill_level_source='self_declared'
+        # but hand_embroidery elevates to skilled
+        r = calculate_price(
+            material_cost_inr=500,
+            labour_hours=10,
+            state_code="WB",
+            skill_level="unskilled",
+            skill_level_source="self_declared",
+            techniques=["hand_embroidery"],
+            zone="zone_a",
+        )
+        assert r.inputs["skill_level"] == "skilled"
+        assert r.inputs["skill_level_self_declared"] == "unskilled"
+        assert r.inputs["skill_level_source"] == "technique_floor"
+        assert "Applied technique-floor elevation" in r.explanation
+        assert "from unskilled to skilled" in r.explanation

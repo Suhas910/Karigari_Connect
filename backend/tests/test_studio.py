@@ -127,3 +127,40 @@ def test_unknown_engine_or_background_is_rejected():
         studio.enhance(b"", engine="magic")
     with pytest.raises(ValueError):
         studio.enhance(b"", background="marble")
+
+
+def test_opencv_grabcut_mask_fallback():
+    from app.ai import birefnet
+    photo, _ = _scene((210, 210, 210), (50, 100, 180))
+    image = Image.open(io.BytesIO(photo))
+    mask = birefnet.predict_mask_opencv(image)
+    assert mask.mode == "L"
+    assert mask.size == image.size
+    mask_np = np.asarray(mask)
+    assert (mask_np >= 128).mean() > 0.02
+
+
+def test_birefnet_falls_back_when_model_unavailable(monkeypatch):
+    from app.ai import birefnet
+    photo, _ = _scene((210, 210, 210), (50, 100, 180))
+    image = Image.open(io.BytesIO(photo))
+
+    def broken_loader():
+        raise birefnet.BiRefNetUnavailable("Simulated missing torch / model weights")
+
+    monkeypatch.setattr(birefnet, "_load_model", broken_loader)
+    mask = birefnet.predict_mask(image)
+    assert mask.mode == "L"
+    assert mask.size == image.size
+    assert (np.asarray(mask) >= 128).mean() > 0.02
+
+
+def test_studio_enhance_end_to_end_resilient():
+    photo, _ = _scene((200, 200, 200), (45, 95, 175))
+    # Calls enhance with default mask_fn=None (production execution path)
+    result = studio.enhance(photo, engine="processing", background="studio")
+    assert result.engine == "processing"
+    assert len(result.image_bytes) > 0
+    img = Image.open(io.BytesIO(result.image_bytes))
+    assert img.format == "JPEG"
+

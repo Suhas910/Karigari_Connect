@@ -1,17 +1,19 @@
 // src/features/publish-export/PublishExportScreen.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, Switch } from 'react-native-paper';
 import { useRoute, useNavigation, useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import QRCode from 'react-native-qrcode-svg';
 import type { CoordinatorStackParamList } from '../../types/navigation';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import type { ExportResult } from '../../types/contracts';
 import { service } from '../../services';
 import { ErrorRetryCard, ProcessingIndicator, BottomDock } from '../../components';
 
 export default function PublishExportScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const navigation = useNavigation<NativeStackNavigationProp<CoordinatorStackParamList>>();
   const route = useRoute<RouteProp<CoordinatorStackParamList, 'PublishExport'>>();
   const { listingId } = route.params;
@@ -244,7 +246,7 @@ export default function PublishExportScreen() {
                   status: exportResult.status,
                 })}
                 size={160}
-                color={colors.text}
+                color={isDark ? '#1C1917' : colors.text}
                 backgroundColor="#FFFFFF"
               />
             </View>
@@ -303,7 +305,7 @@ export default function PublishExportScreen() {
           mode="contained"
           onPress={() => handleExport()}
           buttonColor={colors.primary}
-          textColor="#FFFFFF"
+          textColor={colors.onPrimary}
           style={styles.primaryBtn}
           contentStyle={{ height: 48 }}
         >
@@ -329,7 +331,8 @@ export default function PublishExportScreen() {
 );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
   container: {
     padding: spacing.lg,
     backgroundColor: colors.background,
@@ -588,4 +591,5 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 40,
   },
-});
+  });
+}

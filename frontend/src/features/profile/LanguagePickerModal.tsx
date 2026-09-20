@@ -1,10 +1,10 @@
-// src/features/profile/LanguagePickerModal.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import { setAppLanguage } from '../../i18n';
 
 export const LANGUAGES = [
@@ -23,6 +23,8 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   onDismiss,
 }) => {
   const { t, i18n } = useTranslation();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleSelectLanguage = async (code: string) => {
     try {
@@ -116,115 +118,117 @@ export const LanguagePickerModal: React.FC<LanguagePickerModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-  },
-  sheetContainer: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: spacing.md,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.indigoLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  optionsList: {
-    gap: 10,
-    marginVertical: spacing.sm,
-  },
-  langOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    backgroundColor: '#FAFAFA',
-  },
-  langOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FAF5F2',
-  },
-  langLeft: {
-    flex: 1,
-  },
-  langLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  langLabelSelected: {
-    color: colors.primary,
-  },
-  nativeText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  langRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  badgeChip: {
-    backgroundColor: colors.badgeNeutral,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-  },
-  badgeChipSelected: {
-    backgroundColor: '#F3E5E0',
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  badgeTextSelected: {
-    color: colors.primary,
-  },
-  cancelBtn: {
-    marginTop: spacing.md,
-    borderRadius: 12,
-    borderColor: colors.border,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFill,
+    },
+    sheetContainer: {
+      width: '100%',
+      maxWidth: 400,
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: spacing.lg,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: spacing.md,
+    },
+    iconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      backgroundColor: colors.indigoLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    headerSubtitle: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    closeBtn: {
+      padding: 4,
+    },
+    optionsList: {
+      gap: 10,
+      marginVertical: spacing.sm,
+    },
+    langOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 14,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceElevated,
+    },
+    langOptionSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryLight,
+    },
+    langLeft: {
+      flex: 1,
+    },
+    langLabel: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    langLabelSelected: {
+      color: colors.primary,
+    },
+    nativeText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    langRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    badgeChip: {
+      backgroundColor: colors.badgeNeutral,
+      borderRadius: 6,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+    },
+    badgeChipSelected: {
+      backgroundColor: colors.primaryLight,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: colors.textMuted,
+    },
+    badgeTextSelected: {
+      color: colors.primary,
+    },
+    cancelBtn: {
+      marginTop: spacing.md,
+      borderRadius: 12,
+      borderColor: colors.border,
+    },
+  });
+}

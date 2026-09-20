@@ -1,5 +1,5 @@
 // src/features/my-listings/LiveListingsScreen.tsx
-import React, { useCallback, useState, useLayoutEffect } from 'react';
+import React, { useCallback, useState, useLayoutEffect, useMemo } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Platform } from 'react-native';
 import { Text, FAB, IconButton, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { service } from '../../services';
 import { getDb } from '../../services/database';
 import { processOutbox } from '../../services/outbox';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import type { Listing } from '../../types/contracts';
 import { useDraftStore, PILOT_STATES } from '../../store/draftStore';
 import { ProcessingIndicator } from '../../components';
@@ -22,6 +22,8 @@ export default function LiveListingsScreen() {
   const queryClient = useQueryClient();
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const navigation = useNavigation<any>();
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const selectedState = useDraftStore((s) => s.selectedState);
   const selectedZone = useDraftStore((s) => s.selectedZone);
@@ -52,7 +54,7 @@ export default function LiveListingsScreen() {
         </View>
       ),
     });
-  }, [navigation, selectedState, selectedZone, currentZoneObj, t]);
+  }, [navigation, selectedState, selectedZone, currentZoneObj, t, colors, styles]);
 
   const {
     data: listings,
@@ -105,7 +107,7 @@ export default function LiveListingsScreen() {
   );
 
   const handleCardPress = (listing: Listing) => {
-    navigation.navigate('Price', { draftId: listing.id });
+    navigation.navigate('ApprovedCraftDetail', { draftId: listing.id });
   };
 
   if (isLoading) {
@@ -135,7 +137,7 @@ export default function LiveListingsScreen() {
         </View>
         <View style={[styles.statCard, styles.statCardMiddle]}>
           <Text style={[styles.statNumber, { color: colors.secondary }]}>{exportedCount}</Text>
-          <Text style={styles.statLabel}>{t('listings.liveOnOndc')}</Text>
+          <Text style={styles.statLabel}>{t('listings.stagedForGateway', { defaultValue: 'Staged for Gateway' })}</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={[styles.statNumber, { color: colors.primary }]}>{approvedCount}</Text>
@@ -168,7 +170,7 @@ export default function LiveListingsScreen() {
               mode="contained"
               onPress={handleStartNewListing}
               buttonColor={colors.primary}
-              textColor="#FFFFFF"
+              textColor={colors.onPrimary}
               style={styles.emptyActionBtn}
               icon="plus"
             >
@@ -185,126 +187,128 @@ export default function LiveListingsScreen() {
         icon="plus"
         label={t('listings.newCraft')}
         style={styles.fab}
-        color="#FFFFFF"
+        color={colors.onPrimary}
         onPress={handleStartNewListing}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  headerRightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  locationPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  locationPillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 4,
-  },
-  syncNotice: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.badgeNeutral,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  syncNoticeText: {
-    fontSize: 12,
-    color: colors.secondary,
-    fontWeight: '500',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  statCardMiddle: {
-    marginHorizontal: spacing.sm,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: colors.textMuted,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  listContent: {
-    padding: spacing.md,
-    paddingBottom: 90,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 60,
-    paddingHorizontal: spacing.xl,
-  },
-  emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.badgeNeutral,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 19,
-    marginBottom: spacing.lg,
-  },
-  emptyActionBtn: {
-    borderRadius: 10,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: Platform.OS === 'ios' ? 96 : 88,
-    backgroundColor: colors.primary,
-    borderRadius: 28,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    headerRightRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 16,
+    },
+    locationPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    locationPillText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
+      marginLeft: 4,
+    },
+    syncNotice: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.badgeNeutral,
+      paddingHorizontal: spacing.md,
+      paddingVertical: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    syncNoticeText: {
+      fontSize: 12,
+      color: colors.secondary,
+      fontWeight: '500',
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 8,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    statCardMiddle: {
+      marginHorizontal: spacing.sm,
+    },
+    statNumber: {
+      fontSize: 20,
+      fontWeight: '800',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    statLabel: {
+      fontSize: 11,
+      color: colors.textMuted,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    listContent: {
+      padding: spacing.md,
+      paddingBottom: 90,
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 60,
+      paddingHorizontal: spacing.xl,
+    },
+    emptyIconCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: colors.badgeNeutral,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    emptyTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.sm,
+      textAlign: 'center',
+    },
+    emptySubtitle: {
+      fontSize: 13,
+      color: colors.textMuted,
+      textAlign: 'center',
+      lineHeight: 19,
+      marginBottom: spacing.lg,
+    },
+    emptyActionBtn: {
+      borderRadius: 10,
+    },
+    fab: {
+      position: 'absolute',
+      margin: 16,
+      right: 0,
+      bottom: Platform.OS === 'ios' ? 96 : 88,
+      backgroundColor: colors.primary,
+      borderRadius: 28,
+    },
+  });
+}

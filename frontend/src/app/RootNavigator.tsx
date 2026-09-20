@@ -1,12 +1,12 @@
-// src/app/RootNavigator
+// src/app/RootNavigator.tsx
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { NavigationContainer, DefaultTheme as NavigationDefaultTheme } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../store/authStore';
 import { ProcessingIndicator } from '../components';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 
 // Screens & Stacks
 import SignInScreen from '../features/onboarding/SignInScreen';
@@ -15,16 +15,9 @@ import CoordinatorStack from './CoordinatorStack';
 
 const Stack = createNativeStackNavigator();
 
-const navTheme = {
-  ...NavigationDefaultTheme,
-  colors: {
-    ...NavigationDefaultTheme.colors,
-    background: colors.background, // #FFFFFF
-  },
-};
-
 export default function RootNavigator() {
   const { isAuthenticated, role, isHydrated } = useAuthStore();
+  const { navTheme, isDark } = useAppTheme();
 
   if (!isHydrated) {
     return <ProcessingIndicator hint="Resuming session..." />;
@@ -32,7 +25,12 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer theme={navTheme}>
-      <Stack.Navigator screenOptions={{ headerShown: false, statusBarStyle: 'dark' }}>
+      <Stack.Navigator
+        screenOptions={{
+          headerShown: false,
+          statusBarStyle: isDark ? 'light' : 'dark',
+        }}
+      >
         {!isAuthenticated ? (
           // Unauthenticated Flow
           <Stack.Screen name="Auth" component={SignInScreen} />
@@ -51,9 +49,10 @@ export default function RootNavigator() {
 }
 
 function RoleErrorScreen() {
+  const { colors } = useAppTheme();
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-      <Text>Account role not recognized. Please sign in again or contact support.</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24, backgroundColor: colors.background }}>
+      <Text style={{ color: colors.text }}>Account role not recognized. Please sign in again or contact support.</Text>
     </View>
   );
 }

@@ -1,9 +1,9 @@
 // src/components/SkillTierPicker.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, RadioButton } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
-import { colors, spacing, typography } from '../theme';
+import { useAppTheme, spacing, typography, type ColorPalette } from '../theme';
 
 export type SkillOption = 'beginner' | 'intermediate' | 'skilled' | 'master';
 
@@ -35,6 +35,8 @@ export const SkillTierPicker: React.FC<SkillTierPickerProps> = ({
   disabled = false,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View style={styles.optionsGroup}>
@@ -76,42 +78,44 @@ export const SkillTierPicker: React.FC<SkillTierPickerProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  optionsGroup: {
-    gap: spacing.md,
-  },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E2DDD5',
-    gap: spacing.sm,
-  },
-  optionCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FDF7F4',
-  },
-  optionCardDisabled: {
-    opacity: 0.6,
-  },
-  optionIcon: {
-    fontSize: 24,
-    width: 32,
-    textAlign: 'center',
-  },
-  textContainer: {
-    flex: 1,
-  },
-  optionLabel: {
-    fontFamily: typography.body,
-    fontSize: 15,
-    color: '#1C1917',
-    fontWeight: '600',
-  },
-  optionLabelSelected: {
-    color: colors.primary,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    optionsGroup: {
+      gap: spacing.md,
+    },
+    optionCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      gap: spacing.sm,
+    },
+    optionCardSelected: {
+      borderColor: colors.primary,
+      backgroundColor: colors.primaryTint,
+    },
+    optionCardDisabled: {
+      opacity: 0.6,
+    },
+    optionIcon: {
+      fontSize: 24,
+      width: 32,
+      textAlign: 'center',
+    },
+    textContainer: {
+      flex: 1,
+    },
+    optionLabel: {
+      fontFamily: typography.body,
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    optionLabelSelected: {
+      color: colors.primary,
+    },
+  });
+}

@@ -1,18 +1,19 @@
 // src/features/submit-approval/SubmitApprovalScreen.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import type { Listing } from '../../types/contracts';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import { StepHeader, BottomDock } from '../../components';
 import { useDraftStore, PILOT_STATES } from '../../store/draftStore';
+import { getBestProductPhoto } from '../../utils/media';
 
 interface GateDefinition {
   key: string;
@@ -53,9 +54,14 @@ interface DraftPayload {
   imageAccepted?: boolean;
   priceReviewed?: boolean;
   claimsConfirmed?: boolean;
+  photos?: string[];
+  enhancedPhotos?: string[];
+  coverIndex?: number;
 }
 
 export default function SubmitApprovalScreen() {
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const route = useRoute<RouteProp<ArtisanStackParamList, 'SubmitApproval'>>();
@@ -67,7 +73,7 @@ export default function SubmitApprovalScreen() {
   const currentZoneObj = currentStateObj.zones.find((z) => z.code === selectedZone) || currentStateObj.zones[0];
 
   const [listing, setListing] = useState<Listing | null>(null);
-  const [, setDraftPayload] = useState<DraftPayload>({});
+  const [draftPayload, setDraftPayload] = useState<DraftPayload>({});
   const [unverifiedClaims, setUnverifiedClaims] = useState<string[]>([]);
   const [checkedState, setCheckedState] = useState<Record<string, boolean>>({
     catalogue: false,
@@ -79,39 +85,56 @@ export default function SubmitApprovalScreen() {
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const isRejected = listing?.state === 'rejected';
+  const isFailed = listing?.state === 'failed';
+  const rejectionFlags: string[] = useMemo(() => {
+    if (listing?.rejection_flags && listing.rejection_flags.length > 0) {
+      return listing.rejection_flags;
+    }
+    if (listing?.rejection_categories && listing.rejection_categories.length > 0) {
+      return listing.rejection_categories;
+    }
+    return [];
+  }, [listing]);
+  const rejectionReason = listing?.rejection_reason;
+
+  const loadData = useCallback(async () => {
     if (!draftId) return;
-    (async () => {
+    try {
+      const draft = await getDraft(draftId);
+      const payload = (draft?.payload ?? {}) as DraftPayload;
+      setDraftPayload(payload);
+
+      let unverified: string[] = [];
       try {
-        const draft = await getDraft(draftId);
-        const payload = (draft?.payload ?? {}) as DraftPayload;
-        setDraftPayload(payload);
-
-        let unverified: string[] = [];
-        try {
-          const l = await service.getListing(draftId);
-          setListing(l);
-          const claims = l.claims ?? [];
-          unverified = claims
-            .filter((c) => c.asserted_by_artisan && !c.coordinator_verified)
-            .map((c) => c.claim);
-        } catch (err) {
-          console.error('Failed to load listing', err);
-        }
-        setUnverifiedClaims(unverified);
-        const claimsOk = unverified.length === 0;
-
-        setCheckedState({
-          catalogue: Boolean(payload.catalogueConfirmed),
-          image: Boolean(payload.imageAccepted),
-          price: Boolean(payload.priceReviewed),
-          claims: claimsOk,
-        });
+        const l = await service.getListing(draftId);
+        setListing(l);
+        const claims = l.claims ?? [];
+        unverified = claims
+          .filter((c) => c.asserted_by_artisan && !c.coordinator_verified)
+          .map((c) => c.claim);
       } catch (err) {
-        console.error('Failed to load draft payload in SubmitApprovalScreen', err);
+        console.error('Failed to load listing', err);
       }
-    })();
+      setUnverifiedClaims(unverified);
+      const claimsOk = unverified.length === 0;
+
+      setCheckedState({
+        catalogue: Boolean(payload.catalogueConfirmed),
+        image: Boolean(payload.imageAccepted),
+        price: Boolean(payload.priceReviewed),
+        claims: claimsOk,
+      });
+    } catch (err) {
+      console.error('Failed to load draft payload in SubmitApprovalScreen', err);
+    }
   }, [draftId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   const handleToggle = async (key: string) => {
     if (key === 'claims' && unverifiedClaims.length > 0) {
@@ -144,6 +167,21 @@ export default function SubmitApprovalScreen() {
     }
   };
 
+  const handleGatePress = (key: string) => {
+    if (key === 'catalogue') {
+      navigation.navigate('ConfirmDetails', {
+        draftId,
+        transcriptId: listing?.catalogue?.catalogue?.source?.transcript_id ?? 'transcript_uuid',
+      });
+    } else if (key === 'image') {
+      navigation.navigate('ImageReview', { draftId, reviewOnly: true });
+    } else if (key === 'price') {
+      navigation.navigate('Price', { draftId });
+    } else if (key === 'claims') {
+      handleToggle('claims');
+    }
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
     setSubmitError(null);
@@ -160,21 +198,25 @@ export default function SubmitApprovalScreen() {
   const handleDone = () => {
     navigation.reset({
       index: 0,
-      routes: [{ name: 'MyListings' }],
+      routes: [{ name: 'HomeTabs' }],
     });
   };
 
   const handleListAnother = () => {
     navigation.reset({
       index: 1,
-      routes: [{ name: 'MyListings' }, { name: 'Capture' }],
+      routes: [{ name: 'HomeTabs' }, { name: 'Capture' }],
     });
   };
 
   // Craft preview details
   const titleEn = listing?.catalogue?.catalogue?.title?.en || t('listings.untitledDraft', { defaultValue: 'Handcrafted Piece' });
   const category = listing?.catalogue?.catalogue?.category?.replace(/_/g, ' ');
-  const firstPhoto = listing?.media?.find((m) => m.kind === 'image')?.url;
+  const candidatePhotos = [
+    ...(draftPayload.enhancedPhotos || []),
+    ...(draftPayload.photos || []),
+  ];
+  const firstPhoto = getBestProductPhoto(listing?.media, candidatePhotos);
   const priceFloor = listing?.price?.floor_amount_paise ? Math.round(listing.price.floor_amount_paise / 100) : null;
   const priceHigh = listing?.price?.recommended_high_paise ? Math.round(listing.price.recommended_high_paise / 100) : null;
 
@@ -188,7 +230,7 @@ export default function SubmitApprovalScreen() {
           {/* Celebratory Icon Badge with concentric glowing ring */}
           <View style={styles.successIconOuter}>
             <View style={styles.successIconInner}>
-              <MaterialCommunityIcons name="check-decagram" size={54} color="#059669" />
+              <MaterialCommunityIcons name="check-decagram" size={54} color={colors.successGreen} />
             </View>
           </View>
 
@@ -234,7 +276,7 @@ export default function SubmitApprovalScreen() {
 
           {/* Reassuring note */}
           <View style={styles.successNoticeBox}>
-            <MaterialCommunityIcons name="shield-check" size={20} color="#059669" style={{ marginRight: 8 }} />
+            <MaterialCommunityIcons name="shield-check" size={20} color={colors.successGreen} style={{ marginRight: 8 }} />
             <Text style={styles.successNoticeText}>
               {t('submit.submittedText')}
             </Text>
@@ -283,6 +325,62 @@ export default function SubmitApprovalScreen() {
         />
 
         <View style={styles.content}>
+          {/* Rejection / Needs Revision Banner */}
+          {isRejected && (
+            <View style={styles.rejectionBanner}>
+              <View style={styles.bannerHeaderRow}>
+                <MaterialCommunityIcons name="alert-circle" size={20} color={colors.error} />
+                <Text style={styles.rejectionBannerTitle}>
+                  {t('submit.rejectedBannerTitle', { defaultValue: 'Needs Revision' })}
+                </Text>
+              </View>
+              <Text style={styles.rejectionBannerSubtitle}>
+                {t('submit.rejectedBannerSubtitle', {
+                  defaultValue: 'The coordinator requested revisions on this listing before it can be approved.',
+                })}
+              </Text>
+              {rejectionReason ? (
+                <View style={styles.rejectionReasonBox}>
+                  <Text style={styles.rejectionReasonLabel}>
+                    {t('submit.coordinatorNote', { defaultValue: 'Coordinator Feedback:' })}
+                  </Text>
+                  <Text style={styles.rejectionReasonText}>"{rejectionReason}"</Text>
+                </View>
+              ) : null}
+              {rejectionFlags.length > 0 && (
+                <View style={styles.rejectionFlagsRow}>
+                  <Text style={styles.rejectionFlagsLabel}>
+                    {t('submit.flaggedSections', { defaultValue: 'Flagged sections:' })}{' '}
+                  </Text>
+                  <View style={styles.flagBadgesContainer}>
+                    {rejectionFlags.map((flag) => (
+                      <View key={flag} style={styles.flagBadge}>
+                        <Text style={styles.flagBadgeText}>{flag.toUpperCase()}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Processing Failed Banner */}
+          {isFailed && (
+            <View style={styles.failedBanner}>
+              <View style={styles.bannerHeaderRow}>
+                <MaterialCommunityIcons name="alert-rhombus-outline" size={20} color={colors.warningText} />
+                <Text style={styles.failedBannerTitle}>
+                  {t('submit.failedBannerTitle', { defaultValue: 'Processing Incomplete' })}
+                </Text>
+              </View>
+              <Text style={styles.failedBannerSubtitle}>
+                {t('submit.failedBannerSubtitle', {
+                  defaultValue: 'Some automatic cataloging steps could not be completed. Please review and update each section below.',
+                })}
+              </Text>
+            </View>
+          )}
+
           {/* Craft Showcase Hero Card */}
           <View style={styles.craftHeroCard}>
             <View style={styles.craftThumbnailBox}>
@@ -327,7 +425,7 @@ export default function SubmitApprovalScreen() {
                 <MaterialCommunityIcons
                   name={allItemsChecked ? 'shield-check' : 'clipboard-check-outline'}
                   size={18}
-                  color={allItemsChecked ? '#059669' : colors.primary}
+                  color={allItemsChecked ? colors.successGreen : colors.primary}
                   style={{ marginRight: 6 }}
                 />
                 <Text style={styles.readinessTitle}>{t('submit.checklistHeader')}</Text>
@@ -359,41 +457,131 @@ export default function SubmitApprovalScreen() {
           <View style={styles.gatesContainer}>
             {GATES.map((gate) => {
               const checked = Boolean(checkedState[gate.key]);
+              const isFlagged = rejectionFlags.includes(gate.key);
+              const isGateFailed = isFailed && !checked;
+              const isActionRequired = isFlagged || isGateFailed;
+
               return (
                 <TouchableOpacity
                   key={gate.key}
-                  style={[styles.gateCard, checked && styles.gateCardChecked]}
-                  onPress={() => handleToggle(gate.key)}
+                  style={[
+                    styles.gateCard,
+                    checked && styles.gateCardChecked,
+                    isGateFailed && styles.gateCardFailed,
+                    isFlagged && styles.gateCardRejected,
+                  ]}
+                  onPress={() => {
+                    if (isActionRequired) {
+                      handleGatePress(gate.key);
+                    } else {
+                      handleToggle(gate.key);
+                    }
+                  }}
                   activeOpacity={0.7}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked }}
+                  accessibilityRole={isActionRequired ? 'button' : 'checkbox'}
+                  accessibilityState={isActionRequired ? undefined : { checked }}
                 >
-                  <View style={[styles.gateIconBox, checked && styles.gateIconBoxChecked]}>
+                  <View
+                    style={[
+                      styles.gateIconBox,
+                      checked && styles.gateIconBoxChecked,
+                      isActionRequired && styles.gateIconBoxAlert,
+                    ]}
+                  >
                     <MaterialCommunityIcons
-                      name={gate.icon}
+                      name={isFlagged ? 'alert-circle' : isGateFailed ? 'alert-rhombus-outline' : gate.icon}
                       size={22}
-                      color={checked ? colors.secondary : colors.textMuted}
+                      color={
+                        isFlagged
+                          ? colors.error
+                          : isGateFailed
+                          ? colors.warningText
+                          : checked
+                          ? colors.secondary
+                          : colors.textMuted
+                      }
                     />
                   </View>
 
                   <View style={styles.gateContent}>
-                    <Text style={[styles.gateTitle, checked && styles.gateTitleChecked]}>
-                      {t(gate.titleKey)}
-                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text
+                        style={[
+                          styles.gateTitle,
+                          checked && styles.gateTitleChecked,
+                          isFlagged && { color: colors.error },
+                        ]}
+                      >
+                        {t(gate.titleKey)}
+                      </Text>
+                      {isFlagged && (
+                        <View style={styles.inlineFlagBadge}>
+                          <Text style={styles.inlineFlagText}>ACTION REQ</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.gateDesc}>
                       {t(gate.descKey)}
                     </Text>
                   </View>
 
-                  <View style={[styles.gatePill, checked ? styles.gatePillChecked : styles.gatePillPending]}>
-                    {checked ? (
-                      <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" style={{ marginRight: 3 }} />
-                    ) : (
-                      <MaterialCommunityIcons name="pencil-outline" size={12} color={colors.primary} style={{ marginRight: 3 }} />
+                  {/* Right Action / Pill */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    {!isActionRequired && gate.key !== 'claims' && (
+                      <TouchableOpacity
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleGatePress(gate.key);
+                        }}
+                        style={styles.gateEditIconBtn}
+                        accessibilityRole="button"
+                        accessibilityLabel="Edit section"
+                      >
+                        <MaterialCommunityIcons name="pencil" size={16} color={colors.textMuted} />
+                      </TouchableOpacity>
                     )}
-                    <Text style={[styles.gatePillText, checked ? styles.gatePillTextChecked : styles.gatePillTextPending]}>
-                      {checked ? t('submit.statusVerified') : t('submit.statusTapToVerify')}
-                    </Text>
+
+                    <View
+                      style={[
+                        styles.gatePill,
+                        checked ? styles.gatePillChecked : styles.gatePillPending,
+                        isGateFailed && styles.gatePillFailed,
+                        isFlagged && styles.gatePillRejected,
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name={
+                          isFlagged
+                            ? 'pencil-box-outline'
+                            : isGateFailed
+                            ? 'alert'
+                            : checked
+                            ? 'check'
+                            : 'pencil-outline'
+                        }
+                        size={14}
+                        color={
+                          isActionRequired || checked ? colors.onPrimary : colors.primary
+                        }
+                        style={{ marginRight: 3 }}
+                      />
+                      <Text
+                        style={[
+                          styles.gatePillText,
+                          checked ? styles.gatePillTextChecked : styles.gatePillTextPending,
+                          isActionRequired && { color: colors.onPrimary },
+                        ]}
+                      >
+                        {isFlagged
+                          ? t('submit.statusRevisionNeeded', { defaultValue: 'Needs Revision' })
+                          : isGateFailed
+                          ? t('submit.statusActionRequired', { defaultValue: 'Action Needed' })
+                          : checked
+                          ? t('submit.statusVerified')
+                          : t('submit.statusTapToVerify')}
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
@@ -449,7 +637,7 @@ export default function SubmitApprovalScreen() {
               </View>
 
               <View style={[styles.roadmapStep, { borderLeftWidth: 0, paddingBottom: 0 }]}>
-                <View style={[styles.stepNumberBadge, { backgroundColor: '#059669' }]}>
+                <View style={[styles.stepNumberBadge, { backgroundColor: colors.successGreen }]}>
                   <Text style={styles.stepNumberText}>3</Text>
                 </View>
                 <View style={styles.stepContent}>
@@ -475,19 +663,27 @@ export default function SubmitApprovalScreen() {
           onPress={handleSubmit}
           loading={submitting}
           disabled={!allItemsChecked || submitting}
-          buttonColor={allItemsChecked ? colors.primary : '#9CA3AF'}
+          buttonColor={allItemsChecked ? colors.primary : colors.placeholder}
+          textColor="#FFFFFF"
           style={styles.submitBtn}
           contentStyle={{ height: 48 }}
           icon={allItemsChecked ? 'send-check' : 'lock-outline'}
         >
-          {allItemsChecked ? t('submit.submitBtn') : t('submit.completeAllBtn')}
+          {!allItemsChecked
+            ? t('submit.completeAllBtn', { defaultValue: 'Complete All Steps Above' })
+            : isRejected
+            ? t('submit.resubmitBtn', { defaultValue: 'Resubmit for Approval' })
+            : isFailed
+            ? t('submit.retrySubmitBtn', { defaultValue: 'Retry & Submit' })
+            : t('submit.submitBtn')}
         </Button>
       </BottomDock>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
   container: {
     backgroundColor: colors.background,
     flexGrow: 1,
@@ -498,16 +694,109 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
 
+  // Rejection and Failed Banners
+  rejectionBanner: {
+    backgroundColor: colors.errorLight,
+    borderWidth: 1.5,
+    borderColor: colors.error,
+    borderRadius: 14,
+    padding: 14,
+    gap: 6,
+  },
+  failedBanner: {
+    backgroundColor: colors.warningLight,
+    borderWidth: 1.5,
+    borderColor: colors.warningText,
+    borderRadius: 14,
+    padding: 14,
+    gap: 6,
+  },
+  bannerHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rejectionBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.error,
+  },
+  failedBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.warningText,
+  },
+  rejectionBannerSubtitle: {
+    fontSize: 12,
+    color: colors.text,
+    lineHeight: 17,
+  },
+  failedBannerSubtitle: {
+    fontSize: 12,
+    color: colors.text,
+    lineHeight: 17,
+  },
+  rejectionReasonBox: {
+    backgroundColor: colors.surface,
+    padding: 10,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+    marginTop: 4,
+  },
+  rejectionReasonLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.error,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  rejectionReasonText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    color: colors.text,
+    lineHeight: 16,
+  },
+  rejectionFlagsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  rejectionFlagsLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.error,
+  },
+  flagBadgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  flagBadge: {
+    backgroundColor: colors.error,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  flagBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.surface,
+  },
+
   // Craft Hero Card
   craftHeroCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 12,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -591,7 +880,7 @@ const styles = StyleSheet.create({
 
   // Readiness Meter Card
   readinessCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
@@ -619,24 +908,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   readinessBadgeDone: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.successLight,
   },
   readinessBadgePending: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningLight,
   },
   readinessBadgeText: {
     fontSize: 12,
     fontWeight: '700',
   },
   readinessBadgeTextDone: {
-    color: '#065F46',
+    color: colors.successGreen,
   },
   readinessBadgeTextPending: {
-    color: '#92400E',
+    color: colors.warningText,
   },
   progressTrack: {
     height: 8,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.border,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
@@ -647,7 +936,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   progressBarDone: {
-    backgroundColor: '#059669',
+    backgroundColor: colors.successGreen,
   },
   readinessSubtext: {
     fontSize: 12,
@@ -662,26 +951,39 @@ const styles = StyleSheet.create({
   gateCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: colors.border,
     padding: 12,
   },
   gateCardChecked: {
-    borderColor: '#CBD5E1',
+    borderColor: colors.border,
+  },
+  gateCardRejected: {
+    borderColor: colors.error,
+    borderWidth: 2,
+    backgroundColor: colors.errorLight,
+  },
+  gateCardFailed: {
+    borderColor: colors.warningText,
+    borderWidth: 2,
+    backgroundColor: colors.warningLight,
   },
   gateIconBox: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
   gateIconBoxChecked: {
     backgroundColor: colors.indigoLight,
+  },
+  gateIconBoxAlert: {
+    backgroundColor: colors.surface,
   },
   gateContent: {
     flex: 1,
@@ -695,11 +997,30 @@ const styles = StyleSheet.create({
   gateTitleChecked: {
     color: colors.text,
   },
+  inlineFlagBadge: {
+    backgroundColor: colors.error,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  inlineFlagText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: colors.surface,
+  },
   gateDesc: {
     fontSize: 11,
     color: colors.textMuted,
     lineHeight: 15,
     marginTop: 2,
+  },
+  gateEditIconBtn: {
+    padding: 4,
+    borderRadius: 6,
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginRight: 4,
   },
   gatePill: {
     flexDirection: 'row',
@@ -714,14 +1035,22 @@ const styles = StyleSheet.create({
   gatePillPending: {
     borderWidth: 1,
     borderColor: colors.primary,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
+  },
+  gatePillRejected: {
+    backgroundColor: colors.error,
+    borderColor: colors.error,
+  },
+  gatePillFailed: {
+    backgroundColor: colors.warningText,
+    borderColor: colors.warningText,
   },
   gatePillText: {
     fontSize: 11,
     fontWeight: '700',
   },
   gatePillTextChecked: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   gatePillTextPending: {
     color: colors.primary,
@@ -729,10 +1058,10 @@ const styles = StyleSheet.create({
 
   // Claims Warning Card
   claimWarningCard: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorLight,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#FCA5A5',
+    borderColor: colors.errorBorder,
     elevation: 0,
   },
   claimWarningTitle: {
@@ -756,7 +1085,7 @@ const styles = StyleSheet.create({
 
   // Roadmap Card
   roadmapCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
@@ -778,7 +1107,7 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingBottom: 14,
     borderLeftWidth: 2,
-    borderLeftColor: '#E5E7EB',
+    borderLeftColor: colors.border,
     marginLeft: 12,
   },
   stepNumberBadge: {
@@ -792,7 +1121,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   stepNumberText: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontSize: 11,
     fontWeight: '800',
   },
@@ -815,7 +1144,7 @@ const styles = StyleSheet.create({
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.errorLight,
     padding: 10,
     borderRadius: 8,
     marginBottom: 8,
@@ -847,7 +1176,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#D1FAE5',
+    backgroundColor: colors.successLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
@@ -856,7 +1185,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#A7F3D0',
+    backgroundColor: colors.successBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -877,7 +1206,7 @@ const styles = StyleSheet.create({
   },
   receiptCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
@@ -947,10 +1276,10 @@ const styles = StyleSheet.create({
   successNoticeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ECFDF5',
+    backgroundColor: colors.successLight,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
+    borderColor: colors.successBorder,
     padding: spacing.md,
     marginBottom: spacing.xl,
     width: '100%',
@@ -958,7 +1287,7 @@ const styles = StyleSheet.create({
   successNoticeText: {
     flex: 1,
     fontSize: 12,
-    color: '#065F46',
+    color: colors.successGreen,
     lineHeight: 18,
   },
   successActions: {
@@ -973,4 +1302,5 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderWidth: 1.5,
   },
-});
+  });
+}

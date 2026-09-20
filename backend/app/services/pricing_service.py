@@ -10,10 +10,24 @@ band = floor * margin multipliers (skill/technique aware)
 Never returns a guessed price when wage data is missing.
 """
 
+import functools
 import json
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Optional
+
+
+def round_half_up(val: Optional[float], places: int = 0):
+    """Standard commercial half-up rounding (ROUND_HALF_UP) to prevent fractional artisan underpayment."""
+    if val is None:
+        return None
+    d = Decimal(str(val))
+    if places == 0:
+        return int(d.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    target = Decimal("10") ** -places
+    return float(d.quantize(target, rounding=ROUND_HALF_UP))
+
 
 DATA_DIR = Path(__file__).parent / "data" if (Path(__file__).parent / "data").exists() else Path(__file__).parent.parent / "data"
 WAGE_RATES_PATH = DATA_DIR / "wage_rates.json"
@@ -81,6 +95,7 @@ ZONE_ALIASES: dict[str, str] = {
 }
 
 
+@functools.lru_cache(maxsize=16)
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -193,11 +208,10 @@ def calculate_price(
         )
 
     effective_skill = resolve_effective_skill_level(skill_level, techniques)
-    if skill_level_source is None:
-        if effective_skill != skill_level:
-            skill_level_source = "technique_floor"
-        else:
-            skill_level_source = "self_declared"
+    if SKILL_RANK.get(effective_skill, 0) > SKILL_RANK.get(skill_level, 0):
+        skill_level_source = "technique_floor"
+    elif skill_level_source is None:
+        skill_level_source = "self_declared"
 
     wage = get_wage_rate(state_code, effective_skill, zone=zone)
 
@@ -261,6 +275,8 @@ def calculate_price(
         f"₹{wage.hourly_wage_inr:.2f}/hr ({effective_skill}, {state_code}). "
         f"Wage source: {wage.notification_ref}."
     )
+    if skill_level_source == "technique_floor":
+        explanation += f" Applied technique-floor elevation from {skill_level} to {effective_skill} tier based on craft techniques."
     if wage.caution:
         explanation += f" Note: {wage.caution}"
 
@@ -287,8 +303,8 @@ def calculate_price(
             "zone": wage.zone,
             "techniques": techniques,
         },
-        floor_amount_inr=round(floor_amount, 2),
-        recommended_low_inr=round(recommended_low, 2),
-        recommended_high_inr=round(recommended_high, 2),
+        floor_amount_inr=round_half_up(floor_amount, 2),
+        recommended_low_inr=round_half_up(recommended_low, 2),
+        recommended_high_inr=round_half_up(recommended_high, 2),
         explanation=explanation,
     )
