@@ -1,10 +1,10 @@
-// src/features/profile/StatusExplanationModal.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, spacing, typography } from '../../theme';
+import { useAppTheme, spacing, typography } from '../../theme';
+import type { ColorPalette } from '../../theme';
 import type { ArtisanProfile, ProfileStatus } from '../../types/contracts';
 
 interface StatusExplanationModalProps {
@@ -19,6 +19,8 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
   onDismiss,
 }) => {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const status: ProfileStatus = profile?.profile_status || 'incomplete';
 
   const getStatusInfo = () => {
@@ -33,7 +35,7 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
           }),
           desc: t('statusModal.verified.desc'),
           icon: 'shield-check' as const,
-          color: '#1E40AF',
+          color: colors.secondary,
           bgColor: colors.indigoLight,
         };
       case 'pending_verification':
@@ -42,8 +44,8 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
           subtitle: t('statusModal.pending.subtitle'),
           desc: t('statusModal.pending.desc'),
           icon: 'clock-outline' as const,
-          color: '#B45309',
-          bgColor: '#FEF3C7',
+          color: colors.warningText,
+          bgColor: colors.warningLight,
         };
       case 'rejected':
         return {
@@ -52,7 +54,7 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
           desc: t('statusModal.rejected.desc'),
           icon: 'alert-circle-outline' as const,
           color: colors.error,
-          bgColor: '#FEE2E2',
+          bgColor: colors.errorLight,
         };
       default:
         return {
@@ -125,85 +127,87 @@ export const StatusExplanationModal: React.FC<StatusExplanationModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFill,
-  },
-  sheetContainer: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 2,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: colors.text,
-    lineHeight: 20,
-    marginTop: spacing.md,
-  },
-  statutoryBox: {
-    flexDirection: 'row',
-    backgroundColor: '#FAF5F2',
-    borderWidth: 1,
-    borderColor: '#F3E5E0',
-    borderRadius: 12,
-    padding: 12,
-    gap: 10,
-    marginTop: spacing.md,
-    alignItems: 'flex-start',
-  },
-  statutoryText: {
-    flex: 1,
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 17,
-  },
-  actionBtn: {
-    marginTop: spacing.lg,
-    borderRadius: 12,
-  },
-  actionBtnLabel: {
-    fontSize: 15,
-    fontWeight: '700',
-    paddingVertical: 2,
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.md,
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFill,
+    },
+    sheetContainer: {
+      width: '100%',
+      maxWidth: 400,
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: spacing.lg,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    iconBox: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      fontSize: 12,
+      fontWeight: '800',
+      letterSpacing: 0.6,
+    },
+    headerSubtitle: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.text,
+      marginTop: 2,
+    },
+    closeBtn: {
+      padding: 4,
+    },
+    descriptionText: {
+      fontSize: 14,
+      color: colors.text,
+      lineHeight: 20,
+      marginTop: spacing.md,
+    },
+    statutoryBox: {
+      flexDirection: 'row',
+      backgroundColor: colors.primaryLight,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      padding: 12,
+      gap: 10,
+      marginTop: spacing.md,
+      alignItems: 'flex-start',
+    },
+    statutoryText: {
+      flex: 1,
+      fontSize: 12,
+      color: colors.textMuted,
+      lineHeight: 17,
+    },
+    actionBtn: {
+      marginTop: spacing.lg,
+      borderRadius: 12,
+    },
+    actionBtnLabel: {
+      fontSize: 15,
+      fontWeight: '700',
+      paddingVertical: 2,
+    },
+  });
+}

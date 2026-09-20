@@ -10,10 +10,24 @@ band = floor * margin multipliers (skill/technique aware)
 Never returns a guessed price when wage data is missing.
 """
 
+import functools
 import json
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Optional
+
+
+def round_half_up(val: Optional[float], places: int = 0):
+    """Standard commercial half-up rounding (ROUND_HALF_UP) to prevent fractional artisan underpayment."""
+    if val is None:
+        return None
+    d = Decimal(str(val))
+    if places == 0:
+        return int(d.quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+    target = Decimal("10") ** -places
+    return float(d.quantize(target, rounding=ROUND_HALF_UP))
+
 
 DATA_DIR = Path(__file__).parent / "data" if (Path(__file__).parent / "data").exists() else Path(__file__).parent.parent / "data"
 WAGE_RATES_PATH = DATA_DIR / "wage_rates.json"
@@ -69,6 +83,19 @@ class PriceResult:
     fallback_suggestion: Optional[dict] = None
 
 
+ZONE_ALIASES: dict[str, str] = {
+    "zone_a": "zone_1",
+    "zone_b": "zone_2",
+    "zone_c": "zone_3",
+    "zone_d": "zone_4",
+    "zone_1": "zone_a",
+    "zone_2": "zone_b",
+    "zone_3": "zone_c",
+    "zone_4": "zone_d",
+}
+
+
+@functools.lru_cache(maxsize=16)
 def _load_json(path: Path) -> dict:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -76,25 +103,32 @@ def _load_json(path: Path) -> dict:
 
 def get_wage_rate(state_code: str, skill_level: str, zone: str = "zone_1") -> Optional[WageRate]:
     """
-    Look up wage rate. Falls back across zones if requested zone missing
+    Looks up official wage rate for (state_code, skill_level, zone).
+    Falls back to 'statewide' if specific zone not found
     (e.g. state has no zone system, only 'statewide').
 
     Note on wage_rates.json hourly rates:
     hourly_wage_inr = ROUND_HALF_UP(daily_wage_inr / 8, 2 decimals) — not Python's round().
     Standard commercial half-up rounding protects artisans from floating-point / banker's underpayment.
     """
+    sc = "DD" if state_code.upper() == "DN" else state_code.upper()
     data = _load_json(WAGE_RATES_PATH)
     candidates = [
         r for r in data["rates"]
-        if r["state_code"] == state_code and r["skill_level"] == skill_level
+        if r["state_code"] == sc and r["skill_level"] == skill_level
     ]
     if not candidates:
         return None
 
-    # prefer exact zone match, else fall back to 'statewide', else first available
+    # prefer exact zone match, else normalized alias, else fall back to 'statewide', else first available
     for r in candidates:
         if r["zone"] == zone:
             return WageRate.from_dict(r)
+    alias = ZONE_ALIASES.get(zone)
+    if alias:
+        for r in candidates:
+            if r["zone"] == alias:
+                return WageRate.from_dict(r)
     for r in candidates:
         if r["zone"] == "statewide":
             return WageRate.from_dict(r)
@@ -174,11 +208,10 @@ def calculate_price(
         )
 
     effective_skill = resolve_effective_skill_level(skill_level, techniques)
-    if skill_level_source is None:
-        if effective_skill != skill_level:
-            skill_level_source = "technique_floor"
-        else:
-            skill_level_source = "self_declared"
+    if SKILL_RANK.get(effective_skill, 0) > SKILL_RANK.get(skill_level, 0):
+        skill_level_source = "technique_floor"
+    elif skill_level_source is None:
+        skill_level_source = "self_declared"
 
     wage = get_wage_rate(state_code, effective_skill, zone=zone)
 
@@ -242,6 +275,8 @@ def calculate_price(
         f"₹{wage.hourly_wage_inr:.2f}/hr ({effective_skill}, {state_code}). "
         f"Wage source: {wage.notification_ref}."
     )
+    if skill_level_source == "technique_floor":
+        explanation += f" Applied technique-floor elevation from {skill_level} to {effective_skill} tier based on craft techniques."
     if wage.caution:
         explanation += f" Note: {wage.caution}"
 
@@ -268,8 +303,8 @@ def calculate_price(
             "zone": wage.zone,
             "techniques": techniques,
         },
-        floor_amount_inr=round(floor_amount, 2),
-        recommended_low_inr=round(recommended_low, 2),
-        recommended_high_inr=round(recommended_high, 2),
+        floor_amount_inr=round_half_up(floor_amount, 2),
+        recommended_low_inr=round_half_up(recommended_low, 2),
+        recommended_high_inr=round_half_up(recommended_high, 2),
         explanation=explanation,
     )

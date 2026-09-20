@@ -1,5 +1,5 @@
 // src/features/capture/CaptureScreen.tsx
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Text, ActivityIndicator, IconButton, Button } from 'react-native-paper';
@@ -11,12 +11,14 @@ import * as Crypto from 'expo-crypto';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { useDraftStore } from '../../store/draftStore';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 
 export default function CaptureScreen() {
   const { t, i18n } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
   const isFocused = useIsFocused();
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [capturedUris, setCapturedUris] = useState<string[]>([]);
@@ -56,7 +58,7 @@ export default function CaptureScreen() {
   }, [activeDraftId]);
 
   if (!permission) {
-    return <View style={styles.centered}><ActivityIndicator /></View>;
+    return <View style={styles.centered}><ActivityIndicator color={colors.primary} /></View>;
   }
 
   if (!permission.granted) {
@@ -66,7 +68,7 @@ export default function CaptureScreen() {
           {t('capture.permissionText')}
         </Text>
         <TouchableOpacity style={styles.permissionBtn} onPress={requestPermission}>
-          <Text style={{ color: '#FFF' }}>{t('capture.allowCamera')}</Text>
+          <Text style={{ color: colors.onPrimary }}>{t('capture.allowCamera')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -114,16 +116,6 @@ export default function CaptureScreen() {
         });
       } catch (dbErr) {
         console.error('Failed to save photos to draft payload', dbErr);
-      }
-
-      try {
-        await service.completeMediaUpload(draftId, {
-          kind: 'image',
-          upload_token: Crypto.randomUUID(),
-          client_checksum: 'mock_checksum',
-        });
-      } catch (uploadErr) {
-        setUploadError(t('capture.uploadFailed'));
       }
     } catch (err) {
       setUploadError(t('capture.captureFailed'));
@@ -249,7 +241,7 @@ export default function CaptureScreen() {
             accessibilityRole="button"
             accessibilityLabel={t('capture.takePhoto')}
           >
-            {isSaving ? <ActivityIndicator color="#FFF" /> : <View style={styles.captureBtnInner} />}
+            {isSaving ? <ActivityIndicator color={colors.onPrimary} /> : <View style={styles.captureBtnInner} />}
           </TouchableOpacity>
 
           {/* Right: Continue Action */}
@@ -257,7 +249,7 @@ export default function CaptureScreen() {
             <IconButton
               icon="arrow-right"
               size={28}
-              iconColor="#FFFFFF"
+              iconColor={colors.onPrimary}
               containerColor={colors.primary}
               onPress={handleContinue}
               style={styles.continueBtn}
@@ -314,7 +306,7 @@ export default function CaptureScreen() {
                       <IconButton
                         icon="close"
                         size={15}
-                        iconColor="#FFFFFF"
+                        iconColor={colors.onPrimary}
                         style={{ margin: 0 }}
                       />
                     </TouchableOpacity>
@@ -342,7 +334,7 @@ export default function CaptureScreen() {
                   handleContinue();
                 }}
                 buttonColor={colors.primary}
-                textColor="#FFFFFF"
+                textColor={colors.onPrimary}
                 style={styles.modalBtn}
               >
                 {t('capture.reviewPhotos', { count: capturedUris.length })}
@@ -355,298 +347,301 @@ export default function CaptureScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  camera: { flex: 1 },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  permissionBtn: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: 8,
-    minHeight: spacing.tapTarget,
-    justifyContent: 'center',
-  },
-  topBar: {
-    position: 'absolute',
-    top: 50,
-    left: spacing.md,
-    right: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    zIndex: 10,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(28, 25, 23, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  topStepBadge: {
-    backgroundColor: 'rgba(28, 25, 23, 0.85)',
-    borderWidth: 1,
-    borderColor: colors.indigoBorder,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-  },
-  flashBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(28, 25, 23, 0.75)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  flashBtnActive: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: colors.secondary,
-  },
-  topStepText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  framingOverlay: {
-    position: 'absolute',
-    top: '22%',
-    left: '10%',
-    right: '10%',
-    height: 300,
-  },
-  corner: {
-    position: 'absolute',
-    width: 24,
-    height: 24,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  topLeft: { top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 },
-  topRight: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 },
-  bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 },
-  bottomRight: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 },
-  controls: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-    backgroundColor: 'rgba(28, 25, 23, 0.82)',
-  },
-  hint: {
-    color: '#FFF',
-    textAlign: 'center',
-    marginBottom: spacing.md,
-    fontSize: 13,
-  },
-  errorText: {
-    color: '#FFB4A2',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-    fontSize: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.sm,
-  },
-  sideSpacer: {
-    width: 54,
-    height: 54,
-  },
-  stackPreviewBtn: {
-    width: 54,
-    height: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  stackBackdrop1: {
-    position: 'absolute',
-    width: 46,
-    height: 46,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    transform: [{ rotate: '-8deg' }],
-  },
-  stackBackdrop2: {
-    position: 'absolute',
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    transform: [{ rotate: '5deg' }],
-  },
-  stackThumb: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: '#333',
-  },
-  stackCountBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: colors.secondary,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-  },
-  stackCountText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  captureBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFF',
-  },
-  captureBtnInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFF',
-  },
-  continueBtn: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    margin: 0,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '80%',
-    padding: spacing.lg,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingBottom: spacing.sm,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  modalSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  modalCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.badgeNeutral,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  galleryScrollView: {
-    maxHeight: 380,
-  },
-  galleryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    paddingBottom: spacing.md,
-  },
-  galleryCard: {
-    width: '47%',
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  galleryImageWrapper: {
-    position: 'relative',
-    width: '100%',
-    aspectRatio: 1,
-  },
-  galleryImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#EDE7DD',
-  },
-  removePhotoBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 2,
-  },
-  galleryCardFooter: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  galleryAngleText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.md,
-  },
-  modalBtn: {
-    flex: 1,
-    borderRadius: 8,
-    minHeight: spacing.tapTarget,
-    justifyContent: 'center',
-  },
-});
+function createStyles(colors: ColorPalette, isDark: boolean) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#000' },
+    camera: { flex: 1 },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    permissionBtn: {
+      backgroundColor: colors.primary,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.xl,
+      borderRadius: 8,
+      minHeight: spacing.tapTarget,
+      justifyContent: 'center',
+    },
+    topBar: {
+      position: 'absolute',
+      top: 50,
+      left: spacing.md,
+      right: spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      zIndex: 10,
+    },
+    backBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(28, 25, 23, 0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    topStepBadge: {
+      backgroundColor: 'rgba(28, 25, 23, 0.85)',
+      borderWidth: 1,
+      borderColor: colors.indigoBorder,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+    },
+    flashBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: 'rgba(28, 25, 23, 0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    flashBtnActive: {
+      backgroundColor: isDark ? colors.surfaceElevated : '#FFFFFF',
+      borderWidth: 2,
+      borderColor: colors.secondary,
+    },
+    topStepText: {
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.3,
+    },
+    framingOverlay: {
+      position: 'absolute',
+      top: '22%',
+      left: '10%',
+      right: '10%',
+      height: 300,
+    },
+    corner: {
+      position: 'absolute',
+      width: 24,
+      height: 24,
+      borderColor: 'rgba(255, 255, 255, 0.7)',
+    },
+    topLeft: { top: 0, left: 0, borderTopWidth: 2, borderLeftWidth: 2 },
+    topRight: { top: 0, right: 0, borderTopWidth: 2, borderRightWidth: 2 },
+    bottomLeft: { bottom: 0, left: 0, borderBottomWidth: 2, borderLeftWidth: 2 },
+    bottomRight: { bottom: 0, right: 0, borderBottomWidth: 2, borderRightWidth: 2 },
+    controls: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.xl,
+      backgroundColor: 'rgba(28, 25, 23, 0.82)',
+    },
+    hint: {
+      color: '#FFF',
+      textAlign: 'center',
+      marginBottom: spacing.md,
+      fontSize: 13,
+    },
+    errorText: {
+      color: colors.error,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+      fontSize: 12,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.sm,
+    },
+    sideSpacer: {
+      width: 54,
+      height: 54,
+    },
+    stackPreviewBtn: {
+      width: 54,
+      height: 54,
+      justifyContent: 'center',
+      alignItems: 'center',
+      position: 'relative',
+    },
+    stackBackdrop1: {
+      position: 'absolute',
+      width: 46,
+      height: 46,
+      borderRadius: 8,
+      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+      transform: [{ rotate: '-8deg' }],
+    },
+    stackBackdrop2: {
+      position: 'absolute',
+      width: 48,
+      height: 48,
+      borderRadius: 8,
+      backgroundColor: 'rgba(255, 255, 255, 0.5)',
+      transform: [{ rotate: '5deg' }],
+    },
+    stackThumb: {
+      width: 50,
+      height: 50,
+      borderRadius: 8,
+      borderWidth: 2,
+      borderColor: colors.surface,
+      backgroundColor: colors.badgeNeutral,
+    },
+    stackCountBadge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      backgroundColor: colors.secondary,
+      borderRadius: 10,
+      minWidth: 20,
+      height: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 4,
+      borderWidth: 1.5,
+      borderColor: colors.surface,
+    },
+    stackCountText: {
+      color: colors.onPrimary,
+      fontSize: 10,
+      fontWeight: '700',
+    },
+    captureBtn: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 3,
+      borderColor: colors.onPrimary,
+    },
+    captureBtnInner: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.onPrimary,
+    },
+    continueBtn: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      margin: 0,
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.surfaceElevated,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      maxHeight: '80%',
+      padding: spacing.lg,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingBottom: spacing.sm,
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    modalSubtitle: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginTop: 2,
+    },
+    modalCloseBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.badgeNeutral,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    galleryScrollView: {
+      maxHeight: 380,
+    },
+    galleryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    galleryCard: {
+      width: '47%',
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+    },
+    galleryImageWrapper: {
+      position: 'relative',
+      width: '100%',
+      aspectRatio: 1,
+    },
+    galleryImage: {
+      width: '100%',
+      height: '100%',
+      backgroundColor: colors.badgeNeutral,
+    },
+    removePhotoBadge: {
+      position: 'absolute',
+      top: 6,
+      left: 6,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
+      elevation: 4,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.35,
+      shadowRadius: 2,
+    },
+    galleryCardFooter: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    galleryAngleText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    modalFooter: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingTop: spacing.md,
+    },
+    modalBtn: {
+      flex: 1,
+      borderRadius: 8,
+      minHeight: spacing.tapTarget,
+      justifyContent: 'center',
+      borderColor: colors.border,
+    },
+  });
+}

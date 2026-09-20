@@ -1,8 +1,8 @@
 // src/components/BottomDock.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet, Platform, Keyboard, type ViewStyle, type StyleProp } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, spacing } from '../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../theme';
 
 interface BottomDockProps {
   children: React.ReactNode;
@@ -11,7 +11,10 @@ interface BottomDockProps {
 
 export default function BottomDock({ children, style }: BottomDockProps) {
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useAppTheme();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
   useEffect(() => {
     const showSub = Keyboard.addListener(
@@ -46,19 +49,21 @@ export default function BottomDock({ children, style }: BottomDockProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  dock: {
-    backgroundColor: colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm + 4,
-    // Elevation for Android
-    elevation: 8,
-    // Subtle shadow for iOS
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-  },
-});
+function createStyles(colors: ColorPalette, isDark: boolean) {
+  return StyleSheet.create({
+    dock: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm + 4,
+      // Elevation for Android
+      elevation: 8,
+      // Subtle shadow for iOS
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: -3 },
+      shadowOpacity: isDark ? 0.25 : 0.06,
+      shadowRadius: 4,
+    },
+  });
+}

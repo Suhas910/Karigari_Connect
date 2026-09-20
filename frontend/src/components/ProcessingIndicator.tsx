@@ -1,8 +1,8 @@
 // src/components/ProcessingIndicator.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { Text, ActivityIndicator } from 'react-native-paper';
-import { colors, spacing } from '../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../theme';
 
 interface ProcessingIndicatorProps {
   hint?: string;
@@ -10,6 +10,9 @@ interface ProcessingIndicatorProps {
 }
 
 export default function ProcessingIndicator({ hint, style }: ProcessingIndicatorProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={[styles.centered, style]}>
       <ActivityIndicator size="large" color={colors.primary} />
@@ -18,17 +21,19 @@ export default function ProcessingIndicator({ hint, style }: ProcessingIndicator
   );
 }
 
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  hint: {
-    color: colors.text,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    hint: {
+      color: colors.text,
+      marginTop: spacing.md,
+      textAlign: 'center',
+    },
+  });
+}

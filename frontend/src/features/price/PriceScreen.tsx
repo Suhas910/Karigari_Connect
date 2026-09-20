@@ -1,7 +1,8 @@
 // src/features/price/PriceScreen.tsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
 import { Text, Button, Card, TextInput, Chip } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,7 @@ import type { ArtisanStackParamList } from '../../types/navigation';
 import { service } from '../../services';
 import { getDraft, saveDraft } from '../../services/database';
 import { useDraftStore } from '../../store/draftStore';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import type { PriceResult } from '../../types/contracts';
 import { ProcessingIndicator, ErrorRetryCard, StepHeader, BottomDock } from '../../components';
 
@@ -22,6 +23,9 @@ export default function PriceScreen() {
   const route = useRoute<RouteProp<ArtisanStackParamList, 'Price'>>();
   const headerHeight = useHeaderHeight();
   const { draftId } = route.params;
+
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const [price, setPrice] = useState<PriceResult | null>(null);
@@ -66,6 +70,10 @@ export default function PriceScreen() {
               profileZone = profile.declared_zone;
             }
           }
+
+          if (profileState) {
+            useDraftStore.getState().setSelectedState(profileState, profileZone);
+          }
         }
       } catch (err) {
         // Fall back gracefully if offline or mock
@@ -74,16 +82,16 @@ export default function PriceScreen() {
       const materialCostInr = cat?.material_cost_paise ? Math.round(cat.material_cost_paise / 100) : 800;
       const labourHours = cat?.labour?.hours ?? 12;
       const stateCode =
-        useDraftStore.getState().selectedState ||
         profileState ||
         declaration?.stateCode ||
+        useDraftStore.getState().selectedState ||
         cat?.labour?.state_code ||
         'KA';
 
       const zoneCode =
-        useDraftStore.getState().selectedZone ||
         profileZone ||
         declaration?.zone ||
+        useDraftStore.getState().selectedZone ||
         'zone_1';
 
       let declaredSkill = declaration?.skillLevelSelfDeclared;
@@ -109,9 +117,7 @@ export default function PriceScreen() {
       });
       setPrice(result);
 
-      if (existing?.payload?.finalPricePaise) {
-        setSellingPrice(String(Math.round(existing.payload.finalPricePaise / 100)));
-      } else if (result.status === 'available') {
+      if (result.status === 'available') {
         setSellingPrice(String(Math.round(result.recommended_low_paise / 100)));
       }
 
@@ -338,6 +344,25 @@ export default function PriceScreen() {
               </View>
             )}
 
+          {/* Technique floor elevation informational badge */}
+          {price.status === 'available' &&
+            price.inputs?.skill_level_source === 'technique_floor' && (
+              <View style={[styles.pendingVerificationCard, styles.techniqueElevationCard]}>
+                <View style={styles.pendingBadgeHeader}>
+                  <MaterialCommunityIcons name="shield-star-outline" size={16} color={colors.successGreen} style={{ marginRight: 6 }} />
+                  <Text style={[styles.pendingBadgeTitle, { color: colors.successGreen }]}>
+                    {t('price.techniqueElevation', { defaultValue: 'Technique Floor Applied' })}
+                  </Text>
+                </View>
+                <Text style={[styles.pendingBadgeCaption, { color: colors.successGreen }]}>
+                  {t('price.techniqueElevationText', {
+                    skill: (price.inputs?.skill_level || 'skilled').replace(/_/g, ' '),
+                    defaultValue: `Your wage floor was automatically elevated to ${(price.inputs?.skill_level || 'skilled').replace(/_/g, ' ')} tier based on specialized craft techniques.`
+                  })}
+                </Text>
+              </View>
+            )}
+
           <Card style={styles.statCard}>
             <Card.Content>
               <Text style={styles.statSectionLabel}>{t('price.recommendedBand')}</Text>
@@ -365,6 +390,7 @@ export default function PriceScreen() {
                   onChangeText={(val) => setSellingPrice(val.replace(/[^0-9]/g, ''))}
                   onFocus={handlePriceInputFocus}
                   placeholder={t('price.enterPrice')}
+                  placeholderTextColor={colors.placeholder}
                   style={styles.priceInput}
                   outlineColor={isBelowFloor ? colors.error : colors.border}
                   activeOutlineColor={isBelowFloor ? colors.error : colors.primary}
@@ -432,6 +458,7 @@ export default function PriceScreen() {
           mode="contained"
           onPress={handleContinue}
           buttonColor={colors.primary}
+          textColor="#FFFFFF"
           style={styles.continueBtn}
           contentStyle={{ height: 48 }}
         >
@@ -442,7 +469,8 @@ export default function PriceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
   container: { backgroundColor: colors.background, flexGrow: 1, paddingBottom: spacing.xxl },
   content: { paddingHorizontal: spacing.lg },
   breakdownCard: {
@@ -594,7 +622,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: 10,
     borderWidth: 1.5,
-    borderColor: '#D4CEBF',
+    borderColor: colors.border,
     elevation: 0,
     marginBottom: spacing.lg,
   },
@@ -616,12 +644,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   pendingVerificationCard: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningLight,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: colors.warningBorder,
     borderRadius: 8,
     padding: spacing.md,
     marginBottom: spacing.md,
+  },
+  techniqueElevationCard: {
+    borderColor: colors.successBorder,
+    backgroundColor: colors.successLight,
   },
   pendingBadgeHeader: {
     flexDirection: 'row',
@@ -632,17 +664,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#D97706',
+    backgroundColor: colors.warningAmber,
     marginRight: 6,
   },
   pendingBadgeTitle: {
-    color: '#B45309',
+    color: colors.warningText,
     fontWeight: '700',
     fontSize: 13,
   },
   pendingBadgeCaption: {
-    color: '#92400E',
+    color: colors.warningText,
     fontSize: 12,
     lineHeight: 17,
   },
-});
+  });
+}

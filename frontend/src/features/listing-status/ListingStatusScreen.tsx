@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useLayoutEffect } from 'react';
+import React, { useCallback, useState, useLayoutEffect, useMemo } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Image, ScrollView, Modal, Pressable } from 'react-native';
 import { Text, FAB, IconButton, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,29 +8,131 @@ import { useAuthStore } from '../../store/authStore';
 import { service } from '../../services';
 import { getDb } from '../../services/database';
 import { processOutbox } from '../../services/outbox';
-import { colors, spacing } from '../../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import type { Listing, ListingState } from '../../types/contracts';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
 import { useDraftStore, PILOT_STATES } from '../../store/draftStore';
 import { ProcessingIndicator } from '../../components';
+import { getBestProductPhoto } from '../../utils/media';
 
 // --- State visual metadata mapping ---
-const STATE_META: Record<ListingState, { label: string; color: string; bg: string }> = {
-  draft: { label: 'Draft', color: colors.text, bg: colors.badgeNeutral },
-  processing: { label: 'Processing', color: colors.text, bg: colors.badgeNeutral },
-  awaiting_confirmation: { label: 'Needs Confirm', color: '#FFFFFF', bg: colors.primary },
-  awaiting_approval: { label: 'In Review', color: colors.secondary, bg: colors.indigoLight },
-  approved: { label: 'Approved', color: '#FFFFFF', bg: colors.secondary },
-  export_queued: { label: 'Export Queued', color: colors.text, bg: colors.badgeNeutral },
-  exported: { label: 'Live on Market', color: '#FFFFFF', bg: colors.secondary },
-  rejected: { label: 'Needs Revision', color: '#FFFFFF', bg: colors.error },
-  failed: { label: 'Failed', color: '#FFFFFF', bg: colors.error },
+function getStateMeta(colors: ColorPalette): Record<ListingState, { label: string; color: string; bg: string }> {
+  return {
+    draft: { label: 'Draft', color: colors.text, bg: colors.badgeNeutral },
+    processing: { label: 'Processing', color: colors.text, bg: colors.badgeNeutral },
+    awaiting_confirmation: { label: 'Needs Confirm', color: colors.onPrimary, bg: colors.primary },
+    awaiting_approval: { label: 'In Review', color: colors.secondary, bg: colors.indigoLight },
+    approved: { label: 'Approved', color: colors.onPrimary, bg: colors.secondary },
+    export_queued: { label: 'Export Queued', color: colors.text, bg: colors.badgeNeutral },
+    exported: { label: 'Export Staged', color: colors.onPrimary, bg: colors.secondary },
+    rejected: { label: 'Needs Revision', color: colors.onPrimary, bg: colors.error },
+    failed: { label: 'Failed', color: colors.onPrimary, bg: colors.error },
+  };
+}
+
+const StatusCardItem: React.FC<{
+  item: Listing;
+  onPress: (item: Listing) => void;
+  styles: ReturnType<typeof createStyles>;
+  colors: ColorPalette;
+}> = ({ item, onPress, styles, colors }) => {
+  const stateMeta = getStateMeta(colors);
+  const meta = stateMeta[item.state] || { label: item.state, color: colors.text, bg: colors.badgeNeutral };
+  const titleEn = item.catalogue?.catalogue?.title?.en;
+  const titleLocal = item.catalogue?.catalogue?.title?.local;
+  const category = item.catalogue?.catalogue?.category?.replace(/_/g, ' ');
+  const firstPhoto = getBestProductPhoto(item.media);
+  const [imageError, setImageError] = React.useState(false);
+  const showImage = !!firstPhoto && !imageError;
+  const priceFloor = item.price?.floor_amount_paise ? Math.round(item.price.floor_amount_paise / 100) : null;
+  const priceHigh = item.price?.recommended_high_paise ? Math.round(item.price.recommended_high_paise / 100) : null;
+
+  return (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(item)}
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`Listing: ${titleEn || 'Untitled craft draft'}`}
+    >
+      <View style={styles.cardMainRow}>
+        {/* Craft Thumbnail or Category Icon */}
+        <View style={styles.thumbnailContainer}>
+          {showImage ? (
+            <Image
+              source={{ uri: firstPhoto }}
+              style={styles.thumbnailImage}
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <View style={styles.thumbnailPlaceholder}>
+              <IconButton
+                icon={category ? 'palette-swatch-outline' : 'image-outline'}
+                size={22}
+                iconColor={colors.secondary}
+                style={{ margin: 0 }}
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Craft Details Stack */}
+        <View style={styles.cardDetails}>
+          <View style={styles.cardHeaderRow}>
+            <Text style={styles.cardTitle} numberOfLines={1}>
+              {titleEn || 'Untitled craft draft'}
+            </Text>
+            <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
+              <Text style={[styles.statusBadgeText, { color: meta.color }]}>
+                {meta.label}
+              </Text>
+            </View>
+          </View>
+
+          {titleLocal && titleLocal !== titleEn && (
+            <Text style={styles.cardLocalTitle} numberOfLines={1}>
+              {titleLocal}
+            </Text>
+          )}
+
+          <View style={styles.metaRow}>
+            {category && (
+              <View style={styles.categoryPill}>
+                <Text style={styles.categoryText}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </Text>
+              </View>
+            )}
+            {priceFloor ? (
+              <Text style={styles.priceHighlight}>
+                ₹{priceFloor} {priceHigh ? `- ₹${priceHigh}` : 'floor'}
+              </Text>
+            ) : (
+              <Text style={styles.metaText}>
+                Updated {new Date(item.updated_at).toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <IconButton
+          icon="chevron-right"
+          size={20}
+          iconColor={colors.textMuted}
+          style={{ margin: 0, alignSelf: 'center' }}
+        />
+      </View>
+    </TouchableOpacity>
+  );
 };
 
 export default function MyListingsScreen() {
   const queryClient = useQueryClient();
+  const { colors, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   const [pendingSyncCount, setPendingSyncCount] = useState(0);
   const [activeTab, setActiveTab] = useState<'all' | 'in_progress' | 'approved' | 'action_needed'>('all');
   const [locationModalVisible, setLocationModalVisible] = useState(false);
@@ -76,7 +178,7 @@ export default function MyListingsScreen() {
         </View>
       ),
     });
-  }, [navigation, selectedState, selectedZone, currentZoneObj]);
+  }, [navigation, selectedState, selectedZone, currentZoneObj, styles, colors]);
 
   const {
     data: listings,
@@ -221,7 +323,7 @@ export default function MyListingsScreen() {
                 : 'card-account-details-outline'
             }
             size={22}
-            color={profile?.profile_status === 'verified' ? '#1E40AF' : colors.primary}
+            color={profile?.profile_status === 'verified' ? colors.secondary : colors.primary}
           />
         </View>
         <View style={styles.profileBannerTextContainer}>
@@ -238,7 +340,7 @@ export default function MyListingsScreen() {
               : 'Get verified once to unlock statutory rates without claim review'}
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color="#9CA3AF" />
+        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.placeholder} />
       </TouchableOpacity>
 
       {/* Horizontal Filter Tabs */}
@@ -318,7 +420,7 @@ export default function MyListingsScreen() {
                 mode="contained"
                 onPress={handleStartNewListing}
                 buttonColor={colors.primary}
-                textColor="#FFFFFF"
+                textColor={colors.onPrimary}
                 style={styles.emptyActionBtn}
                 icon="plus"
               >
@@ -327,96 +429,14 @@ export default function MyListingsScreen() {
             )}
           </View>
         }
-        renderItem={({ item }) => {
-          const meta = STATE_META[item.state] || { label: item.state, color: colors.text, bg: colors.badgeNeutral };
-          const titleEn = item.catalogue?.catalogue?.title?.en;
-          const titleLocal = item.catalogue?.catalogue?.title?.local;
-          const category = item.catalogue?.catalogue?.category?.replace(/_/g, ' ');
-          const firstPhoto = item.media?.find((m) => m.kind === 'image')?.url;
-          const priceFloor = item.price?.floor_amount_paise ? Math.round(item.price.floor_amount_paise / 100) : null;
-          const priceHigh = item.price?.recommended_high_paise ? Math.round(item.price.recommended_high_paise / 100) : null;
-
-          return (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => handleCardPress(item)}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`Listing: ${titleEn || 'Untitled craft draft'}`}
-            >
-              <View style={styles.cardMainRow}>
-                {/* Craft Thumbnail or Category Icon */}
-                <View style={styles.thumbnailContainer}>
-                  {firstPhoto ? (
-                    <Image source={{ uri: firstPhoto }} style={styles.thumbnailImage} />
-                  ) : (
-                    <View style={styles.thumbnailPlaceholder}>
-                      <IconButton
-                        icon={category ? 'palette-swatch-outline' : 'image-outline'}
-                        size={22}
-                        iconColor={colors.secondary}
-                        style={{ margin: 0 }}
-                      />
-                    </View>
-                  )}
-                </View>
-
-                {/* Craft Details Stack */}
-                <View style={styles.cardDetails}>
-                  <View style={styles.cardHeaderRow}>
-                    <Text style={styles.cardTitle} numberOfLines={1}>
-                      {titleEn || 'Untitled craft draft'}
-                    </Text>
-                    <View style={[styles.statusBadge, { backgroundColor: meta.bg }]}>
-                      <Text style={[styles.statusBadgeText, { color: meta.color }]}>
-                        {meta.label}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {titleLocal && titleLocal !== titleEn && (
-                    <Text style={styles.cardLocalTitle} numberOfLines={1}>
-                      {titleLocal}
-                    </Text>
-                  )}
-
-                  <View style={styles.metaRow}>
-                    {category && (
-                      <View style={styles.categoryPill}>
-                        <Text style={styles.categoryText}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </Text>
-                      </View>
-                    )}
-                    {priceFloor ? (
-                      <Text style={styles.priceHighlight}>
-                        ₹{priceFloor} {priceHigh ? `- ₹${priceHigh}` : 'floor'}
-                      </Text>
-                    ) : (
-                      <Text style={styles.metaText}>
-                        Updated {new Date(item.updated_at).toLocaleDateString()}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-
-                <IconButton
-                  icon="chevron-right"
-                  size={20}
-                  iconColor={colors.textMuted}
-                  style={{ margin: 0, alignSelf: 'center' }}
-                />
-              </View>
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => <StatusCardItem item={item} onPress={handleCardPress} styles={styles} colors={colors} />}
       />
 
       <FAB
         icon="plus"
         label="New Craft"
         style={styles.fab}
-        color="#FFFFFF"
+        color={colors.onPrimary}
         onPress={handleStartNewListing}
       />
 
@@ -513,7 +533,7 @@ export default function MyListingsScreen() {
               mode="contained"
               onPress={() => setLocationModalVisible(false)}
               buttonColor={colors.primary}
-              textColor="#FFFFFF"
+              textColor={colors.onPrimary}
               style={styles.modalCloseBtn}
             >
               Done
@@ -525,7 +545,8 @@ export default function MyListingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ColorPalette, isDark?: boolean) {
+  return StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   headerRightRow: {
     flexDirection: 'row',
@@ -574,17 +595,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
     padding: spacing.md,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     gap: spacing.sm,
   },
   profileBannerIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FDF7F4',
+    backgroundColor: colors.primaryTint,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -594,16 +615,16 @@ const styles = StyleSheet.create({
   profileBannerTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.text,
   },
   profileBannerSub: {
     fontSize: 12,
-    color: '#6B7280',
+    color: colors.textMuted,
     marginTop: 2,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.52)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
@@ -617,7 +638,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.lg,
     elevation: 12,
-    shadowColor: '#000000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
@@ -702,7 +723,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   stateBadgeTextSelected: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
   },
   stateNote: {
     fontSize: 12,
@@ -764,7 +785,7 @@ const styles = StyleSheet.create({
   },
   statCardMiddle: {
     borderColor: colors.indigoBorder,
-    backgroundColor: '#FAFBFD',
+    backgroundColor: colors.surfaceElevated,
   },
   statNumber: {
     fontSize: 18,
@@ -805,7 +826,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterChipTextActive: {
-    color: '#FFFFFF',
+    color: colors.onPrimary,
     fontWeight: '700',
   },
   listContent: {
@@ -820,7 +841,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: spacing.md,
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
@@ -834,7 +855,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#EDE7DD',
+    backgroundColor: colors.badgeNeutral,
     marginRight: spacing.md,
   },
   thumbnailImage: {
@@ -946,9 +967,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 28,
     elevation: 6,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
   },
-});
+  });
+}

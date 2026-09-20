@@ -9,7 +9,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 
 const ICON_MAP: Record<string, string> = {
   MyListings: 'package-variant-closed',
@@ -32,20 +32,24 @@ export default function GlassTabBar({
   navigation,
   variant = 'artisan',
 }: GlassTabBarProps) {
+  const { colors, isDark } = useAppTheme();
   const isCoordinator = variant === 'coordinator';
   const activeColor = isCoordinator ? colors.secondary : colors.primary;
 
+  // Translucent highlight backgrounds — adjusted for dark mode
   const highlightBg = isCoordinator
-    ? 'rgba(36, 51, 84, 0.15)' // colors.secondary (#243354)
-    : 'rgba(184, 74, 42, 0.16)'; // colors.primary (#B84A2A)
+    ? (isDark ? 'rgba(138, 174, 216, 0.20)' : 'rgba(36, 51, 84, 0.15)')
+    : (isDark ? 'rgba(212, 115, 79, 0.22)' : 'rgba(184, 74, 42, 0.16)');
 
   const highlightBorder = isCoordinator
-    ? 'rgba(36, 51, 84, 0.28)'
-    : 'rgba(184, 74, 42, 0.25)';
+    ? (isDark ? 'rgba(138, 174, 216, 0.30)' : 'rgba(36, 51, 84, 0.28)')
+    : (isDark ? 'rgba(212, 115, 79, 0.30)' : 'rgba(184, 74, 42, 0.25)');
 
-  const glassOverlayBg = isCoordinator
-    ? 'rgba(238, 242, 249, 0.50)' // colors.indigoLight (#EEF2F9)
-    : 'rgba(255, 255, 255, 0.50)'; // pure white translucent glass
+  const glassOverlayBg = isDark
+    ? (isCoordinator ? 'rgba(30, 42, 61, 0.50)' : 'rgba(30, 30, 30, 0.50)')
+    : (isCoordinator ? 'rgba(238, 242, 249, 0.50)' : 'rgba(255, 255, 255, 0.50)');
+
+  const pillBorderColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255,255,255,0.4)';
 
   const tabWidth = 100 / state.routes.length;
   const translateX = useSharedValue(state.index * tabWidth);
@@ -64,10 +68,10 @@ export default function GlassTabBar({
 
   return (
     <View style={styles.wrapper} pointerEvents="box-none">
-      <View style={styles.pillContainer}>
+      <View style={[styles.pillContainer, { borderColor: pillBorderColor }]}>
         <BlurView
           intensity={Platform.OS === 'ios' ? 30 : 60}
-          tint="light"
+          tint={isDark ? 'dark' : 'light'}
           style={StyleSheet.absoluteFill}
         />
         <View style={[styles.glassOverlay, { backgroundColor: glassOverlayBg }]} />
@@ -82,7 +86,7 @@ export default function GlassTabBar({
           <View style={styles.highlightInner}>
             <BlurView
               intensity={Platform.OS === 'ios' ? 30 : 60}
-              tint="light"
+              tint={isDark ? 'dark' : 'light'}
               style={StyleSheet.absoluteFill}
             />
             <View
@@ -131,8 +135,8 @@ export default function GlassTabBar({
                   color={isFocused ? activeColor : colors.textMuted}
                 />
                 {badge != null && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{badge}</Text>
+                  <View style={[styles.badge, { backgroundColor: colors.warningAmber }]}>
+                    <Text style={[styles.badgeText, { color: colors.onPrimary }]}>{badge}</Text>
                   </View>
                 )}
               </View>
@@ -170,7 +174,6 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
@@ -179,7 +182,6 @@ const styles = StyleSheet.create({
   },
   glassOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
   },
   highlightInner: {
     flex: 1,
@@ -190,9 +192,7 @@ const styles = StyleSheet.create({
   },
   highlightTint: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(193,80,46,0.16)', // colors.primary translucent
     borderWidth: 1,
-    borderColor: 'rgba(193,80,46,0.25)',
     borderRadius: 28,
   },
   tab: {
@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -8,
-    backgroundColor: '#F59E0B',
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -231,7 +230,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#FFF',
     fontSize: 9,
     fontWeight: '700',
   },

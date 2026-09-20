@@ -10,42 +10,72 @@ import { useAuthStore } from '../store/authStore';
 // LOCAL DEV BACKEND URL CONFIGURATION:
 // Strict prioritized runtime resolution:
 // 1. Production / Staging HTTPS endpoint
-// 2. Android Emulator runtime detection (!Device.isDevice && Platform.OS === 'android') -> 10.0.2.2
-// 3. Physical Device runtime detection (Device.isDevice) -> Metro hostUri LAN IP
-// 4. Configured non-placeholder override
-// 5. iOS Simulator / Web fallback -> localhost
+// 2. Web browser runtime detection -> localhost / window.location.hostname
+// 3. Android Emulator runtime detection (!Device.isDevice && Platform.OS === 'android') -> 10.0.2.2
+// 4. Physical Device / Expo Go dynamic Metro host LAN IP detection
+// 5. Configured non-placeholder override from app.json
+// 6. iOS Simulator / localhost fallback
 const resolveBaseUrl = (): string => {
   const configured = Constants.expoConfig?.extra?.apiBaseUrl;
+
   // 1. Explicit production / remote HTTPS endpoint takes top priority
   if (configured && configured.startsWith('https://')) {
     return configured;
   }
 
-  // 2. Android Emulator runtime detection:
-  // When running inside an Android Virtual Device (AVD), loopback to the host machine is ALWAYS 10.0.2.2.
+  // 2. Web browser runtime detection
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.location?.hostname) {
+      const hostname = window.location.hostname;
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return `http://${hostname}:8000/api/v1`;
+      }
+    }
+    return 'http://localhost:8000/api/v1';
+  }
+
+  // 3. Android Emulator runtime detection (loopback to host is 10.0.2.2)
   if (Platform.OS === 'android' && !Device.isDevice) {
     return 'http://10.0.2.2:8000/api/v1';
   }
 
-  // 3. Physical device (Android or iOS): Metro bundler hostUri LAN IP takes precedence over localhost
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
-    const lanIp = hostUri.split(':')[0];
-    if (lanIp && lanIp !== 'localhost' && lanIp !== '127.0.0.1') {
-      return `http://${lanIp}:8000/api/v1`;
+  // 4. Dynamic Metro bundler host IP detection (works seamlessly on physical devices via Expo Go or dev builds)
+  const debuggerHost =
+    Constants.expoGoConfig?.debuggerHost ||
+    (Constants as any).manifest2?.extra?.expoGo?.debuggerHost ||
+    (Constants as any).manifest?.debuggerHost ||
+    (Constants as any).manifest?.hostUri ||
+    Constants.expoConfig?.hostUri;
+
+  let metroIp: string | null = null;
+  if (debuggerHost) {
+    metroIp = debuggerHost.split(':')[0];
+  } else if (Constants.linkingUri) {
+    const match = Constants.linkingUri.match(/:\/\/(.[^/:]+)/);
+    if (match && match[1]) {
+      metroIp = match[1];
     }
   }
 
-  // 4. Configured non-placeholder URL (e.g. custom staging or specific local IP override)
+  if (metroIp && metroIp !== 'localhost' && metroIp !== '127.0.0.1') {
+    return `http://${metroIp}:8000/api/v1`;
+  }
+
+  // 5. Configured non-placeholder URL (from app.json)
   if (configured && !configured.includes('LOCAL_DEV_BACKEND_URL')) {
     return configured;
   }
 
-  // 5. iOS Simulator or Web development fallback
+  // 6. iOS Simulator or local loopback fallback
   return 'http://localhost:8000/api/v1';
 };
 
 const API_BASE_URL = resolveBaseUrl();
+console.log(`[API] Base URL resolved to: ${API_BASE_URL}`);
+
+export const getBackendOrigin = (): string => {
+  return API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+};
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -67,6 +97,15 @@ api.interceptors.request.use(async (config) => {
   // Generates a UUID for every non-GET request to ensure safe outbox retries.
   if (config.method && config.method.toLowerCase() !== 'get') {
     config.headers['Idempotency-Key'] = Crypto.randomUUID();
+  }
+
+  // 3. For FormData payloads (React Native / Web):
+  // Remove preconfigured Content-Type so XMLHttpRequest/fetch sets 'multipart/form-data; boundary=...'
+  const isFormData =
+    (typeof FormData !== 'undefined' && config.data instanceof FormData) ||
+    (config.data && typeof (config.data as any).getParts === 'function');
+  if (isFormData && config.headers) {
+    delete config.headers['Content-Type'];
   }
 
   return config;
@@ -134,8 +173,12 @@ import type {
   ArtisanProfile,
   ArtisanProfileSubmitRequest,
   ArtisanProfileReviewRequest,
+  PersonalDetailsUpdate,
+  BusinessDetailsUpdate,
+  BankDetailsUpdate,
   SupportMessage,
   SupportMessageSubmitRequest,
+  SupportMessageReply,
 } from '../types/contracts';
 
 export const liveApi: ListingService = {
@@ -144,8 +187,10 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
-  listListings: async (): Promise<Listing[]> => {
-    const res = await api.get('/listings');
+  listListings: async (state?: string): Promise<Listing[]> => {
+    const res = await api.get('/listings', {
+      params: state ? { state } : undefined,
+    });
     return res.data;
   },
 
@@ -174,15 +219,57 @@ export const liveApi: ListingService = {
       form.append('files', { uri, name: `photo_${idx + 1}.${extension}`, type } as any);
     });
     const res = await api.post(`/listings/${listingId}/jobs/image-enhancement`, form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       transformRequest: (data) => data,
       timeout: 120000,
     });
     return res.data;
   },
 
-  requestTranscription: async (listingId: string, payload: { audio_media_id: string; declared_language: string }) => {
+  requestTranscription: async (
+    listingId: string,
+    payload: { audio_media_id?: string; audioUri?: string; declared_language: string } | FormData
+  ) => {
     // Aligned to contract: POST /listings/{id}/jobs/transcription
+    if (typeof FormData !== 'undefined' && payload instanceof FormData) {
+      const res = await api.post(`/listings/${listingId}/jobs/transcription`, payload, {
+        transformRequest: (data) => data,
+        timeout: 120000,
+      });
+      return res.data;
+    }
+
+    if (payload && 'audioUri' in payload && payload.audioUri) {
+      const form = new FormData();
+      const uri = payload.audioUri;
+      const extension = (uri.split('?')[0].split('.').pop() || 'm4a').toLowerCase();
+      const mimeType =
+        extension === 'wav' ? 'audio/wav' : extension === 'mp3' ? 'audio/mpeg' : 'audio/m4a';
+      const fileName = `voice_${Date.now()}.${extension}`;
+
+      if (Platform.OS === 'web' && (uri.startsWith('blob:') || uri.startsWith('data:'))) {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        form.append('file', blob, fileName);
+      } else {
+        form.append('file', {
+          uri,
+          name: fileName,
+          type: mimeType,
+        } as any);
+      }
+
+      if (payload.audio_media_id) {
+        form.append('audio_media_id', payload.audio_media_id);
+      }
+      form.append('declared_language', payload.declared_language || 'en');
+
+      const res = await api.post(`/listings/${listingId}/jobs/transcription`, form, {
+        transformRequest: (data) => data,
+        timeout: 120000,
+      });
+      return res.data;
+    }
+
     const res = await api.post(`/listings/${listingId}/jobs/transcription`, payload);
     return res.data;
   },
@@ -258,7 +345,7 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
-  decideApproval: async (listingId: string, payload: { decision: string; reason: string }) => {
+  decideApproval: async (listingId: string, payload: { decision: string; reason: string; rejection_categories?: string[] }) => {
     const res = await api.post(`/listings/${listingId}/approval`, payload);
     return res.data;
   },
@@ -269,6 +356,10 @@ export const liveApi: ListingService = {
     return res.data;
   },
 
+  deleteListing: async (listingId: string): Promise<void> => {
+    await api.delete(`/listings/${listingId}`);
+  },
+
   getArtisanProfile: async (userId?: number): Promise<ArtisanProfile> => {
     const endpoint = userId ? `/profile/artisan/${userId}` : '/profile/artisan/me';
     const res = await api.get(endpoint);
@@ -277,6 +368,21 @@ export const liveApi: ListingService = {
 
   submitArtisanProfile: async (payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile> => {
     const res = await api.post('/profile/artisan', payload);
+    return res.data;
+  },
+
+  submitPersonalDetails: async (payload: PersonalDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/personal', payload);
+    return res.data;
+  },
+
+  submitBusinessDetails: async (payload: BusinessDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/business', payload);
+    return res.data;
+  },
+
+  submitBankDetails: async (payload: BankDetailsUpdate): Promise<ArtisanProfile> => {
+    const res = await api.post('/profile/artisan/bank', payload);
     return res.data;
   },
 
@@ -298,6 +404,28 @@ export const liveApi: ListingService = {
   getSupportMessages: async (): Promise<SupportMessage[]> => {
     const res = await api.get('/support/messages');
     return res.data;
+  },
+
+  // TODO: Replace mock with backend API integration. Real-time updates pending Supabase
+  // table + subscription from backend team — this UI polls/refetches on send for now,
+  // swap to a live subscription once that table exists.
+  getSupportThread: async (messageId: string): Promise<SupportMessageReply[]> => {
+    const res = await api.get(`/support/messages/${messageId}/replies`);
+    return res.data;
+  },
+
+  replyToSupportMessage: async (messageId: string, body: string): Promise<SupportMessageReply> => {
+    const res = await api.post(`/support/messages/${messageId}/replies`, { body: body.trim() });
+    return res.data;
+  },
+
+  closeSupportMessage: async (messageId: string): Promise<SupportMessage> => {
+    const res = await api.post(`/support/messages/${messageId}/close`);
+    return res.data;
+  },
+
+  deleteSupportMessage: async (messageId: string): Promise<void> => {
+    await api.delete(`/support/messages/${messageId}`);
   },
 
   login: async (role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }> => {

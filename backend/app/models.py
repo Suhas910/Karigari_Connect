@@ -1,4 +1,3 @@
-# backend/app/models.py
 from datetime import datetime, timezone
 import uuid
 from sqlalchemy import (
@@ -10,9 +9,29 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     ForeignKey,
+    JSON,
 )
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship
 from .database import Base
+from .crypto import encrypt_pii, decrypt_pii
+
+
+class EncryptedString(TypeDecorator):
+    """SQLAlchemy TypeDecorator that encrypts sensitive PII values at rest."""
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return encrypt_pii(str(value))
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return decrypt_pii(value)
+        return value
+
 
 class User(Base):
     __tablename__ = "users"
@@ -35,44 +54,58 @@ class User(Base):
     verified_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
 
-    products = relationship("Product", back_populates="owner")
+    # --- PROFILE-EXPANSION: personal ---
+    first_name = Column(String(100), nullable=True)
+    middle_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    name_as_per_aadhaar = Column(String(150), nullable=True)
+    gender = Column(String(20), nullable=True)  # 'male' | 'female' | 'other' | 'prefer_not_to_say'
+    profile_image_url = Column(String(500), nullable=True)
+    # NOTE: `email` already exists on this model (see top of class) — reuse it,
+    # do not add a second email column.
+
+    # --- PROFILE-EXPANSION: business ---
+    business_name = Column(String(200), nullable=True)
+    brand_name = Column(String(200), nullable=True)
+    establishment_type = Column(String(30), nullable=True)
+    pan_number = Column(String(10), nullable=True)
+    aadhaar_number = Column(EncryptedString, nullable=True)
+    gst_registered = Column(Boolean, nullable=True, default=False)
+    gst_number = Column(String(15), nullable=True)
+    enrollment_number = Column(String(50), nullable=True)
+    business_address_line = Column(String(300), nullable=True)
+    pincode = Column(String(6), nullable=True)
+    district = Column(String(100), nullable=True)
+    city = Column(String(100), nullable=True)
+    business_state_code = Column(String(5), nullable=True)  # deliberately separate from declared_zone — wage vs KYC address
+    ondc_std_code = Column(String(10), nullable=True)
+    location_type = Column(String(20), nullable=True)  # warehouse|shop|office|home
+    pickup_days = Column(JSON, nullable=True)
+
+    # --- PROFILE-EXPANSION: bank ---
+    account_holder_name = Column(String(150), nullable=True)
+    account_number = Column(EncryptedString, nullable=True)
+    ifsc_code = Column(String(11), nullable=True)
+    bank_name = Column(String(150), nullable=True)
+
     listings = relationship("ListingModel", back_populates="artisan")
-
-class Product(Base):
-    __tablename__ = "products"
-
-    product_id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    price = Column(Float, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-
-    owner = relationship("User", back_populates="products")
-    images = relationship("Image", back_populates="product", cascade="all, delete-orphan")
-
-class Image(Base):
-    __tablename__ = "images"
-
-    image_id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.product_id"), nullable=False)
-    storage_path = Column(String, nullable=False)
-    url = Column(String, nullable=False)
-
-    product = relationship("Product", back_populates="images")
 
 class ListingModel(Base):
     __tablename__ = "listings"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    artisan_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    state = Column(String, default="draft", nullable=False)
+    artisan_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, index=True)
+    state = Column(String, default="draft", nullable=False, index=True)
     # Valid states: 'draft', 'processing', 'awaiting_confirmation', 'awaiting_approval',
     # 'approved', 'export_queued', 'exported', 'rejected', 'failed'
     preferred_language = Column(String, default="en", nullable=False)
+    idempotency_key = Column(String(100), nullable=True, index=True)
+    rejection_categories = Column(JSON, default=list, nullable=True)
+    rejection_reason = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    artisan = relationship("User", back_populates="listings")
+    artisan = relationship("User", back_populates="listings", lazy="joined")
     media = relationship("MediaAssetModel", back_populates="listing", cascade="all, delete-orphan", lazy="selectin")
     catalogue = relationship("CatalogueModel", back_populates="listing", uselist=False, cascade="all, delete-orphan", lazy="selectin")
     price = relationship("PriceCalculationModel", back_populates="listing", uselist=False, cascade="all, delete-orphan", lazy="selectin")
@@ -84,13 +117,14 @@ class MediaAssetModel(Base):
     __tablename__ = "media_assets"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    listing_id = Column(String, ForeignKey("listings.id"), nullable=False)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=False, index=True)
     kind = Column(String, nullable=False)  # 'image' | 'audio'
     variant = Column(String, default="original", nullable=False)  # 'original' | 'enhanced'
     status = Column(String, default="pending", nullable=False)  # 'pending' | 'processing' | 'complete' | 'failed'
     url = Column(String, nullable=True)
     storage_path = Column(String, nullable=True)
     checksum = Column(String, nullable=True)
+    idempotency_key = Column(String(100), nullable=True, index=True)
     metadata_json = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
@@ -138,7 +172,7 @@ class ClaimModel(Base):
     __tablename__ = "claims"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    listing_id = Column(String, ForeignKey("listings.id"), nullable=False)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=False, index=True)
     claim = Column(String, nullable=False)
     asserted_by_artisan = Column(Boolean, default=True, nullable=False)
     coordinator_verified = Column(Boolean, default=False, nullable=False)
@@ -151,7 +185,7 @@ class JobModel(Base):
     __tablename__ = "jobs"
 
     job_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    listing_id = Column(String, ForeignKey("listings.id"), nullable=False)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=False, index=True)
     type = Column(String, nullable=False)  # 'image_studio' | 'transcription' | 'catalogue_generation'
     status = Column(String, default="queued", nullable=False)  # 'queued' | 'processing' | 'complete' | 'failed'
     attempt = Column(Integer, default=1, nullable=False)
@@ -166,24 +200,42 @@ class ExportRecordModel(Base):
     __tablename__ = "export_records"
 
     export_id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    listing_id = Column(String, ForeignKey("listings.id"), nullable=False)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=False, index=True)
     target = Column(String, nullable=False)  # 'ondc' | 'gem' | 'tribes_india'
     status = Column(String, default="validated", nullable=False)  # 'validated' | 'submitted' | 'exported' | 'failed'
     payload_hash = Column(String, nullable=False)
     contract_validation = Column(Text, nullable=False)  # JSON string
     network_submission = Column(String, default="not_attempted", nullable=False)  # 'not_attempted' | 'pending' | 'success' | 'failed'
+    idempotency_key = Column(String(100), nullable=True, index=True)
     listing = relationship("ListingModel", back_populates="exports")
 
 class SupportMessageModel(Base):
     __tablename__ = "support_messages"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
-    artisan_id = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    listing_id = Column(String, ForeignKey("listings.id"), nullable=True)
+    artisan_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, index=True)
+    listing_id = Column(String, ForeignKey("listings.id"), nullable=True, index=True)
     message = Column(Text, nullable=False)
+    idempotency_key = Column(String(100), nullable=True, index=True)
     status = Column(String, default="open", nullable=False)  # 'open' | 'resolved' | 'closed'
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     artisan = relationship("User")
     listing = relationship("ListingModel")
+    replies = relationship("SupportMessageReplyModel", back_populates="parent_message", cascade="all, delete-orphan", order_by="SupportMessageReplyModel.created_at.asc()")
+
+class SupportMessageReplyModel(Base):
+    __tablename__ = "support_message_replies"
+
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    message_id = Column(String, ForeignKey("support_messages.id"), nullable=False, index=True)
+    sender_id = Column(Integer, ForeignKey("users.user_id"), nullable=False, index=True)
+    sender_role = Column(String, nullable=False)  # 'artisan' | 'coordinator' | 'admin'
+    sender_name = Column(String, nullable=False)
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    parent_message = relationship("SupportMessageModel", back_populates="replies")
+    sender = relationship("User")
+
 

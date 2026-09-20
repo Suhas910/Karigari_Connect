@@ -10,7 +10,17 @@ from .. import models, schemas, auth
 router = APIRouter(prefix="/profile", tags=["Profile"])
 
 
-def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse:
+def _mask_tail(value: Optional[str], visible: int = 4) -> Optional[str]:
+    """Mask all but the last `visible` characters, e.g. Aadhaar/account numbers."""
+    if not value:
+        return value
+    if len(value) <= visible:
+        return "*" * len(value)
+    return "*" * (len(value) - visible) + value[-visible:]
+
+
+def format_profile_response(user: models.User, requester: models.User) -> schemas.ArtisanProfileResponse:
+    is_self = requester.user_id == user.user_id
     return schemas.ArtisanProfileResponse(
         user_id=user.user_id,
         username=user.username,
@@ -24,6 +34,36 @@ def format_profile_response(user: models.User) -> schemas.ArtisanProfileResponse
         verified_skill_level=user.verified_skill_level,
         verified_by=user.verified_by,
         verified_at=user.verified_at,
+        # PROFILE-EXPANSION: personal
+        first_name=user.first_name,
+        middle_name=user.middle_name,
+        last_name=user.last_name,
+        name_as_per_aadhaar=user.name_as_per_aadhaar,
+        email=user.email,
+        gender=user.gender,
+        profile_image_url=user.profile_image_url,
+        # PROFILE-EXPANSION: business
+        business_name=user.business_name,
+        brand_name=user.brand_name,
+        establishment_type=user.establishment_type,
+        pan_number=user.pan_number if is_self else None,
+        aadhaar_number=_mask_tail(user.aadhaar_number) if is_self else None,
+        gst_registered=user.gst_registered,
+        gst_number=user.gst_number,
+        enrollment_number=user.enrollment_number,
+        business_address_line=user.business_address_line,
+        pincode=user.pincode,
+        district=user.district,
+        city=user.city,
+        business_state_code=user.business_state_code,
+        ondc_std_code=user.ondc_std_code,
+        location_type=user.location_type,
+        pickup_days=user.pickup_days,
+        # PROFILE-EXPANSION: bank
+        account_holder_name=user.account_holder_name if is_self else None,
+        account_number=_mask_tail(user.account_number) if is_self else None,
+        ifsc_code=user.ifsc_code if is_self else None,
+        bank_name=user.bank_name if is_self else None,
     )
 
 
@@ -52,12 +92,63 @@ def submit_artisan_profile(
 
     db.commit()
     db.refresh(current_user)
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
+
+
+@router.post("/artisan/personal", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/personal", response_model=schemas.ArtisanProfileResponse)
+def submit_personal_details(
+    payload: schemas.PersonalDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """
+    Partial update of personal details (name, email, gender, profile image).
+    Does NOT touch profile_status — that transition belongs exclusively to
+    submit_artisan_profile()'s skill/ID verification flow above.
+    """
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user, current_user)
+
+
+@router.post("/artisan/business", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/business", response_model=schemas.ArtisanProfileResponse)
+def submit_business_details(
+    payload: schemas.BusinessDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Partial update of business/KYC details. Does NOT touch profile_status."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user, current_user)
+
+
+@router.post("/artisan/bank", response_model=schemas.ArtisanProfileResponse)
+@router.put("/artisan/bank", response_model=schemas.ArtisanProfileResponse)
+def submit_bank_details(
+    payload: schemas.BankDetailsUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
+):
+    """Partial update of bank details. Does NOT touch profile_status."""
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    db.commit()
+    db.refresh(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.get("/artisan/pending", response_model=List[schemas.ArtisanProfileResponse])
 @router.get("/artisans/pending", response_model=List[schemas.ArtisanProfileResponse])
 def get_pending_artisan_profiles(
+    limit: Optional[int] = 100,
+    offset: Optional[int] = 0,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
@@ -67,13 +158,16 @@ def get_pending_artisan_profiles(
     if current_user.role not in ["coordinator", "admin"]:
         raise HTTPException(status_code=403, detail="Coordinator access required")
 
+    effective_limit = min(limit, 200) if limit is not None else 100
     pending_users = (
         db.query(models.User)
         .filter(models.User.profile_status == "pending_verification")
         .order_by(models.User.user_id.desc())
+        .offset(offset or 0)
+        .limit(effective_limit)
         .all()
     )
-    return [format_profile_response(u) for u in pending_users]
+    return [format_profile_response(u, current_user) for u in pending_users]
 
 
 @router.get("/artisan/me", response_model=schemas.ArtisanProfileResponse)
@@ -84,7 +178,7 @@ def get_my_artisan_profile(
     """
     Current user reads their own profile.
     """
-    return format_profile_response(current_user)
+    return format_profile_response(current_user, current_user)
 
 
 @router.get("/artisan/{user_id}", response_model=schemas.ArtisanProfileResponse)
@@ -103,7 +197,7 @@ def get_artisan_profile(
     if not user:
         raise HTTPException(status_code=404, detail="Artisan user not found")
 
-    return format_profile_response(user)
+    return format_profile_response(user, current_user)
 
 
 @router.post("/artisan/{user_id}/review", response_model=schemas.ArtisanProfileResponse)
@@ -146,4 +240,4 @@ def review_artisan_profile(
 
     db.commit()
     db.refresh(target_user)
-    return format_profile_response(target_user)
+    return format_profile_response(target_user, current_user)

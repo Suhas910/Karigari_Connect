@@ -15,12 +15,11 @@ export type ArtisanStackParamList = {
 
   HomeTabs: NavigatorScreenParams<ArtisanTabParamList> | undefined;
 
-  MyListings: undefined;
-
   Capture: undefined;
 
   ImageReview: {
     draftId: string;
+    reviewOnly?: boolean;
   };
 
   Speak: {
@@ -29,7 +28,8 @@ export type ArtisanStackParamList = {
 
   ConfirmDetails: {
     draftId: string;
-    transcriptId: string;
+    transcriptId?: string;
+    declared_language?: string;
   };
 
   ArtisanExperience?: {
@@ -50,6 +50,19 @@ export type ArtisanStackParamList = {
   };
 
   ArtisanProfile: undefined;
+
+  SupportThread: {
+    messageId: string;
+    initialTitle?: string;
+  };
+
+  ApprovedCraftDetail: {
+    draftId: string;
+  };
+
+  PublishExport: {
+    listingId: string;
+  };
 };
 
 export type CoordinatorTabParamList = {
@@ -66,13 +79,26 @@ export type CoordinatorStackParamList = {
     | NavigatorScreenParams<CoordinatorTabParamList>
     | undefined;
 
+  CraftReviewDetail: {
+    listingId: string;
+  };
+
   PublishExport: {
     listingId: string;
+  };
+
+  SupportThread: {
+    messageId: string;
+    initialTitle?: string;
   };
 
   ArtisanProfile?: {
     userId?: number;
   };
+
+  CoordinatorProfile: undefined;
+
+  ArtisanInquiriesList: undefined;
 };
 
 export type RootStackParamList = {

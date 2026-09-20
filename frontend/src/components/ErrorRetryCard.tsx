@@ -1,8 +1,8 @@
 // src/components/ErrorRetryCard.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
-import { colors, spacing } from '../theme';
+import { useAppTheme, spacing, type ColorPalette } from '../theme';
 
 interface ErrorRetryCardProps {
   errorText: string;
@@ -19,6 +19,9 @@ export default function ErrorRetryCard({
   asCard = false,
   style,
 }: ErrorRetryCardProps) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (asCard) {
     return (
       <Card style={[styles.card, style]}>
@@ -56,34 +59,36 @@ export default function ErrorRetryCard({
   );
 }
 
-const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: colors.background,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    elevation: 0,
-    marginBottom: spacing.md,
-  },
-  hint: {
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    color: colors.error,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  retryBtn: {
-    minHeight: spacing.tapTarget,
-    justifyContent: 'center',
-  },
-});
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+      backgroundColor: colors.background,
+    },
+    card: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      elevation: 0,
+      marginBottom: spacing.md,
+    },
+    hint: {
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    errorText: {
+      color: colors.error,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    retryBtn: {
+      minHeight: spacing.tapTarget,
+      justifyContent: 'center',
+    },
+  });
+}

@@ -33,11 +33,9 @@ def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
             detail="Email address already registered",
         )
 
-    role = (
-        user_data.role
-        if user_data.role in ["artisan", "coordinator", "admin"]
-        else "artisan"
-    )
+    # Security: Self-registration strictly provisions 'artisan' accounts.
+    # Coordinators and Admins must be provisioned via /admin/users.
+    role = "artisan"
     new_user = models.User(
         username=clean_username,
         phone_number=clean_phone,
@@ -64,8 +62,69 @@ def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
 
 @router.post("/signup", response_model=schemas.TokenResponse)
 def signup(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
-    """Convenience alias for /register endpoint."""
+    """Convenience alias for /register endpoint. Always provisions role 'artisan'."""
     return register(user_data, db)
+
+
+@router.post("/admin/users", response_model=schemas.TokenResponse)
+def create_privileged_user(
+    user_data: schemas.AdminUserCreate,
+    db: Session = Depends(get_db),
+    _authorized: bool = Depends(auth.get_admin_user_or_secret)
+):
+    """
+    Privileged provisioning of coordinator and admin accounts.
+    Requires Bearer token of an admin user OR valid X-Admin-Secret header.
+    """
+    clean_username = user_data.username.strip()
+    clean_phone = user_data.phone_number.strip() if user_data.phone_number else None
+
+    # Check if username exists
+    if db.query(models.User).filter(models.User.username == clean_username).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered",
+        )
+    # Check if phone number exists (if provided)
+    if clean_phone and db.query(models.User).filter(models.User.phone_number == clean_phone).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Phone number already registered",
+        )
+    # Check if email exists (if provided)
+    if user_data.email and db.query(models.User).filter(models.User.email == user_data.email.strip()).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email address already registered",
+        )
+
+    role = (
+        user_data.role
+        if user_data.role in ["artisan", "coordinator", "admin"]
+        else "coordinator"
+    )
+    new_user = models.User(
+        username=clean_username,
+        phone_number=clean_phone,
+        email=user_data.email.strip() if user_data.email else None,
+        hashed_password=auth.hash_password(user_data.password),
+        role=role,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    token = auth.create_token(
+        {"sub": new_user.username, "id": new_user.user_id, "role": new_user.role}
+    )
+    return schemas.TokenResponse(
+        access_token=token,
+        token_type="bearer",
+        role=new_user.role,
+        user_id=new_user.user_id,
+        username=new_user.username,
+        phone_number=new_user.phone_number,
+    )
 
 
 @router.post("/login", response_model=schemas.TokenResponse)

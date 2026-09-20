@@ -87,6 +87,15 @@ def transcribe_audio(audio_bytes: bytes, source_language: str = "hi") -> str:
     inf_res = requests.post(inference_url, json=inference_payload, headers=inference_headers, timeout=30)
     if inf_res.status_code != 200:
         raise RuntimeError(f"Bhashini API Error ({inf_res.status_code}): {inf_res.text}")
-    inf_data = inf_res.json()
-
-    return inf_data["pipelineResponse"][0]["output"][0]["source"]
+    try:
+        inf_data = inf_res.json()
+        pipeline_resp = inf_data.get("pipelineResponse", [])
+        if not pipeline_resp or not isinstance(pipeline_resp, list):
+            raise ValueError(f"Invalid Bhashini response structure (empty pipelineResponse): {inf_data}")
+        output = pipeline_resp[0].get("output", [])
+        if not output or not isinstance(output, list):
+            raise ValueError(f"Invalid Bhashini response structure (empty output): {inf_data}")
+        source_text = output[0].get("source", "")
+        return str(source_text).strip()
+    except (IndexError, KeyError, TypeError, ValueError) as parse_err:
+        raise ValueError(f"Failed to parse Bhashini ASR response: {parse_err}. Response text: {inf_res.text[:500]}")

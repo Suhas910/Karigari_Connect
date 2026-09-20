@@ -68,3 +68,8 @@ export const listDrafts = async () => {
   const rows = await database.getAllAsync<any>(`SELECT * FROM drafts ORDER BY updated_at DESC`);
   return rows.map((r) => ({ ...r, payload: JSON.parse(r.payload) }));
 };
+
+export const deleteDraft = async (id: string) => {
+  const database = await getDb();
+  await database.runAsync(`DELETE FROM drafts WHERE id = ?`, [id]);
+};

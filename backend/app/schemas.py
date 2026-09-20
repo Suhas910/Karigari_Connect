@@ -1,13 +1,8 @@
 # backend/app/schemas.py
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
-
-# --- Legacy Product schemas for backwards compatibility ---
-class ProductCreate(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
+from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+import re
 
 # --- Error Schemas ---
 class ApiErrorDetail(BaseModel):
@@ -26,7 +21,14 @@ class UserRegister(BaseModel):
     password: str
     phone_number: Optional[str] = None
     email: Optional[str] = None
-    role: Optional[str] = "artisan"  # 'artisan' | 'coordinator' | 'admin'
+    role: Optional[str] = "artisan"  # Public self-registration strictly grants 'artisan'
+
+class AdminUserCreate(BaseModel):
+    username: str
+    password: str
+    phone_number: Optional[str] = None
+    email: Optional[str] = None
+    role: str = "coordinator"  # 'coordinator' | 'admin' | 'artisan'
 
 class UserLogin(BaseModel):
     username: str  # Accepts either username or phone_number
@@ -48,6 +50,13 @@ class UserResponse(BaseModel):
     role: str
 
 # --- Artisan Profile Schemas ---
+PAN_REGEX = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]$')
+IFSC_REGEX = re.compile(r'^[A-Z]{4}0[A-Z0-9]{6}$')
+GST_REGEX = re.compile(r'^\d{2}[A-Z]{5}\d{4}[A-Z]\d[A-Z\d]{1}[A-Z\d]{1}$')
+PINCODE_REGEX = re.compile(r'^\d{6}$')
+AADHAAR_REGEX = re.compile(r'^\d{12}$')
+EMAIL_REGEX = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
 class ArtisanProfileSubmitRequest(BaseModel):
     declared_skill_level: str  # "unskilled" | "semi_skilled" | "skilled" | "highly_skilled"
     declared_zone: str  # e.g. "KA/zone_2"
@@ -58,6 +67,115 @@ class ArtisanProfileReviewRequest(BaseModel):
     decision: str  # "verified" | "rejected"
     verified_skill_level: Optional[str] = None
     reason: Optional[str] = None
+
+class PersonalDetailsUpdate(BaseModel):
+    """Partial update — only fields present in the request body are applied."""
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    name_as_per_aadhaar: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None  # "male" | "female" | "other" | "prefer_not_to_say"
+    profile_image_url: Optional[str] = None
+
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v):
+        if v is not None and not EMAIL_REGEX.match(v):
+            raise ValueError('Invalid email format')
+        return v
+
+    @field_validator('gender')
+    @classmethod
+    def validate_gender(cls, v):
+        valid = {'male', 'female', 'other', 'prefer_not_to_say'}
+        if v is not None and v not in valid:
+            raise ValueError(f'gender must be one of {sorted(valid)}')
+        return v
+
+class BusinessDetailsUpdate(BaseModel):
+    """Partial update — only fields present in the request body are applied."""
+    business_name: Optional[str] = None
+    brand_name: Optional[str] = None
+    establishment_type: Optional[str] = None  # individual|proprietorship|partnership|llp|pvt_ltd|public_ltd|huf|trust|society
+    pan_number: Optional[str] = None
+    aadhaar_number: Optional[str] = None
+    gst_registered: Optional[bool] = None
+    gst_number: Optional[str] = None
+    enrollment_number: Optional[str] = None
+    business_address_line: Optional[str] = None
+    pincode: Optional[str] = None
+    district: Optional[str] = None
+    city: Optional[str] = None
+    business_state_code: Optional[str] = None
+    ondc_std_code: Optional[str] = None
+    location_type: Optional[str] = None  # warehouse|shop|office|home
+    pickup_days: Optional[List[str]] = None
+
+    @field_validator('pan_number')
+    @classmethod
+    def validate_pan(cls, v):
+        if v is not None and not PAN_REGEX.match(v.upper()):
+            raise ValueError('Invalid PAN format (expected AAAAA9999A)')
+        return v.upper() if v else v
+
+    @field_validator('aadhaar_number')
+    @classmethod
+    def validate_aadhaar(cls, v):
+        if v is not None and not AADHAAR_REGEX.match(v):
+            raise ValueError('Aadhaar number must be exactly 12 digits')
+        return v
+
+    @field_validator('pincode')
+    @classmethod
+    def validate_pincode(cls, v):
+        if v is not None and not PINCODE_REGEX.match(v):
+            raise ValueError('Pincode must be exactly 6 digits')
+        return v
+
+    @field_validator('establishment_type')
+    @classmethod
+    def validate_establishment_type(cls, v):
+        valid = {'individual', 'proprietorship', 'partnership', 'llp', 'pvt_ltd', 'public_ltd', 'huf', 'trust', 'society'}
+        if v is not None and v not in valid:
+            raise ValueError(f'establishment_type must be one of {sorted(valid)}')
+        return v
+
+    @field_validator('location_type')
+    @classmethod
+    def validate_location_type(cls, v):
+        valid = {'warehouse', 'shop', 'office', 'home'}
+        if v is not None and v not in valid:
+            raise ValueError(f'location_type must be one of {sorted(valid)}')
+        return v
+
+    @model_validator(mode='after')
+    def validate_gst_conditional(self):
+        # Only enforced when this same payload is actively setting GST status —
+        # a partial update that doesn't touch gst_registered at all won't trip this.
+        if self.gst_registered is True:
+            if not self.gst_number:
+                raise ValueError('gst_number is required when gst_registered is true')
+            if not GST_REGEX.match(self.gst_number.upper()):
+                raise ValueError('Invalid GST number format')
+        elif self.gst_registered is False:
+            if not self.enrollment_number:
+                raise ValueError('enrollment_number is required when gst_registered is false')
+        return self
+
+class BankDetailsUpdate(BaseModel):
+    """Partial update — only fields present in the request body are applied."""
+    account_holder_name: Optional[str] = None
+    account_number: Optional[str] = None
+    ifsc_code: Optional[str] = None
+    bank_name: Optional[str] = None
+
+    @field_validator('ifsc_code')
+    @classmethod
+    def validate_ifsc(cls, v):
+        if v is not None and not IFSC_REGEX.match(v.upper()):
+            raise ValueError('Invalid IFSC format (expected AAAA0AAAAAA)')
+        return v.upper() if v else v
 
 class ArtisanProfileResponse(BaseModel):
     user_id: int
@@ -72,6 +190,36 @@ class ArtisanProfileResponse(BaseModel):
     verified_skill_level: Optional[str] = None
     verified_by: Optional[int] = None
     verified_at: Optional[datetime] = None
+    # PROFILE-EXPANSION: personal
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+    name_as_per_aadhaar: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None
+    profile_image_url: Optional[str] = None
+    # PROFILE-EXPANSION: business
+    business_name: Optional[str] = None
+    brand_name: Optional[str] = None
+    establishment_type: Optional[str] = None
+    pan_number: Optional[str] = None
+    aadhaar_number: Optional[str] = None  # masked by the router before this leaves the backend
+    gst_registered: Optional[bool] = None
+    gst_number: Optional[str] = None
+    enrollment_number: Optional[str] = None
+    business_address_line: Optional[str] = None
+    pincode: Optional[str] = None
+    district: Optional[str] = None
+    city: Optional[str] = None
+    business_state_code: Optional[str] = None
+    ondc_std_code: Optional[str] = None
+    location_type: Optional[str] = None
+    pickup_days: Optional[List[str]] = None
+    # PROFILE-EXPANSION: bank
+    account_holder_name: Optional[str] = None
+    account_number: Optional[str] = None  # masked by the router before this leaves the backend
+    ifsc_code: Optional[str] = None
+    bank_name: Optional[str] = None
 
 # --- Media Schemas ---
 class MediaAssetSchema(BaseModel):
@@ -261,6 +409,7 @@ class PriceRequest(BaseModel):
 # --- Listing Schemas ---
 class CreateListingRequest(BaseModel):
     preferred_language: str = "en"
+    idempotency_key: Optional[str] = None
 
 class CreateListingResponse(BaseModel):
     id: str
@@ -280,6 +429,9 @@ class ListingResponse(BaseModel):
     catalogue: Optional[CatalogueResult] = None
     price: Optional[PriceResult] = None
     claims: List[ClaimSchema] = Field(default_factory=list)
+    rejection_categories: Optional[List[str]] = None
+    rejection_flags: Optional[List[str]] = None
+    rejection_reason: Optional[str] = None
     created_at: Optional[str] = ""
     updated_at: Optional[str] = ""
 
@@ -296,12 +448,14 @@ class ClaimReviewRequest(BaseModel):
 class ListingDecisionRequest(BaseModel):
     decision: str  # 'approve' | 'reject'
     reason: Optional[str] = None
+    rejection_categories: Optional[List[str]] = Field(default_factory=list)
 
 # --- Export Schemas ---
 class ExportRequest(BaseModel):
     target: str = "ondc"
     schema_version: str = "1.0"
     simulate_network_submission: Optional[bool] = False
+    idempotency_key: Optional[str] = None
 
 class ContractValidation(BaseModel):
     passed: bool
@@ -319,6 +473,7 @@ class ExportResult(BaseModel):
 class SupportMessageCreate(BaseModel):
     listing_id: Optional[str] = None
     message: str
+    idempotency_key: Optional[str] = None
 
 class SupportMessageResponse(BaseModel):
     id: str
@@ -329,3 +484,14 @@ class SupportMessageResponse(BaseModel):
     created_at: str
     artisan_name: Optional[str] = None
     listing_title: Optional[str] = None
+
+class SupportMessageReplyCreate(BaseModel):
+    body: str
+
+class SupportMessageReplyResponse(BaseModel):
+    id: str
+    message_id: str
+    sender_role: str
+    sender_name: str
+    body: str
+    created_at: str

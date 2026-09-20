@@ -7,13 +7,14 @@ import InReviewListingsScreen from '../features/my-listings/InReviewListingsScre
 import HelpScreen from '../features/help/HelpScreen';
 import ArtisanProfileScreen from '../features/profile/ArtisanProfileScreen';
 import GlassTabBar from '../components/GlassTabBar';
-import { colors } from '../theme';
+import { useAppTheme } from '../theme';
 import type { ArtisanTabParamList } from '../types/navigation';
 
 const Tab = createBottomTabNavigator<ArtisanTabParamList>();
 
 export default function ArtisanTabs() {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
   return (
     <Tab.Navigator
       initialRouteName="MyListings"
@@ -66,4 +67,3 @@ export default function ArtisanTabs() {
     </Tab.Navigator>
   );
 }
-

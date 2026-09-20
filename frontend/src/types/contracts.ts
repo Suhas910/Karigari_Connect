@@ -21,7 +21,9 @@ export type ErrorCode =
   | 'WAGE_RATE_UNAVAILABLE'
   | 'LISTING_STATE_INVALID'
   | 'EXPORT_CONTRACT_INVALID'
-  | 'PROVIDER_UNAVAILABLE';
+  | 'PROVIDER_UNAVAILABLE'
+  | 'INVALID_INPUT'
+  | 'INTERNAL_SERVER_ERROR';
 
 export interface ApiError {
   request_id: string;
@@ -82,6 +84,7 @@ export interface PriceResult {
     skill_level_self_declared?: string;
     skill_level_source?: 'self_declared' | 'technique_floor' | 'artisan_card_elevation' | 'coordinator_verified';
     zone?: string;
+    state_code?: string;
   };
   floor_amount_paise: number;
   recommended_low_paise: number;
@@ -145,6 +148,9 @@ export interface Listing {
   catalogue: CatalogueResult | null; 
   price: PriceResult | null;
   claims: Claim[];
+  rejection_flags?: string[];
+  rejection_categories?: string[];
+  rejection_reason?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -209,6 +215,72 @@ export interface ArtisanProfile {
   verified_skill_level: string | null;
   verified_by: number | null;
   verified_at: string | null;
+  // PROFILE-EXPANSION: personal
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  name_as_per_aadhaar?: string | null;
+  email?: string | null;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null;
+  profile_image_url?: string | null;
+  // PROFILE-EXPANSION: business
+  business_name?: string | null;
+  brand_name?: string | null;
+  establishment_type?: 'individual' | 'proprietorship' | 'partnership' | 'llp' | 'pvt_ltd' | 'public_ltd' | 'huf' | 'trust' | 'society' | null;
+  pan_number?: string | null;
+  aadhaar_number?: string | null; // masked by backend, e.g. "XXXXXXXX1234"
+  gst_registered?: boolean | null;
+  gst_number?: string | null;
+  enrollment_number?: string | null;
+  business_address_line?: string | null;
+  pincode?: string | null;
+  district?: string | null;
+  city?: string | null;
+  business_state_code?: string | null;
+  ondc_std_code?: string | null;
+  location_type?: 'warehouse' | 'shop' | 'office' | 'home' | null;
+  pickup_days?: string[] | null;
+  // PROFILE-EXPANSION: bank
+  account_holder_name?: string | null;
+  account_number?: string | null; // masked by backend
+  ifsc_code?: string | null;
+  bank_name?: string | null;
+}
+
+export interface PersonalDetailsUpdate {
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  name_as_per_aadhaar?: string;
+  email?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  profile_image_url?: string;
+}
+
+export interface BusinessDetailsUpdate {
+  business_name?: string;
+  brand_name?: string;
+  establishment_type?: 'individual' | 'proprietorship' | 'partnership' | 'llp' | 'pvt_ltd' | 'public_ltd' | 'huf' | 'trust' | 'society';
+  pan_number?: string;
+  aadhaar_number?: string;
+  gst_registered?: boolean;
+  gst_number?: string;
+  enrollment_number?: string;
+  business_address_line?: string;
+  pincode?: string;
+  district?: string;
+  city?: string;
+  business_state_code?: string;
+  ondc_std_code?: string;
+  location_type?: 'warehouse' | 'shop' | 'office' | 'home';
+  pickup_days?: string[];
+}
+
+export interface BankDetailsUpdate {
+  account_holder_name?: string;
+  account_number?: string;
+  ifsc_code?: string;
+  bank_name?: string;
 }
 
 export interface ArtisanProfileSubmitRequest {
@@ -241,6 +313,15 @@ export interface SupportMessageSubmitRequest {
   message: string;
 }
 
+export interface SupportMessageReply {
+  id: string;
+  message_id: string;
+  sender_role: 'artisan' | 'coordinator';
+  sender_name: string;
+  body: string;
+  created_at: string;
+}
+
 // --- 9. SERVICE INTERFACE ---
 export interface ListingService {
   createListing(payload: { preferred_language: string }): Promise<{
@@ -250,12 +331,12 @@ export interface ListingService {
     preferred_language: string;
     upload_instructions?: any;
   }>;
-  listListings(): Promise<Listing[]>;
+  listListings(state?: string): Promise<Listing[]>;
   getListing(listingId: string): Promise<Listing>;
   completeMediaUpload(listingId: string, payload: { kind: string; upload_token: string; client_checksum: string }): Promise<{ status: string; media_id: string }>;
   requestImageAnalysis(listingId: string, payload: { media_id: string; photos?: string[] }): Promise<{ job_id: string }>;
   requestImageEnhancement(listingId: string, photoUris: string[]): Promise<{ job_id: string }>;
-  requestTranscription(listingId: string, payload: { audio_media_id: string; declared_language: string }): Promise<{ job_id: string }>;
+  requestTranscription(listingId: string, payload: { audio_media_id?: string; audioUri?: string; declared_language: string } | FormData): Promise<{ job_id: string }>;
   getJobStatus(jobId: string): Promise<JobStatus>;
   getImageJobResult(jobId: string): Promise<ImageJobResult>;
   requestCatalogueGeneration(listingId: string, payload: any): Promise<CatalogueResult>;
@@ -264,14 +345,22 @@ export interface ListingService {
   requestPrice_unavailable?(): Promise<PriceResult>;
   reviewClaim(listingId: string, claim: string, payload: { decision: string; evidence_note: string; reason: string | null }): Promise<{ claim: string; coordinator_verified: boolean; evidence_note: string }>;
   submitForApproval(listingId: string): Promise<{ status: string }>;
-  decideApproval(listingId: string, payload: { decision: string; reason: string }): Promise<{ status: string; reason: string }>;
+  decideApproval(listingId: string, payload: { decision: string; reason: string; rejection_categories?: string[] }): Promise<{ status: string; reason: string; rejection_categories?: string[]; rejection_flags?: string[]; rejection_reason?: string | null }>;
   requestExport(listingId: string, payload: { target: string; schema_version: string; simulate_network_submission?: boolean }): Promise<ExportResult>;
+  deleteListing(listingId: string): Promise<void>;
   getArtisanProfile(userId?: number): Promise<ArtisanProfile>;
   submitArtisanProfile(payload: ArtisanProfileSubmitRequest): Promise<ArtisanProfile>;
+  submitPersonalDetails(payload: PersonalDetailsUpdate): Promise<ArtisanProfile>;
+  submitBusinessDetails(payload: BusinessDetailsUpdate): Promise<ArtisanProfile>;
+  submitBankDetails(payload: BankDetailsUpdate): Promise<ArtisanProfile>;
   getPendingArtisanProfiles(): Promise<ArtisanProfile[]>;
   reviewArtisanProfile(userId: number, payload: ArtisanProfileReviewRequest): Promise<ArtisanProfile>;
   submitSupportMessage(payload: SupportMessageSubmitRequest): Promise<SupportMessage>;
   getSupportMessages(): Promise<SupportMessage[]>;
+  getSupportThread(messageId: string): Promise<SupportMessageReply[]>;
+  replyToSupportMessage(messageId: string, body: string): Promise<SupportMessageReply>;
+  closeSupportMessage(messageId: string): Promise<SupportMessage>;
+  deleteSupportMessage(messageId: string): Promise<void>;
   submitVoiceFeedback?(audioUri?: string, note?: string): Promise<{ success: boolean; message: string }>;
   login(role: UserRole): Promise<{ access_token: string; role: UserRole; user_id: string }>;
   loginWithCredentials(identifier: string, password: string): Promise<{ access_token: string; role: UserRole; user_id: string }>;

@@ -14,12 +14,12 @@ from sqlalchemy.orm import Session
 
 try:
     from ..database import get_db
-    from .. import models
-    from ..services.pricing_service import calculate_price, PriceResult
+    from .. import models, auth
+    from ..services.pricing_service import calculate_price, PriceResult, round_half_up
 except ImportError:
     from app.database import get_db
-    from app import models
-    from app.services.pricing_service import calculate_price, PriceResult
+    from app import models, auth
+    from app.services.pricing_service import calculate_price, PriceResult, round_half_up
 
 router = APIRouter(tags=["pricing"])
 
@@ -118,12 +118,12 @@ ERROR_CODE_META = {
 def _result_to_response(result: PriceResult, request_id: str) -> PriceResponse:
     material_cost_inr = result.inputs.get("material_cost_inr", 0.0)
     hourly_wage_inr = result.inputs.get("hourly_wage_inr", 0.0)
-    material_cost_paise = round(material_cost_inr * 100)
-    hourly_wage_paise = round(hourly_wage_inr * 100) if hourly_wage_inr else 0
+    material_cost_paise = round_half_up(material_cost_inr * 100)
+    hourly_wage_paise = round_half_up(hourly_wage_inr * 100) if hourly_wage_inr else 0
 
-    floor_amount_paise = round(result.floor_amount_inr * 100) if result.floor_amount_inr is not None else None
-    recommended_low_paise = round(result.recommended_low_inr * 100) if result.recommended_low_inr is not None else None
-    recommended_high_paise = round(result.recommended_high_inr * 100) if result.recommended_high_inr is not None else None
+    floor_amount_paise = round_half_up(result.floor_amount_inr * 100) if result.floor_amount_inr is not None else None
+    recommended_low_paise = round_half_up(result.recommended_low_inr * 100) if result.recommended_low_inr is not None else None
+    recommended_high_paise = round_half_up(result.recommended_high_inr * 100) if result.recommended_high_inr is not None else None
 
     inputs_dict = {
         **result.inputs,
@@ -167,14 +167,20 @@ def compute_price(
     listing_id: str = Path(..., description="opaque listing UUID"),
     body: Optional[PriceRequest] = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user),
 ):
     request_id = f"req_{uuid.uuid4().hex[:12]}"
     body = body or PriceRequest()
 
-    # If listing exists, read catalogue draft for fallbacks
+    # Verify listing exists and user has authorization
     listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
+    if not listing:
+        raise HTTPException(status_code=404, detail="Listing not found")
+    if current_user.role == "artisan" and listing.artisan_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to calculate price for this listing")
+
     cat_data = {}
-    if listing and listing.catalogue and listing.catalogue.catalogue_data:
+    if listing.catalogue and listing.catalogue.catalogue_data:
         try:
             import json
             cat_data = json.loads(listing.catalogue.catalogue_data)
@@ -291,14 +297,14 @@ def compute_price(
             price_record.effective_from = result.wage_source.get("effective_from")
             price_record.source_url = result.wage_source.get("source_url")
 
-        price_record.material_cost_paise = round(mat_cost * 100)
+        price_record.material_cost_paise = round_half_up(mat_cost * 100)
         price_record.labour_hours = labour_hours
         hourly_wage_inr = result.inputs.get("hourly_wage_inr", 0.0)
-        price_record.hourly_wage_paise = round(hourly_wage_inr * 100) if hourly_wage_inr else 0
+        price_record.hourly_wage_paise = round_half_up(hourly_wage_inr * 100) if hourly_wage_inr else 0
         price_record.skill_level = result.inputs.get("skill_level", skill_level)
-        price_record.floor_amount_paise = round(result.floor_amount_inr * 100) if result.floor_amount_inr is not None else 0
-        price_record.recommended_low_paise = round(result.recommended_low_inr * 100) if result.recommended_low_inr is not None else 0
-        price_record.recommended_high_paise = round(result.recommended_high_inr * 100) if result.recommended_high_inr is not None else 0
+        price_record.floor_amount_paise = round_half_up(result.floor_amount_inr * 100) if result.floor_amount_inr is not None else 0
+        price_record.recommended_low_paise = round_half_up(result.recommended_low_inr * 100) if result.recommended_low_inr is not None else 0
+        price_record.recommended_high_paise = round_half_up(result.recommended_high_inr * 100) if result.recommended_high_inr is not None else 0
         price_record.explanation = result.explanation
         db.commit()
 

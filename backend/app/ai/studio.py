@@ -249,12 +249,27 @@ def _refine_alpha(mask: Image.Image) -> np.ndarray:
 
 def process_photo(image_bytes: bytes, background: str = "studio", mask_fn: Optional[MaskFn] = None) -> StudioResult:
     """Deterministic engine: BiRefNet cut-out, levelled, relit and composited on a catalogue background."""
-    mask_fn = mask_fn or birefnet.predict_mask
+    custom_mask_fn = mask_fn is not None
+    effective_mask_fn = mask_fn or birefnet.predict_mask
     image = _load(image_bytes)
-    mask = mask_fn(image)
+
+    try:
+        mask = effective_mask_fn(image)
+    except Exception as exc:
+        if custom_mask_fn:
+            raise
+        logger.warning("Primary mask prediction failed: %s. Falling back to OpenCV GrabCut.", exc)
+        mask = birefnet.predict_mask_opencv(image)
+
     mask_np = np.asarray(mask)
     if (mask_np >= 128).mean() < MIN_FOREGROUND_FRACTION:
-        raise NoProductDetected("No product was found in the photo. Retake it with the product filling more of the frame.")
+        if custom_mask_fn:
+            raise NoProductDetected("No product was found in the photo. Retake it with the product filling more of the frame.")
+        logger.warning("Foreground fraction below %s, attempting forced foreground fallback.", MIN_FOREGROUND_FRACTION)
+        mask = birefnet.predict_mask_opencv(image, force_foreground=True)
+        mask_np = np.asarray(mask)
+        if (mask_np >= 128).mean() < MIN_FOREGROUND_FRACTION:
+            raise NoProductDetected("No product was found in the photo. Retake it with the product filling more of the frame.")
 
     transformations = ["background_neutralization"]
     tilt = estimate_tilt(mask_np)
@@ -307,7 +322,7 @@ def _ai_prompt(background: str) -> str:
 
 
 def _generate_ai_edit(image: Image.Image, background: str) -> bytes:
-    from .gemini_client import gemini_client
+    from .gemini_client import gemini_client, _generate_with_retry
     from google.genai import types
 
     if not gemini_client.client:
@@ -315,7 +330,8 @@ def _generate_ai_edit(image: Image.Image, background: str) -> bytes:
 
     source = io.BytesIO()
     image.save(source, format="JPEG", quality=95)
-    response = gemini_client.client.models.generate_content(
+    response = _generate_with_retry(
+        gemini_client.client,
         model=GEMINI_IMAGE_MODEL,
         contents=[types.Part.from_bytes(data=source.getvalue(), mime_type="image/jpeg"), _ai_prompt(background)],
         config=types.GenerateContentConfig(response_modalities=["IMAGE"]),
