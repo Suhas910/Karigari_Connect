@@ -183,13 +183,16 @@ export default function LiveListingsScreen() {
         )}
       />
 
-      <FAB
-        icon="plus"
-        label={t('listings.newCraft')}
-        style={styles.fab}
-        color={colors.onPrimary}
-        onPress={handleStartNewListing}
-      />
+      <View style={styles.fabWrapper}>
+        <FAB
+          mode="flat"
+          icon="plus"
+          label={t('listings.newCraft')}
+          color={colors.onPrimary}
+          style={{ backgroundColor: colors.primary, borderRadius: 28 }}
+          onPress={handleStartNewListing}
+        />
+      </View>
     </View>
   );
 }
@@ -302,13 +305,14 @@ function createStyles(colors: ColorPalette) {
     emptyActionBtn: {
       borderRadius: 10,
     },
-    fab: {
+    fabWrapper: {
       position: 'absolute',
       margin: 16,
       right: 0,
       bottom: Platform.OS === 'ios' ? 96 : 88,
-      backgroundColor: colors.primary,
       borderRadius: 28,
+      backgroundColor: colors.primary,
+      elevation: 4,
     },
   });
 }

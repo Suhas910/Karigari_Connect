@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { View, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { Text, Button, ProgressBar, IconButton, ActivityIndicator } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ArtisanStackParamList } from '../../types/navigation';
@@ -34,6 +35,7 @@ export default function ImageReviewScreen() {
     quality?: any;
   } | null>(null);
   const [initDone, setInitDone] = useState(false);
+  const [noPhotosFound, setNoPhotosFound] = useState(false);
 
   // 1. Initialize photos and enhancement status from draft on mount
   useEffect(() => {
@@ -79,12 +81,9 @@ export default function ImageReviewScreen() {
         } else if (existingEnhanced.length > 0) {
           setPhotos(existingEnhanced);
         } else {
-          // Fallback placeholders if launched directly without camera
-          setPhotos([
-            'https://placehold.co/400x400/EDE7DD/2B2320?text=Angle+1+(Front)',
-            'https://placehold.co/400x400/E8ECEF/2B2320?text=Angle+2+(Detail)',
-            'https://placehold.co/400x400/F2EDE4/2B2320?text=Angle+3+(Border)',
-          ]);
+          setNoPhotosFound(true);
+          setInitDone(true);
+          return;
         }
 
         // Check if images were already enhanced OR if reviewOnly is requested OR if draft has accepted/enhanced photos
@@ -100,10 +99,8 @@ export default function ImageReviewScreen() {
           return; // Skip re-requesting image analysis/enhancement
         }
 
-        // Otherwise, kick off image enhancement job
-        const result = currentPhotos.length > 0
-          ? await service.requestImageEnhancement(draftId, currentPhotos)
-          : await service.requestImageAnalysis(draftId, { media_id: 'media_photo_batch' });
+        // Otherwise, kick off image enhancement job (currentPhotos is guaranteed non-empty)
+        const result = await service.requestImageEnhancement(draftId, currentPhotos);
         if (isMounted) {
           setJobId(result.job_id);
           setInitDone(true);
@@ -342,6 +339,21 @@ export default function ImageReviewScreen() {
     );
   }
 
+  // --- No Photos Screen ---
+  if (noPhotosFound) {
+    return (
+      <View style={styles.centered}>
+        <MaterialCommunityIcons name="camera-off-outline" size={48} color={colors.textMuted} />
+        <Text style={[styles.hint, { marginTop: spacing.sm, textAlign: 'center' }]}>
+          {t('imageReview.noPhotosFound', 'No product photos found. Please capture photos first.')}
+        </Text>
+        <Button mode="contained" onPress={handleRetake} style={styles.retakeBtn} buttonColor={colors.primary}>
+          {t('imageReview.retake', 'Take Photos')}
+        </Button>
+      </View>
+    );
+  }
+
   // --- Failure Screen ---
   if (isFailed) {
     return (
@@ -359,7 +371,7 @@ export default function ImageReviewScreen() {
     ? effectiveResult.enhanced_urls
     : (effectiveResult?.enhanced_url ? [effectiveResult.enhanced_url] : []);
 
-  const activeOriginalUri = photos[selectedIndex] || 'https://placehold.co/400x400/EDE7DD/2B2320?text=Angle';
+  const activeOriginalUri = photos[selectedIndex] || '';
   const activeEnhancedUri = (enhancedPhotos[selectedIndex] || effectiveResult?.enhanced_url || '').trim();
   const hasEnhancedPhoto = activeEnhancedUri.length > 0;
   const isCurrentCover = selectedIndex === coverIndex;

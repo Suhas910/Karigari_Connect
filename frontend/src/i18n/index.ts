@@ -5,9 +5,15 @@ import * as SecureStore from 'expo-secure-store';
 import en from './locales/en.json';
 import hi from './locales/hi.json';
 import kn from './locales/kn.json';
+import bn from './locales/bn.json';
+import ta from './locales/ta.json';
+import te from './locales/te.json';
+import mr from './locales/mr.json';
+import gu from './locales/gu.json';
+import or from './locales/or.json';
 
 const LANGUAGE_STORAGE_KEY = 'app.language';
-const SUPPORTED_LANGUAGES = ['en', 'hi', 'kn'] as const;
+const SUPPORTED_LANGUAGES = ['en', 'hi', 'kn', 'bn', 'ta', 'te', 'mr', 'gu', 'or'] as const;
 
 i18n.use(initReactI18next).init({
   compatibilityJSON: 'v4',
@@ -15,6 +21,12 @@ i18n.use(initReactI18next).init({
     en: { translation: en },
     hi: { translation: hi },
     kn: { translation: kn },
+    bn: { translation: bn },
+    ta: { translation: ta },
+    te: { translation: te },
+    mr: { translation: mr },
+    gu: { translation: gu },
+    or: { translation: or },
   },
   lng: 'en', 
   fallbackLng: 'en',

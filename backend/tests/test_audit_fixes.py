@@ -278,51 +278,36 @@ def test_pricing_engine_reconciled():
     listing_res = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers)
     listing_id = listing_res.json()["id"]
 
-    db = SessionLocal()
-    try:
-        # Calculate fair price via AIService
-        res = ai_service.calculate_fair_price(
-            listing_id=listing_id,
-            material_cost_paise=20000,
-            labour_hours=5.0,
-            skill_level="skilled",
-            state_code="KA",
-            db=db
-        )
-        assert res.floor_amount_paise > 0
-        assert res.recommended_low_paise > res.floor_amount_paise
-        assert res.status == "available"
-        assert res.currency == "INR"
-    finally:
-        db.close()
+    # Calculate fair price via live pricing endpoint
+    price_res = client.post(
+        f"/api/v1/listings/{listing_id}/price",
+        json={
+            "material_cost_paise": 20000,
+            "labour_hours": 5.0,
+            "skill_level": "skilled",
+            "state_code": "KA"
+        },
+        headers=headers
+    )
+    assert price_res.status_code == 200
+    res = price_res.json()
+    assert res["floor_amount_paise"] > 0
+    assert res["recommended_low_paise"] > res["floor_amount_paise"]
+    assert res["status"] == "available"
+    assert res["currency"] == "INR"
 
 
 def test_pricing_wage_rate_unavailable_http_422_mapping():
-    """Verify that unnotified state codes raise HTTPException(422) with WAGE_RATE_UNAVAILABLE error shape."""
-    suffix = uuid.uuid4().hex[:6]
-    res_art = client.post("/api/v1/auth/register", json={"username": f"art_p422_{suffix}", "password": "Password123!"})
-    headers = {"Authorization": f"Bearer {res_art.json()['access_token']}"}
-
-    listing_res = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers)
-    listing_id = listing_res.json()["id"]
-
-    db = SessionLocal()
-    try:
-        with pytest.raises(HTTPException) as exc_info:
-            ai_service.calculate_fair_price(
-                listing_id=listing_id,
-                material_cost_paise=20000,
-                labour_hours=5.0,
-                skill_level="skilled",
-                state_code="ZZ",  # Invalid/unnotified state code
-                db=db
-            )
-        assert exc_info.value.status_code == 422
-        assert exc_info.value.detail["code"] == "WAGE_RATE_UNAVAILABLE"
-        assert exc_info.value.detail["recoverable"] is True
-        assert "Statutory craft minimum wage is not officially notified" in exc_info.value.detail["message"]
-    finally:
-        db.close()
+    """Verify that unnotified state codes return WAGE_RATE_UNAVAILABLE from pricing service."""
+    from app.services.pricing_service import calculate_price
+    res = calculate_price(
+        material_cost_inr=200.0,
+        labour_hours=5.0,
+        skill_level="skilled",
+        state_code="ZZ",  # Invalid/unnotified state code
+    )
+    assert res.status == "unavailable"
+    assert res.error_code == "WAGE_RATE_UNAVAILABLE"
 
 
 # 10. Test Issue #10: Legacy Products and Images Removed

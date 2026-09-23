@@ -433,24 +433,40 @@ def confirm_listing(
             },
         )
 
+    from ..schema_validation import validate_catalogue
+
     cat_model = db.query(models.CatalogueModel).filter(models.CatalogueModel.listing_id == listing_id).first()
     if not cat_model:
-        # Create new if not existing
+        merged_catalogue = payload.catalogue
+    else:
+        merged_catalogue = json.loads(cat_model.catalogue_data)
+        merged_catalogue.update(payload.catalogue)
+
+    is_valid, error_msg = validate_catalogue(merged_catalogue)
+    if not is_valid:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "CATALOGUE_SCHEMA_INVALID",
+                "message": f"Confirmed catalogue failed schema validation: {error_msg}",
+                "recoverable": True,
+                "action": "check_catalogue_fields",
+            },
+        )
+
+    if not cat_model:
         cat_model = models.CatalogueModel(
             listing_id=listing_id,
             schema_version="1.0",
-            catalogue_data=json.dumps(payload.catalogue),
+            catalogue_data=json.dumps(merged_catalogue),
             field_confidence=json.dumps({}),
             needs_confirmation=json.dumps([])
         )
         db.add(cat_model)
     else:
-        # Merge catalogue updates
-        current_data = json.loads(cat_model.catalogue_data)
-        current_data.update(payload.catalogue)
-        cat_model.catalogue_data = json.dumps(current_data)
+        cat_model.catalogue_data = json.dumps(merged_catalogue)
         # Clear out confirmed fields from needs_confirmation
-        current_needs = json.loads(cat_model.needs_confirmation)
+        current_needs = json.loads(cat_model.needs_confirmation) if cat_model.needs_confirmation else []
         updated_needs = [f for f in current_needs if f not in payload.confirmed_fields]
         cat_model.needs_confirmation = json.dumps(updated_needs)
 

@@ -171,6 +171,7 @@ Standard codes → frontend behavior:
 | `CATALOGUE_SCHEMA_INVALID` | Keep draft, show retry; backend logs details |
 | `PROVENANCE_VERIFICATION_REQUIRED` | Show claim, send to coordinator review |
 | `WAGE_RATE_UNAVAILABLE` | Do NOT show guessed price; show unavailable state |
+| `PRICE_INPUT_REQUIRED` | Show missing field prompt, block submission; price floor cannot be guessed |
 | `LISTING_STATE_INVALID` | Refresh listing status, prevent duplicate actions |
 | `EXPORT_CONTRACT_INVALID` | Show export not ready; don't claim marketplace publication |
 | `PROVIDER_UNAVAILABLE` | Queue/retry per adapter policy; preserve draft |
@@ -209,7 +210,7 @@ Canonical schema: `Initial Legacy Context/03_starter_kit/taxonomy/listing.schema
     "title": { "en": "Cotton handloom saree", "local": "...", "local_language": "kn" },
     "description": { "en": "...", "local": "..." },
     "labour": { "hours": 12, "skill_level": "skilled", "state_code": "KA" },
-    "material_cost_inr": 800,
+    "material_cost_paise": 80000,
     "provenance": { "claims": [], "gi_tag": null },
     "source": { "transcript_id": "transcript_uuid", "asr_confidence": 0.86 }
   },
@@ -275,7 +276,7 @@ Provenance guard re-runs immediately before any export, always.
 **Price contract** — `POST /listings/{listing_id}/price`
 ```json
 {
-  "material_cost_inr": 800,
+  "material_cost_paise": 80000,
   "labour_hours": 12,
   "state_code": "KA",
   "skill_level": "skilled",

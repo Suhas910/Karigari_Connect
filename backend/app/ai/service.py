@@ -581,7 +581,7 @@ class AIService:
                 skill_level=raw_cat.get("skill_level", "skilled"),
                 state_code=resolved_state_code
             ),
-            material_cost_paise=int(raw_cat.get("material_cost_paise", 45000)),
+            material_cost_paise=int(raw_cat.get("material_cost_paise", 0)),
             provenance=schemas.ProvenanceInfo(
                 claims=claims_list,
                 gi_tag=raw_cat.get("gi_tag")
@@ -591,6 +591,19 @@ class AIService:
                 asr_confidence=asr_conf
             )
         )
+
+        from ..schema_validation import validate_catalogue
+        is_valid, error_msg = validate_catalogue(json.loads(catalogue_draft.model_dump_json()))
+        if not is_valid:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "CATALOGUE_SCHEMA_INVALID",
+                    "message": f"AI-generated catalogue failed schema validation: {error_msg}",
+                    "recoverable": True,
+                    "action": "retry",
+                },
+            )
 
         result = schemas.CatalogueResult(
             schema_version="1.0",
@@ -643,143 +656,5 @@ class AIService:
         db.commit()
         return result
 
-    @staticmethod
-    def calculate_fair_price(
-        listing_id: str,
-        material_cost_paise: Optional[int],
-        labour_hours: Optional[float],
-        skill_level: Optional[str],
-        state_code: Optional[str],
-        db: Session
-    ) -> schemas.PriceResult:
-        listing = db.query(models.ListingModel).filter(models.ListingModel.id == listing_id).first()
-        if not listing:
-            raise HTTPException(status_code=404, detail="Listing not found")
-
-        if material_cost_paise is None or labour_hours is None or state_code is None:
-            cat_model = db.query(models.CatalogueModel).filter(models.CatalogueModel.listing_id == listing_id).first()
-            if cat_model:
-                cat_data = json.loads(cat_model.catalogue_data)
-                material_cost_paise = material_cost_paise or cat_data.get("material_cost_paise", 45000)
-                labour_hours = labour_hours or cat_data.get("labour", {}).get("hours", 6.0)
-                state_code = state_code or cat_data.get("labour", {}).get("state_code", "KA")
-            else:
-                material_cost_paise = material_cost_paise or 45000
-                labour_hours = labour_hours or 6.0
-                state_code = state_code or "KA"
-
-        state_code = (state_code or "KA").upper()
-        material_cost_inr = float(material_cost_paise or 0) / 100.0
-
-        from ..services.pricing_service import calculate_price, round_half_up, WageRateUnavailable
-
-        try:
-            p_res = calculate_price(
-                material_cost_inr=material_cost_inr,
-                labour_hours=float(labour_hours or 0.0),
-                state_code=state_code,
-                skill_level=skill_level or "skilled",
-            )
-        except WageRateUnavailable:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "WAGE_RATE_UNAVAILABLE",
-                    "message": f"Statutory craft minimum wage is not officially notified for state code: {state_code}",
-                    "recoverable": True,
-                    "action": "Select a recognized state code (e.g. KA, UP, RJ, TN, MP, IN) or input verified artisan rate."
-                }
-            )
-
-        if p_res.status == "unavailable" or p_res.error_code == "WAGE_RATE_UNAVAILABLE":
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "WAGE_RATE_UNAVAILABLE",
-                    "message": f"Statutory craft minimum wage is not officially notified for state code: {state_code}",
-                    "recoverable": True,
-                    "action": "Select a recognized state code (e.g. KA, UP, RJ, TN, MP, IN) or input verified artisan rate."
-                }
-            )
-
-        floor_paise = round_half_up(p_res.floor_amount_inr * 100) if p_res.floor_amount_inr is not None else 0
-        rec_low_paise = round_half_up(p_res.recommended_low_inr * 100) if p_res.recommended_low_inr is not None else 0
-        rec_high_paise = round_half_up(p_res.recommended_high_inr * 100) if p_res.recommended_high_inr is not None else 0
-        hourly_wage_inr = p_res.inputs.get("hourly_wage_inr", 0.0) if p_res.inputs else 0.0
-        hourly_wage = round_half_up(hourly_wage_inr * 100) if hourly_wage_inr else 0
-
-        wage_source = None
-        if p_res.wage_source:
-            ws = p_res.wage_source
-            wage_source = schemas.WageSourceInfo(
-                state_code=ws.get("state_code", state_code) if isinstance(ws, dict) else getattr(ws, "state_code", state_code),
-                notification_ref=ws.get("notification_ref", "") if isinstance(ws, dict) else getattr(ws, "notification_ref", ""),
-                effective_from=ws.get("effective_from", "") if isinstance(ws, dict) else getattr(ws, "effective_from", ""),
-                source_url=ws.get("source_url", "") if isinstance(ws, dict) else getattr(ws, "source_url", ""),
-            )
-
-        price_inputs = schemas.PriceInputs(
-            material_cost_paise=material_cost_paise,
-            labour_hours=labour_hours,
-            hourly_wage_paise=hourly_wage,
-            skill_level=skill_level or "skilled"
-        )
-
-        price_result = schemas.PriceResult(
-            calculation_version=p_res.calculation_version,
-            status=p_res.status,
-            currency=p_res.currency,
-            wage_source=wage_source,
-            inputs=price_inputs,
-            floor_amount_paise=floor_paise,
-            recommended_low_paise=rec_low_paise,
-            recommended_high_paise=rec_high_paise,
-            explanation=p_res.explanation
-        )
-
-        existing_price = db.query(models.PriceCalculationModel).filter(
-            models.PriceCalculationModel.listing_id == listing_id
-        ).first()
-
-        notification_ref = wage_source.notification_ref if wage_source else ""
-        effective_from = wage_source.effective_from if wage_source else ""
-        source_url = wage_source.source_url if wage_source else ""
-
-        if existing_price:
-            existing_price.state_code = state_code
-            existing_price.notification_ref = notification_ref
-            existing_price.effective_from = effective_from
-            existing_price.source_url = source_url
-            existing_price.material_cost_paise = material_cost_paise
-            existing_price.labour_hours = labour_hours
-            existing_price.hourly_wage_paise = hourly_wage
-            existing_price.skill_level = skill_level or "skilled"
-            existing_price.floor_amount_paise = floor_paise
-            existing_price.recommended_low_paise = rec_low_paise
-            existing_price.recommended_high_paise = rec_high_paise
-            existing_price.explanation = p_res.explanation
-        else:
-            new_price = models.PriceCalculationModel(
-                listing_id=listing_id,
-                calculation_version=p_res.calculation_version,
-                status=p_res.status,
-                currency=p_res.currency,
-                state_code=state_code,
-                notification_ref=notification_ref,
-                effective_from=effective_from,
-                source_url=source_url,
-                material_cost_paise=material_cost_paise,
-                labour_hours=labour_hours,
-                hourly_wage_paise=hourly_wage,
-                skill_level=skill_level or "skilled",
-                floor_amount_paise=floor_paise,
-                recommended_low_paise=rec_low_paise,
-                recommended_high_paise=rec_high_paise,
-                explanation=p_res.explanation
-            )
-            db.add(new_price)
-
-        db.commit()
-        return price_result
 
 ai_service = AIService()

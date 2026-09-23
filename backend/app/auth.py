@@ -1,5 +1,5 @@
-# backend/app/auth.py
 import os
+import hmac
 import logging
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -200,7 +200,7 @@ def get_admin_user_or_secret(
     1. Valid X-Admin-Secret header matching ADMIN_SECRET_KEY is provided.
     2. Valid Bearer token belonging to an 'admin' user is provided.
     """
-    if x_admin_secret and x_admin_secret.strip() == ADMIN_SECRET_KEY:
+    if x_admin_secret and hmac.compare_digest(x_admin_secret.strip(), ADMIN_SECRET_KEY):
         return True
 
     if credentials:

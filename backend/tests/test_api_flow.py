@@ -305,7 +305,17 @@ def test_invalid_state_wage_rate_error():
     res_listing = client.post("/api/v1/listings", json={"preferred_language": "en"}, headers=headers)
     listing_id = res_listing.json()["id"]
 
-    res_price = client.post(f"/api/v1/listings/{listing_id}/price", json={"state_code": "XX"}, headers=headers)
+    # Truly missing inputs must yield 422 with PRICE_INPUT_REQUIRED
+    res_missing = client.post(f"/api/v1/listings/{listing_id}/price", json={"state_code": "XX"}, headers=headers)
+    assert res_missing.status_code == 422
+    assert res_missing.json()["error"]["code"] == "PRICE_INPUT_REQUIRED"
+
+    # With required inputs provided, invalid state code hits WAGE_RATE_UNAVAILABLE
+    res_price = client.post(
+        f"/api/v1/listings/{listing_id}/price",
+        json={"state_code": "XX", "material_cost_inr": 500, "labour_hours": 6},
+        headers=headers
+    )
     assert res_price.status_code == 200
     price_body = res_price.json()
     assert price_body["status"] == "unavailable"
@@ -941,7 +951,16 @@ def test_state_machine_bypass_guards():
 
     # 4. Confirm listing -> state transitions to awaiting_confirmation (NOT awaiting_approval)
     confirm_payload = {
-        "catalogue": {"category": "woodwork", "title": {"en": "Wooden Toy"}},
+        "catalogue": {
+            "category": "woodwork",
+            "materials": ["rosewood"],
+            "techniques": ["hand_carved"],
+            "title": {"en": "Wooden Toy", "local": "Wooden Toy", "local_language": "en"},
+            "description": {"en": "A hand-carved wooden toy", "local": "A hand-carved wooden toy"},
+            "labour": {"hours": 4.0, "skill_level": "skilled", "state_code": "KA"},
+            "material_cost_paise": 20000,
+            "provenance": {"claims": []}
+        },
         "confirmed_fields": ["title.en"],
         "corrections": []
     }

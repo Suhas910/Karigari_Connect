@@ -20,6 +20,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../store/authStore';
+import { LanguagePickerModal, LANGUAGES } from '../profile/LanguagePickerModal';
 import { UserRole } from '../../types/contracts';
 import { useAppTheme, spacing } from '../../theme';
 import type { ColorPalette } from '../../theme';
@@ -34,10 +35,12 @@ const THEME_ICON: Record<ThemeMode, keyof typeof MaterialCommunityIcons.glyphMap
 };
 
 export default function SignInScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const setAuth = useAuthStore((state) => state.setAuth);
   const { colors, isDark, themeMode, toggleTheme } = useAppTheme();
   const insets = useSafeAreaInsets();
+
+  const [langPickerVisible, setLangPickerVisible] = useState(false);
 
   // Active Role Selection ('artisan' | 'coordinator')
   const [selectedRole, setSelectedRole] = useState<UserRole>('artisan');
@@ -162,6 +165,21 @@ export default function SignInScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {/* Language Button — top-left corner */}
+      <TouchableOpacity
+        style={[styles.langToggle, { top: insets.top + 12 }]}
+        onPress={() => setLangPickerVisible(true)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Change app language"
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <MaterialCommunityIcons name="translate" size={20} color={colors.textMuted} />
+        <Text style={[styles.langCode, { color: colors.textMuted }]}>
+          {(LANGUAGES.find((l) => l.code === i18n.language) ?? LANGUAGES[0]).shortCode}
+        </Text>
+      </TouchableOpacity>
+
       {/* Theme Toggle — top-right corner */}
       <TouchableOpacity
         style={[styles.themeToggle, { top: insets.top + 12 }]}
@@ -449,6 +467,11 @@ export default function SignInScreen() {
           </Button>
         </View>
       </ScrollView>
+
+      <LanguagePickerModal
+        visible={langPickerVisible}
+        onDismiss={() => setLangPickerVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -470,6 +493,23 @@ function createStyles(colors: ColorPalette, isDark: boolean) {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    langToggle: {
+      position: 'absolute',
+      left: 16,
+      zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      height: 40,
+      paddingHorizontal: 10,
+      borderRadius: 20,
+      backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+    },
+    langCode: {
+      fontSize: 12,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+    },
     scrollContent: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xxl,
@@ -484,6 +524,7 @@ function createStyles(colors: ColorPalette, isDark: boolean) {
       width: 88,
       height: 88,
       marginBottom: spacing.sm,
+      marginRight: 9,
     },
     title: {
       fontWeight: '800',

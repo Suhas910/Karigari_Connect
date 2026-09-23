@@ -337,13 +337,13 @@ export default function ArtisanProfileScreen() {
             onPress={() => setPersonalModalVisible(true)}
           />
 
-          {/* Row 2: State & Jurisdiction */}
+          {/* Row 2: Skill Tier & Official ID */}
           <SettingsRow
-            icon="map-marker-outline"
+            icon="certificate-outline"
             iconBgColor={colors.primaryLight}
             iconColor={colors.primary}
-            title={t('profile.stateJurisdictionTitle')}
-            subtitle={stateSubtitle}
+            title={t('profile.skillTierTitle')}
+            subtitle={skillSubtitle}
             badgeText={selectedState && selectedZone ? t('profile.configured') : undefined}
             showDivider={true}
             onPress={openEditModal}
@@ -380,18 +380,8 @@ export default function ArtisanProfileScreen() {
         </View>
 
         <View style={styles.settingsCard}>
-          {/* Row 1: Skill Tier & Official ID */}
-          <SettingsRow
-            icon="certificate-outline"
-            iconBgColor={colors.primaryLight}
-            iconColor={colors.primary}
-            title={t('profile.skillTierTitle')}
-            subtitle={skillSubtitle}
-            showDivider={true}
-            onPress={openEditModal}
-          />
 
-          {/* Row 2: App Language / भाषा */}
+          {/* Row 1: App Language / भाषा */}
           <SettingsRow
             icon="translate"
             iconBgColor={colors.indigoLight}
@@ -403,7 +393,7 @@ export default function ArtisanProfileScreen() {
             onPress={() => setLanguageModalVisible(true)}
           />
 
-          {/* Row 3: App Theme (light/dark toggle) */}
+          {/* Row 2: App Theme (light/dark toggle) */}
           <SettingsRow
             icon={isDark ? 'weather-night' : 'weather-sunny'}
             iconBgColor={isDark ? colors.indigoLight : colors.primaryLight}

@@ -7,13 +7,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   LayoutAnimation,
+  Modal,
 } from 'react-native';
-import { Text, TextInput, Button, Card, ActivityIndicator } from 'react-native-paper';
+import { Text, TextInput, Button, ActivityIndicator, IconButton } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { service } from '../../services';
 import { useAppTheme, spacing } from '../../theme';
 import type { ColorPalette } from '../../theme';
@@ -22,17 +24,18 @@ import type { ArtisanStackParamList } from '../../types/navigation';
 
 export default function HelpScreen() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, isDark } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<ArtisanStackParamList>>();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
   const queryClient = useQueryClient();
+  
   const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [messageText, setMessageText] = useState('');
-  const [isMessageFocused, setIsMessageFocused] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Auto-dismiss success/error feedback banner after a few seconds
+  // Auto-dismiss feedback
   useEffect(() => {
     if (!feedback) return;
     const duration = feedback.type === 'success' ? 5000 : 7000;
@@ -43,13 +46,11 @@ export default function HelpScreen() {
     return () => clearTimeout(timer);
   }, [feedback]);
 
-  // Fetch artisan's listings to populate the dropdown
   const { data: listings } = useQuery({
     queryKey: ['listings'],
     queryFn: () => service.listListings(),
   });
 
-  // Fetch artisan's past submitted support messages
   const { data: supportMessages, isLoading: isLoadingMessages } = useQuery({
     queryKey: ['supportMessages'],
     queryFn: () => service.getSupportMessages(),
@@ -61,12 +62,7 @@ export default function HelpScreen() {
     onSuccess: () => {
       setMessageText('');
       setSelectedListingId(null);
-      setPickerOpen(false);
-      setIsMessageFocused(false);
-      setFeedback({
-        type: 'success',
-        text: t('help.sentSuccess'),
-      });
+      setFeedback({ type: 'success', text: t('help.sentSuccess') });
       queryClient.invalidateQueries({ queryKey: ['supportMessages'] });
     },
     onError: (err: any) => {
@@ -95,40 +91,25 @@ export default function HelpScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
+      style={styles.container} 
     >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        
         {/* Header Hero */}
         <View style={styles.headerHero}>
-          <View style={styles.heroIconCircle}>
-            <MaterialCommunityIcons name="help-circle-outline" size={32} color={colors.primary} />
-          </View>
           <Text style={styles.heroTitle}>{t('help.title')}</Text>
-          <Text style={styles.heroSubtitle}>
-            {t('help.subtitle')}
-          </Text>
+          <Text style={styles.heroSubtitle}>{t('help.subtitle')}</Text>
         </View>
 
         {/* Feedback Alert */}
         {feedback && (
-          <View
-            style={[
-              styles.feedbackBanner,
-              feedback.type === 'success' ? styles.feedbackSuccess : styles.feedbackError,
-            ]}
-          >
+          <View style={[styles.feedbackBanner, feedback.type === 'success' ? styles.feedbackSuccess : styles.feedbackError]}>
             <MaterialCommunityIcons
               name={feedback.type === 'success' ? 'check-circle' : 'alert-circle'}
-              size={18}
+              size={20}
               color={feedback.type === 'success' ? colors.successGreen : colors.error}
-              style={{ marginRight: 8 }}
             />
-            <Text
-              style={[
-                styles.feedbackText,
-                feedback.type === 'success' ? styles.feedbackSuccessText : styles.feedbackErrorText,
-              ]}
-            >
+            <Text style={[styles.feedbackText, feedback.type === 'success' ? styles.feedbackSuccessText : styles.feedbackErrorText]}>
               {feedback.text}
             </Text>
             <TouchableOpacity
@@ -137,144 +118,62 @@ export default function HelpScreen() {
                 setFeedback(null);
               }}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={{ padding: 4, marginLeft: 6 }}
-              accessibilityRole="button"
-              accessibilityLabel={t('common.close') || 'Close'}
             >
-              <MaterialCommunityIcons
-                name="close"
-                size={16}
-                color={feedback.type === 'success' ? colors.successGreen : colors.error}
-              />
+              <MaterialCommunityIcons name="close" size={18} color={feedback.type === 'success' ? colors.successGreen : colors.error} />
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Submission Card */}
-        <Card style={styles.formCard}>
-          <Card.Content>
-            <Text style={styles.fieldLabel}>{t('help.attachLabel')}</Text>
-
-            {/* Dropdown Selector */}
-            <TouchableOpacity
-              style={styles.pickerSelector}
-              onPress={() => setPickerOpen(!pickerOpen)}
-              activeOpacity={0.7}
-            >
-              <MaterialCommunityIcons
-                name={selectedListingId ? 'palette-outline' : 'help-circle-outline'}
-                size={20}
-                color={colors.primary}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.pickerSelectorText} numberOfLines={1}>
+        {/* Submission Form Area */}
+        <View style={styles.formContainer}>
+          <Text style={styles.fieldLabel}>{t('help.attachLabel')}</Text>
+          
+          <TouchableOpacity 
+            style={styles.selectInput} 
+            activeOpacity={0.7} 
+            onPress={() => setModalVisible(true)}
+          >
+            <View style={styles.selectInputLeft}>
+              <MaterialCommunityIcons name={selectedListingId ? 'tag-outline' : 'message-question-outline'} size={18} color={colors.primary} />
+              <Text style={styles.selectInputText} numberOfLines={1}>
                 {selectedListingId ? t('help.craftPrefix', { title: selectedListingTitle }) : t('help.generalQuestion')}
               </Text>
-              <MaterialCommunityIcons
-                name={pickerOpen ? 'chevron-up' : 'chevron-down'}
-                size={20}
-                color={colors.textMuted}
-              />
-            </TouchableOpacity>
+            </View>
+            <MaterialCommunityIcons name="chevron-down" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
 
-            {/* Dropdown Options */}
-            {pickerOpen && (
-              <View style={styles.pickerDropdown}>
-                <TouchableOpacity
-                  style={[styles.pickerOption, selectedListingId === null && styles.pickerOptionActive]}
-                  onPress={() => {
-                    setSelectedListingId(null);
-                    setPickerOpen(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.pickerOptionText,
-                      selectedListingId === null && styles.pickerOptionTextActive,
-                    ]}
-                  >
-                    {t('help.generalQuestion')}
-                  </Text>
-                  {selectedListingId === null && (
-                    <MaterialCommunityIcons name="check" size={16} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
+          <Text style={styles.fieldLabel}>{t('help.messageLabel')}</Text>
+          <TextInput
+            mode="outlined"
+            multiline
+            numberOfLines={6}
+            value={messageText}
+            onChangeText={setMessageText}
+            placeholder={t('help.messagePlaceholder')}
+            placeholderTextColor={colors.textMuted}
+            textColor={colors.text}
+            outlineColor={colors.border}
+            activeOutlineColor={colors.primary}
+            style={styles.messageInput}
+            contentStyle={styles.messageInputContent}
+          />
 
-                {(listings || []).map((l: Listing) => {
-                  const title = l.catalogue?.catalogue?.title?.en || t('help.untitledCraft');
-                  const isSelected = selectedListingId === l.id;
-                  return (
-                    <TouchableOpacity
-                      key={l.id}
-                      style={[styles.pickerOption, isSelected && styles.pickerOptionActive]}
-                      onPress={() => {
-                        setSelectedListingId(l.id);
-                        setPickerOpen(false);
-                      }}
-                    >
-                      <Text
-                        style={[styles.pickerOptionText, isSelected && styles.pickerOptionTextActive]}
-                        numberOfLines={1}
-                      >
-                        {title} ({l.state.replace(/_/g, ' ')})
-                      </Text>
-                      {isSelected && (
-                        <MaterialCommunityIcons name="check" size={16} color={colors.primary} />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            )}
+          <Button
+            mode="contained"
+            onPress={handleSubmit}
+            loading={submitMutation.isPending}
+            disabled={submitMutation.isPending || !messageText.trim()}
+            buttonColor={colors.primary}
+            textColor={colors.onPrimary}
+            style={styles.submitBtn}
+            icon="send"
+            contentStyle={styles.submitBtnContent}
+          >
+            {t('help.send')}
+          </Button>
+        </View>
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t('help.messageLabel')}</Text>
-            <TextInput
-              mode="outlined"
-              multiline
-              numberOfLines={isMessageFocused || messageText ? 7 : 4}
-              value={messageText}
-              onChangeText={setMessageText}
-              onFocus={() => {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                setIsMessageFocused(true);
-              }}
-              onBlur={() => {
-                if (!messageText.trim()) {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                  setIsMessageFocused(false);
-                }
-              }}
-              placeholder={t('help.messagePlaceholder')}
-              placeholderTextColor={colors.placeholder}
-              textColor={colors.text}
-              outlineColor={colors.border}
-              activeOutlineColor={colors.primary}
-              style={[
-                styles.messageInput,
-                { minHeight: isMessageFocused || messageText ? 150 : 96 },
-              ]}
-              contentStyle={[
-                styles.messageInputContent,
-                { textAlign: messageText ? 'left' : 'center' },
-              ]}
-            />
-
-            <Button
-              mode="contained"
-              onPress={handleSubmit}
-              loading={submitMutation.isPending}
-              disabled={submitMutation.isPending || !messageText.trim()}
-              buttonColor={colors.primary}
-              textColor={colors.onPrimary}
-              style={styles.submitBtn}
-              icon="send"
-            >
-              {t('help.send')}
-            </Button>
-          </Card.Content>
-        </Card>
-
-        {/* Previous Inquiries Section */}
+        {/* Previous Inquiries */}
         <View style={styles.inquiriesHeader}>
           <Text style={styles.inquiriesTitle}>{t('help.previousTitle')}</Text>
         </View>
@@ -282,110 +181,146 @@ export default function HelpScreen() {
         {isLoadingMessages ? (
           <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: spacing.lg }} />
         ) : !supportMessages || supportMessages.length === 0 ? (
-          <View style={styles.emptyMessagesCard}>
+          <View style={styles.emptyMessagesBox}>
+            <MaterialCommunityIcons name="message-outline" size={32} color={colors.border} style={{ marginBottom: 8 }} />
             <Text style={styles.emptyMessagesText}>{t('help.noPrevious')}</Text>
           </View>
         ) : (
-          supportMessages.map((msg: SupportMessage) => (
-            <TouchableOpacity
-              key={msg.id}
-              activeOpacity={0.7}
-              onPress={() =>
-                navigation.navigate('SupportThread', {
-                  messageId: msg.id,
-                  initialTitle: msg.listing_title || undefined,
-                })
-              }
-            >
-              <Card style={styles.msgCard}>
-                <Card.Content>
-                  <View style={styles.msgHeader}>
-                    <View style={styles.msgStatusPill}>
-                      <Text style={styles.msgStatusText}>
-                        {msg.status === 'open' ? t('help.statusOpen') : msg.status.toUpperCase()}
-                      </Text>
-                    </View>
+          supportMessages.map((msg: SupportMessage) => {
+            const isOpen = msg.status === 'open';
+            return (
+              <TouchableOpacity
+                key={msg.id}
+                activeOpacity={0.7}
+                onPress={() =>
+                  navigation.navigate('SupportThread', {
+                    messageId: msg.id,
+                    initialTitle: msg.listing_title || undefined,
+                  })
+                }
+                style={[styles.msgCard, isOpen ? styles.msgCardOpen : styles.msgCardResolved]}
+              >
+                <View style={styles.msgHeader}>
+                  <Text style={styles.msgBody} numberOfLines={2}>{msg.message}</Text>
+                </View>
+                
+                {msg.listing_title && (
+                  <Text style={styles.msgAttachedText} numberOfLines={1}>
+                    {t('help.craftPrefix', { title: msg.listing_title })}
+                  </Text>
+                )}
+
+                <View style={styles.msgFooter}>
+                  <View style={[styles.msgStatusPill, isOpen ? styles.pillOpen : styles.pillResolved]}>
+                    <Text style={[styles.msgStatusText, isOpen ? styles.textOpen : styles.textResolved]}>
+                      {isOpen ? t('help.statusOpen') : msg.status.toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.msgFooterRight}>
                     <Text style={styles.msgDate}>
                       {msg.created_at ? new Date(msg.created_at).toLocaleDateString() : ''}
                     </Text>
+                    <MaterialCommunityIcons name="chevron-right" size={18} color={colors.textMuted} />
                   </View>
-
-                  {msg.listing_title && (
-                    <View style={styles.msgAttachedListing}>
-                      <MaterialCommunityIcons name="tag-outline" size={14} color={colors.secondary} />
-                      <Text style={styles.msgAttachedText}>{t('help.craftPrefix', { title: msg.listing_title })}</Text>
-                    </View>
-                  )}
-
-                  <Text style={styles.msgBody}>{msg.message}</Text>
-
-                  <View style={styles.threadHintRow}>
-                    <MaterialCommunityIcons name="chat-processing-outline" size={14} color={colors.primary} />
-                    <Text style={styles.threadHintText}>View conversation & replies</Text>
-                    <MaterialCommunityIcons name="chevron-right" size={16} color={colors.primary} />
-                  </View>
-                </Card.Content>
-              </Card>
-            </TouchableOpacity>
-          ))
+                </View>
+              </TouchableOpacity>
+            )
+          })
         )}
       </ScrollView>
+
+      {/* Listing Selection Bottom Sheet Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setModalVisible(false)} />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('help.selectListing')}</Text>
+              <IconButton icon="close" size={20} iconColor={colors.textMuted} onPress={() => setModalVisible(false)} />
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalScroll}>
+              <TouchableOpacity
+                style={styles.modalOption}
+                onPress={() => {
+                  setSelectedListingId(null);
+                  setModalVisible(false);
+                }}
+              >
+                <Text style={[styles.modalOptionText, selectedListingId === null && styles.modalOptionTextActive]}>
+                  {t('help.generalQuestion')}
+                </Text>
+                {selectedListingId === null && <MaterialCommunityIcons name="check" size={20} color={colors.primary} />}
+              </TouchableOpacity>
+
+              {(listings || []).map((l: Listing) => {
+                const title = l.catalogue?.catalogue?.title?.en || t('help.untitledCraft');
+                const isSelected = selectedListingId === l.id;
+                return (
+                  <TouchableOpacity
+                    key={l.id}
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setSelectedListingId(l.id);
+                      setModalVisible(false);
+                    }}
+                  >
+                    <Text style={[styles.modalOptionText, isSelected && styles.modalOptionTextActive]} numberOfLines={1}>
+                      {title}
+                    </Text>
+                    {isSelected && <MaterialCommunityIcons name="check" size={20} color={colors.primary} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
 
-function createStyles(colors: ColorPalette) {
+function createStyles(colors: ColorPalette, isDark: boolean) {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
     content: {
-      padding: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
       paddingBottom: 100,
     },
     headerHero: {
-      alignItems: 'center',
-      marginBottom: spacing.md,
-      paddingHorizontal: spacing.sm,
-    },
-    heroIconCircle: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
-      backgroundColor: colors.surfaceElevated,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: spacing.sm,
+      marginBottom: spacing.lg,
     },
     heroTitle: {
-      fontSize: 20,
+      fontSize: 26,
       fontWeight: '800',
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 6,
     },
     heroSubtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.textMuted,
-      textAlign: 'center',
-      lineHeight: 18,
+      lineHeight: 20,
     },
     feedbackBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 12,
-      borderRadius: 10,
+      borderRadius: 8,
       marginBottom: spacing.md,
+      gap: 8,
     },
     feedbackSuccess: {
       backgroundColor: colors.successLight,
-      borderWidth: 1,
       borderColor: colors.successBorder,
+      borderWidth: 1,
     },
     feedbackError: {
       backgroundColor: colors.errorLight,
-      borderWidth: 1,
       borderColor: colors.errorBorder,
+      borderWidth: 1,
     },
     feedbackText: {
       flex: 1,
@@ -398,157 +333,199 @@ function createStyles(colors: ColorPalette) {
     feedbackErrorText: {
       color: colors.error,
     },
-    formCard: {
-      backgroundColor: colors.surface,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginBottom: spacing.lg,
-      elevation: 2,
+    formContainer: {
+      marginBottom: spacing.xl,
     },
     fieldLabel: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: '700',
-      color: colors.textMuted,
-      letterSpacing: 0.5,
-      marginBottom: 6,
+      color: colors.text,
+      marginBottom: 8,
     },
-    pickerSelector: {
+    selectInput: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 12,
-      borderRadius: 8,
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
       borderWidth: 1,
       borderColor: colors.border,
-      backgroundColor: colors.surface,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      marginBottom: spacing.lg,
     },
-    pickerSelectorText: {
+    selectInputLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
       flex: 1,
+    },
+    selectInputText: {
       fontSize: 14,
       color: colors.text,
       fontWeight: '500',
     },
-    pickerDropdown: {
-      marginTop: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
-      overflow: 'hidden',
-    },
-    pickerOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: colors.border,
-    },
-    pickerOptionActive: {
-      backgroundColor: colors.surfaceElevated,
-    },
-    pickerOptionText: {
-      fontSize: 13,
-      color: colors.text,
-      flex: 1,
-    },
-    pickerOptionTextActive: {
-      fontWeight: '700',
-      color: colors.primary,
-    },
     messageInput: {
       backgroundColor: colors.surface,
-      marginBottom: spacing.md,
+      fontSize: 14,
+      marginBottom: spacing.lg,
+      minHeight: 140, // Specifically increased minimum height
     },
     messageInputContent: {
-      paddingTop: 10,
-      paddingBottom: 10,
+      paddingTop: 16, // Explicit top padding inside the text box
+      paddingBottom: 16, // Explicit bottom padding inside the text box
     },
     submitBtn: {
       borderRadius: 10,
-      paddingVertical: 2,
+    },
+    submitBtnContent: {
+      height: 48,
+      flexDirection: 'row-reverse', // Flips the icon to the right side of the text
     },
     inquiriesHeader: {
-      marginBottom: spacing.sm,
+      marginBottom: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      paddingBottom: 8,
     },
     inquiriesTitle: {
-      fontSize: 16,
-      fontWeight: '700',
+      fontSize: 18,
+      fontWeight: '800',
       color: colors.text,
     },
-    emptyMessagesCard: {
-      padding: 24,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
+    emptyMessagesBox: {
+      padding: spacing.xl,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     emptyMessagesText: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.textMuted,
+      textAlign: 'center',
     },
     msgCard: {
       backgroundColor: colors.surface,
       borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
+      padding: spacing.md,
       marginBottom: spacing.sm,
+      borderLeftWidth: 4,
       elevation: 1,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+    },
+    msgCardOpen: {
+      borderLeftColor: colors.warningText,
+    },
+    msgCardResolved: {
+      borderLeftColor: colors.successGreen,
     },
     msgHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       marginBottom: 6,
-    },
-    msgStatusPill: {
-      backgroundColor: colors.badgeNeutral,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 6,
-    },
-    msgStatusText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: colors.secondary,
-    },
-    msgDate: {
-      fontSize: 11,
-      color: colors.textMuted,
-    },
-    msgAttachedListing: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: 6,
-    },
-    msgAttachedText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: colors.secondary,
-      marginLeft: 4,
     },
     msgBody: {
       fontSize: 14,
       color: colors.text,
       lineHeight: 20,
+      fontWeight: '500',
     },
-    threadHintRow: {
+    msgAttachedText: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginBottom: 12,
+    },
+    msgFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 4,
+    },
+    msgFooterRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 10,
-      paddingTop: 8,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      gap: 5,
+      gap: 6,
     },
-    threadHintText: {
-      fontSize: 12,
+    msgStatusPill: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 6,
+    },
+    pillOpen: {
+      backgroundColor: colors.warningLight,
+    },
+    pillResolved: {
+      backgroundColor: colors.successLight,
+    },
+    msgStatusText: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    textOpen: {
+      color: colors.warningText,
+    },
+    textResolved: {
+      color: colors.successGreen,
+    },
+    msgDate: {
+      fontSize: 11,
+      color: colors.textMuted,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      justifyContent: 'flex-end',
+    },
+    modalBackdrop: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    modalContent: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '70%',
+      paddingBottom: spacing.xl,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 16,
+      fontWeight: '800',
+      color: colors.text,
+    },
+    modalScroll: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+    },
+    modalOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    modalOptionText: {
+      fontSize: 14,
+      color: colors.text,
+      flex: 1,
+    },
+    modalOptionTextActive: {
       fontWeight: '700',
       color: colors.primary,
-      flex: 1,
     },
   });
 }

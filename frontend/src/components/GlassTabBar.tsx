@@ -163,7 +163,7 @@ export default function GlassTabBar({
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16,
+    bottom: Platform.OS === 'ios' ? 24 : 26,
     left: 6,
     right: 6,
   },
@@ -176,9 +176,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.8,
     shadowRadius: 16,
-    elevation: 10,
+    elevation: 6,
   },
   glassOverlay: {
     ...StyleSheet.absoluteFill,

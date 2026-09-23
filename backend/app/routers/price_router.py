@@ -187,25 +187,42 @@ def compute_price(
         except Exception:
             pass
 
-    # Resolve material cost in INR
+    # Resolve material cost in INR — never fabricate
     mat_cost = body.material_cost_inr
     if mat_cost is None and body.material_cost_paise is not None:
         mat_cost = body.material_cost_paise / 100.0
     if mat_cost is None:
-        if "material_cost_paise" in cat_data:
+        if "material_cost_paise" in cat_data and cat_data["material_cost_paise"] is not None and cat_data["material_cost_paise"] > 0:
             mat_cost = cat_data["material_cost_paise"] / 100.0
-        elif "material_cost_inr" in cat_data:
+        elif "material_cost_inr" in cat_data and cat_data["material_cost_inr"] is not None and float(cat_data["material_cost_inr"]) > 0:
             mat_cost = float(cat_data["material_cost_inr"])
-        else:
-            mat_cost = 450.0
 
-    # Resolve labour hours
+    # Resolve labour hours — never fabricate
     labour_hours = body.labour_hours
     if labour_hours is None:
-        labour_hours = cat_data.get("labour", {}).get("hours", 6.0)
+        labour_hours = cat_data.get("labour", {}).get("hours")
 
-    # Resolve state code and skill level
-    state_code = (body.state_code or cat_data.get("labour", {}).get("state_code", "KA")).upper()
+    # Resolve state code — never fabricate
+    state_code = body.state_code or cat_data.get("labour", {}).get("state_code")
+
+    missing = []
+    if mat_cost is None:
+        missing.append("material_cost")
+    if labour_hours is None:
+        missing.append("labour_hours")
+    if not state_code:
+        missing.append("state_code")
+    if missing:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "code": "PRICE_INPUT_REQUIRED",
+                "message": f"Cannot calculate a price floor without: {', '.join(missing)}. This must never be guessed.",
+                "recoverable": True,
+                "action": "provide_missing_field",
+            },
+        )
+    state_code = state_code.upper()
     skill_level = body.skill_level or cat_data.get("labour", {}).get("skill_level", "skilled")
     techniques = body.techniques or cat_data.get("techniques", [])
 

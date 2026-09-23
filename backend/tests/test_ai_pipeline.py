@@ -43,24 +43,15 @@ def test_bhashini_fallback_on_exception(mock_gemini, mock_bhashini, caplog):
 
 # 2. Unsupported State Code Test
 def test_pricing_unsupported_state_code():
-    db_mock = MagicMock()
-    mock_listing = models.ListingModel(id="test_listing")
-    db_mock.query().filter().first.return_value = mock_listing
-    
-    # Attempt to calculate price with an invalid state code "XX"
-    with pytest.raises(HTTPException) as exc_info:
-        ai_service.calculate_fair_price(
-            listing_id="test_listing",
-            material_cost_paise=50000,
-            labour_hours=10.0,
-            skill_level="skilled",
-            state_code="XX", 
-            db=db_mock
-        )
-    
-    # Assert HTTP 422 and correct error code
-    assert exc_info.value.status_code == 422
-    assert exc_info.value.detail["code"] == "WAGE_RATE_UNAVAILABLE"
+    from app.services.pricing_service import calculate_price
+    res = calculate_price(
+        material_cost_inr=500.0,
+        labour_hours=10.0,
+        skill_level="skilled",
+        state_code="XX",
+    )
+    assert res.status == "unavailable"
+    assert res.error_code == "WAGE_RATE_UNAVAILABLE"
 
 
 # 3. Low ASR/Field Confidence Routing Test

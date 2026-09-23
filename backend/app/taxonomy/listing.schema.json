@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CatalogueDraft",
+  "type": "object",
+  "required": [
+    "category",
+    "materials",
+    "techniques",
+    "title",
+    "description",
+    "labour",
+    "material_cost_paise"
+  ],
+  "properties": {
+    "category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "techniques": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "title": {
+      "type": "object",
+      "required": [
+        "en",
+        "local",
+        "local_language"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local_language": {
+          "type": "string"
+        }
+      }
+    },
+    "description": {
+      "type": "object",
+      "required": [
+        "en",
+        "local"
+      ],
+      "properties": {
+        "en": {
+          "type": "string"
+        },
+        "local": {
+          "type": "string"
+        }
+      }
+    },
+    "labour": {
+      "type": "object",
+      "required": [
+        "hours",
+        "skill_level",
+        "state_code"
+      ],
+      "properties": {
+        "hours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "skill_level": {
+          "enum": [
+            "unskilled",
+            "semi_skilled",
+            "skilled",
+            "highly_skilled"
+          ]
+        },
+        "state_code": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2
+        }
+      }
+    },
+    "material_cost_paise": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "claim"
+            ],
+            "properties": {
+              "claim": {
+                "enum": [
+                  "natural_dye",
+                  "handloom_weave",
+                  "gi_tag"
+                ]
+              }
+            }
+          }
+        },
+        "gi_tag": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

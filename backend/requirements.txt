@@ -26,3 +26,4 @@ einops>=0.8.0,<1.0.0
 opencv-python-headless>=4.9.0,<5.0.0
 numpy>=1.26.0,<2.3.0
 pydub>=0.25.1,<1.0.0
+jsonschema>=4.21.0,<5.0.0

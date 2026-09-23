@@ -1,15 +1,10 @@
 // src/features/coordinator-review/ArtisanInquiriesListScreen.tsx
 import React, { useState, useMemo } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text, Card, ActivityIndicator, Searchbar, Chip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
 
@@ -20,20 +15,16 @@ import { useAppTheme, spacing, type ColorPalette } from '../../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ArtisanInquiriesListScreen() {
+  const { t } = useTranslation();
   const { colors, isDark } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+  const styles = useMemo(() => createStyles(colors, isDark, insets.top), [colors, isDark, insets.top]);
   const navigation = useNavigation<NativeStackNavigationProp<CoordinatorStackParamList>>();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'resolved'>('all');
 
-  const {
-    data: supportMessages,
-    isLoading,
-    isRefetching,
-    refetch,
-  } = useQuery({
+  const { data: supportMessages, isLoading, isRefetching, refetch } = useQuery({
     queryKey: ['supportMessages'],
     queryFn: () => service.getSupportMessages(),
     staleTime: 5000,
@@ -42,11 +33,7 @@ export default function ArtisanInquiriesListScreen() {
   const filteredMessages = useMemo(() => {
     if (!supportMessages) return [];
     return supportMessages.filter((msg) => {
-      // Filter by status
-      if (statusFilter !== 'all' && msg.status !== statusFilter) {
-        return false;
-      }
-      // Filter by query
+      if (statusFilter !== 'all' && msg.status !== statusFilter) return false;
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
       const matchName = msg.artisan_name?.toLowerCase().includes(q);
@@ -56,104 +43,114 @@ export default function ArtisanInquiriesListScreen() {
     });
   }, [supportMessages, statusFilter, searchQuery]);
 
+  // Safely calculate counts to prevent undefined.length UI crashes
+  const safeMessages = supportMessages || [];
+  const openCount = safeMessages.filter((m) => m.status === 'open').length;
+  const resolvedCount = safeMessages.filter((m) => m.status === 'resolved').length;
+
   return (
     <View style={styles.screen}>
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 8) }]}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.text} />
+      {/* Pinned Top Section */}
+      <View style={styles.topSection}>
+        
+        {/* 1. Header Row */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity 
+            onPress={() => navigation.goBack()} 
+            style={styles.backBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <MaterialCommunityIcons name="arrow-left" size={26} color={colors.text} />
           </TouchableOpacity>
-          <View style={styles.headerTitleBox}>
-            <Text style={styles.kicker}>CLUSTER SUPPORT QUEUE</Text>
-            <Text style={styles.title}>Artisan Inquiries</Text>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.kicker}>{t('coordinator.inquiries.kicker', 'CLUSTER SUPPORT QUEUE')}</Text>
+            <Text style={styles.title}>{t('coordinator.inquiries.title', 'Artisan Inquiries')}</Text>
           </View>
         </View>
 
-        {/* Search & Filter */}
-        <Searchbar
-          placeholder="Search inquiries, crafts, or artisans..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchBar}
-          inputStyle={styles.searchInput}
-          iconColor={colors.textMuted}
-        />
+        {/* 2. Search Container */}
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder={t('coordinator.inquiries.searchPlaceholder', 'Search inquiries, crafts, or artisans...')}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchBar}
+            inputStyle={styles.searchInput}
+            iconColor={colors.textMuted}
+            elevation={0}
+          />
+        </View>
 
-        <View style={styles.filterRow}>
-          <Chip
-            selected={statusFilter === 'all'}
-            onPress={() => setStatusFilter('all')}
-            style={[styles.filterChip, statusFilter === 'all' && styles.filterChipActive]}
+        {/* 3. Filter Container */}
+        <View style={styles.filterContainer}>
+          <Chip 
+            selected={statusFilter === 'all'} 
+            onPress={() => setStatusFilter('all')} 
+            style={[styles.filterChip, statusFilter === 'all' && styles.filterChipActive]} 
             textStyle={[styles.filterChipText, statusFilter === 'all' && styles.filterChipTextActive]}
+            showSelectedOverlay
           >
-            All ({supportMessages?.length || 0})
+            {t('coordinator.inquiries.filterAll', { count: safeMessages.length })}
           </Chip>
-          <Chip
-            selected={statusFilter === 'open'}
-            onPress={() => setStatusFilter('open')}
-            style={[styles.filterChip, statusFilter === 'open' && styles.filterChipActive]}
+          <Chip 
+            selected={statusFilter === 'open'} 
+            onPress={() => setStatusFilter('open')} 
+            style={[styles.filterChip, statusFilter === 'open' && styles.filterChipActive]} 
             textStyle={[styles.filterChipText, statusFilter === 'open' && styles.filterChipTextActive]}
           >
-            Open ({supportMessages?.filter((m) => m.status === 'open').length || 0})
+            {t('coordinator.inquiries.filterOpen', { count: openCount })}
           </Chip>
-          <Chip
-            selected={statusFilter === 'resolved'}
-            onPress={() => setStatusFilter('resolved')}
-            style={[styles.filterChip, statusFilter === 'resolved' && styles.filterChipActive]}
+          <Chip 
+            selected={statusFilter === 'resolved'} 
+            onPress={() => setStatusFilter('resolved')} 
+            style={[styles.filterChip, statusFilter === 'resolved' && styles.filterChipActive]} 
             textStyle={[styles.filterChipText, statusFilter === 'resolved' && styles.filterChipTextActive]}
           >
-            Resolved ({supportMessages?.filter((m) => m.status === 'resolved').length || 0})
+            {t('coordinator.inquiries.filterResolved', { count: resolvedCount })}
           </Chip>
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.container}
-        showsVerticalScrollIndicator={false}
+      {/* Scrolling Content */}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false} 
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            colors={[colors.secondary]}
-          />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} colors={[colors.secondary]} />
         }
       >
         {isLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator size="large" color={colors.secondary} />
-            <Text style={styles.loadingText}>Loading artisan inquiries...</Text>
+            <Text style={styles.loadingText}>{t('coordinator.inquiries.loading', 'Loading artisan inquiries...')}</Text>
           </View>
         ) : filteredMessages.length === 0 ? (
           <View style={styles.emptyCard}>
-            <MaterialCommunityIcons name="check-all" size={36} color={colors.textMuted} />
-            <Text style={styles.emptyTitle}>No Inquiries Found</Text>
+            <View style={styles.emptyIconCircle}>
+              <MaterialCommunityIcons name="check-all" size={36} color={colors.textMuted} />
+            </View>
+            <Text style={styles.emptyTitle}>{t('coordinator.inquiries.emptyTitle', 'No Inquiries Found')}</Text>
             <Text style={styles.emptySub}>
-              {searchQuery ? 'Try adjusting your search criteria.' : 'No active inquiries from artisans at this time.'}
+              {searchQuery 
+                ? t('coordinator.inquiries.emptySub', 'Try adjusting your search criteria.') 
+                : t('coordinator.inquiries.emptySub', 'Try adjusting your search criteria.')}
             </Text>
           </View>
         ) : (
           filteredMessages.map((msg: SupportMessage) => {
             const isOpen = msg.status === 'open';
             return (
-              <TouchableOpacity
-                key={msg.id}
-                activeOpacity={0.7}
-                onPress={() =>
-                  navigation.navigate('SupportThread', {
-                    messageId: msg.id,
-                    initialTitle: msg.listing_title || undefined,
-                  })
-                }
+              <TouchableOpacity 
+                key={msg.id} 
+                activeOpacity={0.8} 
+                onPress={() => navigation.navigate('SupportThread', { messageId: msg.id, initialTitle: msg.listing_title || undefined })}
               >
                 <Card style={styles.msgCard}>
                   <Card.Content>
                     <View style={styles.cardTopRow}>
                       <View style={styles.artisanTag}>
-                        <MaterialCommunityIcons name="account-circle" size={18} color={colors.secondary} />
-                        <Text style={styles.artisanName}>
-                          {msg.artisan_name ? msg.artisan_name : `Artisan #${msg.artisan_id}`}
-                        </Text>
+                        <MaterialCommunityIcons name="account-circle" size={20} color={colors.secondary} />
+                        <Text style={styles.artisanName}>{msg.artisan_name ? msg.artisan_name : `Artisan #${msg.artisan_id}`}</Text>
                       </View>
                       <View style={[styles.statusBadge, isOpen ? styles.statusOpen : styles.statusResolved]}>
                         <Text style={[styles.statusText, isOpen ? styles.statusTextOpen : styles.statusTextResolved]}>
@@ -161,27 +158,21 @@ export default function ArtisanInquiriesListScreen() {
                         </Text>
                       </View>
                     </View>
-
+                    
                     {msg.listing_title && (
                       <View style={styles.craftTitleRow}>
                         <MaterialCommunityIcons name="tag-outline" size={14} color={colors.primary} />
-                        <Text style={styles.craftTitleText} numberOfLines={1}>
-                          {msg.listing_title}
-                        </Text>
+                        <Text style={styles.craftTitleText} numberOfLines={1}>{msg.listing_title}</Text>
                       </View>
                     )}
-
-                    <Text style={styles.msgBody} numberOfLines={3}>
-                      {msg.message}
-                    </Text>
-
+                    
+                    <Text style={styles.msgBody} numberOfLines={3}>{msg.message}</Text>
+                    
                     <View style={styles.cardFooter}>
-                      <Text style={styles.timestamp}>
-                        {msg.created_at ? new Date(msg.created_at).toLocaleString() : 'Recently'}
-                      </Text>
+                      <Text style={styles.timestamp}>{msg.created_at ? new Date(msg.created_at).toLocaleString() : 'Recently'}</Text>
                       <View style={styles.replyRow}>
-                        <Text style={styles.replyText}>Open Discussion</Text>
-                        <MaterialCommunityIcons name="chevron-right" size={16} color={colors.secondary} />
+                        <Text style={styles.replyText}>{t('coordinator.inquiries.openDiscussion', 'Open Discussion')}</Text>
+                        <MaterialCommunityIcons name="chevron-right" size={18} color={colors.secondary} />
                       </View>
                     </View>
                   </Card.Content>
@@ -195,194 +186,218 @@ export default function ArtisanInquiriesListScreen() {
   );
 }
 
-function createStyles(colors: ColorPalette, isDark: boolean) {
+function createStyles(colors: ColorPalette, isDark: boolean, topInset: number) {
   return StyleSheet.create({
-    screen: {
-      flex: 1,
+    screen: { 
+      flex: 1, 
+      backgroundColor: colors.background 
+    },
+    topSection: {
+      paddingTop: topInset + spacing.md, 
       backgroundColor: colors.background,
     },
-    header: {
-      paddingHorizontal: spacing.md,
-      paddingTop: spacing.md,
-      paddingBottom: spacing.sm,
-      backgroundColor: colors.surface,
+    headerRow: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    backBtn: { 
+      marginRight: spacing.md,
+      marginTop: 8,
+    },
+    headerTextContainer: { 
+      flex: 1,
+      justifyContent: 'center',
+    },
+    kicker: { 
+      fontSize: 10, 
+      fontWeight: '700', 
+      color: colors.secondary, 
+      letterSpacing: 1.2,
+      textTransform: 'uppercase',
+      marginBottom: 2 
+    },
+    title: { 
+      fontSize: 20, 
+      fontWeight: '800', 
+      color: colors.text 
+    },
+    searchContainer: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+    },
+    searchBar: { 
+      backgroundColor: isDark ? colors.surface : colors.surfaceElevated, 
+      borderRadius: 24, 
+      borderWidth: 1, 
+      borderColor: colors.border, 
+      height: 48, 
+    },
+    searchInput: { 
+      fontSize: 14, 
+      alignSelf: 'center',
+      minHeight: 0 
+    },
+    filterContainer: { 
+      flexDirection: 'row', 
+      gap: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    headerTop: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: spacing.sm,
-    },
-    backBtn: {
-      padding: spacing.xs,
-      marginRight: spacing.xs,
-    },
-    headerTitleBox: {
-      flex: 1,
-    },
-    kicker: {
-      fontSize: 10,
-      fontWeight: '700',
-      color: colors.secondary,
-      letterSpacing: 1,
-    },
-    title: {
-      fontSize: 17,
-      fontWeight: '800',
-      color: colors.text,
-    },
-    searchBar: {
-      backgroundColor: colors.background,
-      elevation: 0,
-      borderRadius: 10,
+    filterChip: { 
+      backgroundColor: 'transparent', 
+      borderColor: colors.border,
       borderWidth: 1,
-      borderColor: colors.border,
-      height: 44,
-      marginBottom: spacing.sm,
+      borderRadius: 20,
     },
-    searchInput: {
-      fontSize: 14,
-      minHeight: 0,
+    filterChipActive: { 
+      backgroundColor: isDark ? 'rgba(88, 101, 242, 0.15)' : colors.indigoLight, 
+      borderColor: colors.secondary 
     },
-    filterRow: {
-      flexDirection: 'row',
-      gap: spacing.xs,
-    },
-    filterChip: {
-      backgroundColor: colors.background,
-      borderColor: colors.border,
-    },
-    filterChipActive: {
-      backgroundColor: colors.indigoLight,
-      borderColor: colors.secondary,
-    },
-    filterChipText: {
-      fontSize: 12,
-      color: colors.textMuted,
-    },
-    filterChipTextActive: {
-      color: colors.secondary,
-      fontWeight: '700',
-    },
-    container: {
-      padding: spacing.md,
-      paddingBottom: 100,
-    },
-    centered: {
-      paddingVertical: 60,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    loadingText: {
-      marginTop: spacing.md,
-      color: colors.textMuted,
-      fontSize: 14,
-    },
-    emptyCard: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 60,
-    },
-    emptyTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.text,
-      marginTop: spacing.sm,
-    },
-    emptySub: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginTop: 4,
-      textAlign: 'center',
-    },
-    msgCard: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginBottom: spacing.sm,
-    },
-    cardTopRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 6,
-    },
-    artisanTag: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    artisanName: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.text,
-    },
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 6,
-    },
-    statusOpen: {
-      backgroundColor: colors.warningLight,
-    },
-    statusResolved: {
-      backgroundColor: colors.successLight,
-    },
-    statusText: {
-      fontSize: 10,
-      fontWeight: '800',
-      letterSpacing: 0.5,
-    },
-    statusTextOpen: {
-      color: colors.warningText,
-    },
-    statusTextResolved: {
-      color: colors.successGreen,
-    },
-    craftTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.primaryLight,
-      paddingHorizontal: spacing.xs,
-      paddingVertical: 3,
-      borderRadius: 6,
-      marginBottom: 6,
-      gap: 4,
-    },
-    craftTitleText: {
-      fontSize: 12,
+    filterChipText: { 
+      fontSize: 12, 
       fontWeight: '600',
-      color: colors.primary,
+      color: colors.textMuted 
     },
-    msgBody: {
-      fontSize: 13,
-      lineHeight: 18,
-      color: colors.text,
-      marginBottom: 8,
+    filterChipTextActive: { 
+      color: colors.secondary, 
+      fontWeight: '700' 
     },
-    cardFooter: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    scrollContent: { 
+      padding: spacing.md, 
+      paddingBottom: 100 
+    },
+    centered: { 
+      paddingVertical: 60, 
+      justifyContent: 'center', 
+      alignItems: 'center' 
+    },
+    loadingText: { 
+      marginTop: spacing.md, 
+      color: colors.textMuted, 
+      fontSize: 14 
+    },
+    emptyCard: { 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      paddingVertical: 60 
+    },
+    emptyIconCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: colors.badgeNeutral,
       alignItems: 'center',
-      paddingTop: 6,
-      borderTopWidth: 1,
-      borderTopColor: colors.badgeNeutral,
+      justifyContent: 'center',
+      marginBottom: spacing.md,
     },
-    timestamp: {
-      fontSize: 11,
-      color: colors.textMuted,
+    emptyTitle: { 
+      fontSize: 18, 
+      fontWeight: '800', 
+      color: colors.text, 
+      marginBottom: spacing.xs 
     },
-    replyRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 2,
+    emptySub: { 
+      fontSize: 13, 
+      color: colors.textMuted, 
+      textAlign: 'center',
+      maxWidth: 280
     },
-    replyText: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: colors.secondary,
+    msgCard: { 
+      backgroundColor: colors.surface, 
+      borderRadius: 16, 
+      borderWidth: 1, 
+      borderColor: colors.border, 
+      marginBottom: spacing.md,
+      elevation: 1,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+    },
+    cardTopRow: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      marginBottom: 10 
+    },
+    artisanTag: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 8 
+    },
+    artisanName: { 
+      fontSize: 15, 
+      fontWeight: '700', 
+      color: colors.text 
+    },
+    statusBadge: { 
+      paddingHorizontal: 10, 
+      paddingVertical: 4, 
+      borderRadius: 8 
+    },
+    statusOpen: { 
+      backgroundColor: colors.warningLight 
+    },
+    statusResolved: { 
+      backgroundColor: colors.successLight 
+    },
+    statusText: { 
+      fontSize: 10, 
+      fontWeight: '800', 
+      letterSpacing: 0.5 
+    },
+    statusTextOpen: { 
+      color: colors.warningText 
+    },
+    statusTextResolved: { 
+      color: colors.successGreen 
+    },
+    craftTitleRow: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      backgroundColor: colors.primaryLight, 
+      paddingHorizontal: spacing.sm, 
+      paddingVertical: 4, 
+      borderRadius: 8, 
+      marginBottom: 8, 
+      gap: 6 
+    },
+    craftTitleText: { 
+      fontSize: 12, 
+      fontWeight: '700', 
+      color: colors.primary 
+    },
+    msgBody: { 
+      fontSize: 13, 
+      lineHeight: 20, 
+      color: colors.text, 
+      marginBottom: 12 
+    },
+    cardFooter: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      paddingTop: 10, 
+      borderTopWidth: 1, 
+      borderTopColor: colors.badgeNeutral 
+    },
+    timestamp: { 
+      fontSize: 11, 
+      color: colors.textMuted 
+    },
+    replyRow: { 
+      flexDirection: 'row', 
+      alignItems: 'center', 
+      gap: 4 
+    },
+    replyText: { 
+      fontSize: 12, 
+      fontWeight: '700', 
+      color: colors.secondary 
     },
   });
 }
