@@ -44,8 +44,11 @@ Reports link figures by relative path, so the whole project can be read on GitHu
 
 ## Git rules for this branch
 
-- Claude commits and pushes automatically after every stage. Authorised by the project owner on
+- Claude commits and pushes automatically, as often as needed. Authorised by the project owner on
   2026-10-02, for this branch only.
-- Only `ml_price/` is staged; app code is never touched.
-- One commit per stage, with messages like `ml_price: S01 dedup report + log`.
+- Any files may change when necessary, including demo code or app-side code for showing the model.
+  Project records stay in `ml_price/`.
+- Each commit is one readable unit of work, with a clear message
+  (e.g. `ml_price: S01 dedup report`). The `PROJECT_LOG.md` entry goes in the same commit, so
+  the history on GitHub and the log always match.
 - No force-pushes, no merges into `main` or `frontend-avi`, no PRs unless asked.
