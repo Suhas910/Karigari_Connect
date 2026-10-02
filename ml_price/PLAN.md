@@ -82,4 +82,4 @@ After S13, ablation: remove one feature group at a time from the final model.
 ## Open decisions
 
 - [x] Parts 9 and 16: kept (approved 2026-10-02)
-- [ ] Final report format: Markdown, or PDF/Word
+- [x] Final report format: Markdown throughout; convert to Word only at the very end, and only if asked (decided 2026-10-02)

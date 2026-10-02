@@ -47,8 +47,14 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   - [PROCESSING_STEPS.md](PROCESSING_STEPS.md): methods and recording rules for every data step
   - [PLAN.md](PLAN.md): updated
 
+## 2026-10-02 — Report format decided
+
+- **What:** All reports stay in Markdown. Conversion to Word happens only at the very end, and
+  only if asked.
+- **Why:** Markdown renders on GitHub, shows clean diffs in git history, and can be read and
+  edited reliably by both of us.
+
 ## Pending
 
 - Install OpenRefine, Orange (+ add-ons), Protégé
 - Download the primary dataset CSVs into `data/raw/handicraft/`
-- Decide the final report format

@@ -14,7 +14,7 @@ Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS
 - [ ] Download the primary dataset CSVs into `data/raw/handicraft/`
 - [ ] Record SHA-256 checksums of the raw files
 - [ ] Write the data card (`reports/00_data_card.md`)
-- [ ] Decide the final report format: Markdown, or PDF/Word
+- [x] Final report format: Markdown (Word conversion only at the end, if asked)
 
 ## 1 — Raw audit (State 0, no changes)
 
@@ -99,3 +99,4 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [ ] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations
 - [ ] Syllabus coverage table (Units I–V)
 - [ ] Demo walkthrough
+- [ ] Convert to Word — only if asked at the very end
