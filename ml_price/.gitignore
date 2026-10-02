@@ -1,0 +1,5 @@
+# Everything in ml_price/ is committed on purpose: data, exports, reports, figures.
+# Only exclusion: product photos (~1.1 GB), too big for GitHub.
+data/raw/**/images/
+.ipynb_checkpoints/
+.DS_Store
