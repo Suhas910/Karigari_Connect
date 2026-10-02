@@ -1,0 +1,101 @@
+# To Do
+
+The master checklist for the project. Ticked as each item finishes, with a link to its report.
+Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS.md).
+
+## 0 — Setup
+
+- [x] Branch `ai-ml-price-extension` created and pushed
+- [x] Folder layout, plan, log, experiments table
+- [x] Datasets selected ([DATASETS.md](DATASETS.md))
+- [ ] Install OpenRefine
+- [ ] Install Orange and the add-ons: Text Mining, Associate, Explain, Image Analytics
+- [ ] Install Protégé
+- [ ] Download the primary dataset CSVs into `data/raw/handicraft/`
+- [ ] Record SHA-256 checksums of the raw files
+- [ ] Write the data card (`reports/00_data_card.md`)
+- [ ] Decide the final report format: Markdown, or PDF/Word
+
+## 1 — Raw audit (State 0, no changes)
+
+- [ ] Profile each of the 3 CSVs separately
+- [ ] Check that schemas match across files
+- [ ] Check the encoding and the price format
+- [ ] Report: `reports/cleaning/step_00_raw_audit.md`
+
+## 2 — Cleaning and processing
+
+See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods and reasons.
+
+- [ ] 2.1 Combine the 3 CSVs, adding a `source_file` column
+- [ ] 2.2 Fix column names and types (parse price to a number)
+- [ ] 2.3 Remove exact duplicates
+- [ ] 2.4 Handle near-duplicates and product variants
+- [ ] 2.5 Handle missing values (decided per column)
+- [ ] 2.6 Handle invalid values (price ≤ 0, wrong currency)
+- [ ] 2.7 Clean text (HTML, whitespace, broken characters)
+- [ ] 2.8 Consolidate art-form names; merge rare ones into `other`
+- [ ] 2.9 Outliers: compare IQR, z-score and Isolation Forest, then decide per group
+- [ ] 2.10 Derived features: log price, text lengths, materials, set size, has-image
+- [ ] Final cleaned dataset → `data/final/`
+- [ ] Combined report: `reports/cleaning/CLEANING_REPORT.md`
+
+## 3 — Exploratory analysis
+
+- [ ] Price distribution, skewness, kurtosis; raw vs log price
+- [ ] Price by art form (boxplots, medians)
+- [ ] ANOVA / Kruskal-Wallis test of art-form effect
+- [ ] Correlations (Pearson, Spearman)
+- [ ] Most frequent words per price band (TF-IDF)
+- [ ] Report: `reports/eda/EDA_REPORT.md`
+
+## 4 — Second dataset (Amazon Handmade)
+
+- [ ] Schema-mapping table
+- [ ] Run phases 1–3 on it
+- [ ] Run as a separate experiment to test whether the pipeline transfers to new data
+
+## 5 — Project parts (all 16 approved)
+
+- [ ] 1 Data cleaning with audit trail (sections 1–2 above)
+- [ ] 2 Statistics and EDA (section 3 above)
+- [ ] 3 Craft knowledge graph: RDF triples in Protégé
+- [ ] 4 Rule-based reasoning: SWRL rules + HermiT reasoner; inferred facts used as features
+- [ ] 5 Market segmentation: k-Means, Hierarchical, DBSCAN; silhouette; PCA map
+- [ ] 6 Material combination rules: Apriori (support, confidence, lift)
+- [ ] 7 Underpricing detector: Isolation Forest / LOF
+- [ ] 8 Price regression: baselines → Linear, Polynomial, Tree, RF, Gradient Boosting, kNN
+- [ ] 9 Price range: quantile models (small code)
+- [ ] 10 Price class classifier: Logistic, SVM, Naive Bayes, kNN; confusion matrix, ROC
+- [ ] 11 Similar-items search: embeddings + nearest neighbours
+- [ ] 12 LLM attribute extraction: prompt + accuracy on a hand-labelled sample
+- [ ] 13 Image features (stretch goal): CNN embeddings
+- [ ] 14 Explainability: SHAP, overall and per prediction
+- [ ] 15 Bias audit and ethics section
+- [ ] 16 Price advisor agent + demo: floor rule + model + similar items + underpricing flag (small code)
+
+## 6 — Experiment stages (scores logged in [EXPERIMENTS.md](EXPERIMENTS.md))
+
+- [ ] Create the frozen test set (grouped by art form) → `data/splits/`
+- [ ] S0 raw, price parsed only
+- [ ] S1 duplicates removed
+- [ ] S2 missing values handled
+- [ ] S3 outliers handled (training data only)
+- [ ] S4 art forms consolidated
+- [ ] S5 log(price) target
+- [ ] S6 TF-IDF text features
+- [ ] S7 knowledge-graph and rule features
+- [ ] S8 cluster ID and material-combination features
+- [ ] S9 sentence embeddings
+- [ ] S10 LLM-extracted attributes
+- [ ] S11 image features
+- [ ] S12 hyperparameter tuning
+- [ ] S13 quantile bands
+- [ ] Ablation: remove one feature group at a time
+- [ ] Progress chart → `figures/experiments_progress.png`
+
+## 7 — Final report
+
+- [ ] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations
+- [ ] Syllabus coverage table (Units I–V)
+- [ ] Demo walkthrough

@@ -11,7 +11,9 @@ plus every report, chart and data snapshot, is stored in this folder and committ
 
 | Path | What's in it | Who writes it |
 |---|---|---|
+| [TODO.md](TODO.md) | Master checklist: every task and project part, ticked as it finishes | Claude |
 | [PLAN.md](PLAN.md) | The 16 project parts, the tools, and the experiment stages | Claude |
+| [PROCESSING_STEPS.md](PROCESSING_STEPS.md) | How each cleaning/processing step is done and recorded: methods, reasons, templates | Claude |
 | [PROJECT_LOG.md](PROJECT_LOG.md) | Dated history of every action: what, which tool, why, and the outcome | Claude |
 | [EXPERIMENTS.md](EXPERIMENTS.md) | Score table after every stage, plus the progress chart | Claude, from tool exports |
 | [DATASETS.md](DATASETS.md) | Sources, licences, limits | Claude |

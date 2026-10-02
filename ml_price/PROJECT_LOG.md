@@ -38,8 +38,17 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Outcome:** The rules are in [README.md](README.md#git-rules-for-this-branch). First commit and
   push of the project scaffold.
 
+## 2026-10-02 — All 16 parts approved; to-do list and methods reference added
+
+- **What:** All 16 project parts approved, including 9 (quantile price range) and 16 (advisor
+  agent + demo), which need small amounts of code.
+- **Outcome:**
+  - [TODO.md](TODO.md): master checklist
+  - [PROCESSING_STEPS.md](PROCESSING_STEPS.md): methods and recording rules for every data step
+  - [PLAN.md](PLAN.md): updated
+
 ## Pending
 
 - Install OpenRefine, Orange (+ add-ons), Protégé
 - Download the primary dataset CSVs into `data/raw/handicraft/`
-- Decide parts 9 and 16; decide the final report format
+- Decide the final report format
