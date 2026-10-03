@@ -21,9 +21,8 @@ brew install --cask openrefine
 brew install --cask orange
 ```
 
-```bash
-brew install --cask protege
-```
+Protégé: **no Homebrew option.** Homebrew disabled the `protege` cask on 2026-09-01 because the
+app fails Apple's Gatekeeper check. Download it directly instead (see Option B).
 
 **Option B, browser:**
 
@@ -31,13 +30,19 @@ brew install --cask protege
 |---|---|
 | OpenRefine | https://openrefine.org/download → macOS |
 | Orange | https://orangedatamining.com/download → macOS, Apple Silicon |
-| Protégé | https://protege.stanford.edu → Download → macOS |
+| Protégé | https://github.com/protegeproject/protege-distribution/releases/tag/protege-5.6.9 → `Protege-5.6.9-mac.zip` (about 117 MB). Unzip, then drag `Protégé.app` into Applications |
 
 Drag each app into Applications.
 
-**If macOS says an app "can't be opened"** (common with OpenRefine and Protégé, which aren't
-signed by Apple): right-click the app in Applications → **Open** → **Open**. This is needed only
-the first time.
+**If macOS blocks an app** ("can't be opened" or "Apple could not verify…"), which is expected for
+Protégé and possible for OpenRefine:
+
+1. Try to open the app once and dismiss the warning.
+2. Open **System Settings → Privacy & Security** and scroll down to the message about the app.
+3. Click **Open Anyway**, confirm with your password or Touch ID, then open the app again.
+
+This is needed only the first time. (On current macOS, the old right-click → Open trick no longer
+skips the check.)
 
 ## 2. Orange add-ons
 

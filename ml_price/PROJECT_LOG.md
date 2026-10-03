@@ -61,6 +61,17 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Versions pinned:** OpenRefine 3.10.1, Orange 3.40.0 (Apple Silicon), Protégé 5.6.9
   (from the Homebrew cask index, 2026-10-03).
 
+## 2026-10-03 — Protégé install route changed; tool cleaning abilities documented
+
+- **What:** `brew install --cask protege` failed: Homebrew disabled the cask on 2026-09-01
+  (fails Gatekeeper).
+- **Fix:** download `Protege-5.6.9-mac.zip` from the official GitHub release, then allow it
+  under System Settings → Privacy & Security → Open Anyway. [Setup guide](guides/00_setup.md)
+  updated.
+- **Also:** added section 1b to [PROCESSING_STEPS.md](PROCESSING_STEPS.md), covering what
+  OpenRefine and Orange can and can't do for cleaning (OpenRefine has no mean/median
+  imputation; Orange Impute has mean/mode but no median option).
+
 ## Pending
 
 - Install OpenRefine, Orange (+ add-ons), Protégé

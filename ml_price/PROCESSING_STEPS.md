@@ -47,6 +47,40 @@ Each step produces:
   only; otherwise scores improve just because hard cases were deleted.
 - The target (`price`) is never imputed. Filling in labels invents the answer key.
 
+## 1b — What each tool can do for cleaning
+
+Neither tool cleans anything on its own. Every change is an operation chosen by hand, and every
+one is recorded.
+
+**OpenRefine: inspection and edits on the table**
+
+| Feature | What it does | Used in |
+|---|---|---|
+| Facets (text, numeric, custom) | Groups or filters rows by value; shows counts and blanks | Finding missing, invalid and duplicate values |
+| Cluster and edit | Finds spelling variants (fingerprint key collision, nearest-neighbour / Levenshtein) and merges the ones you approve | 2.8 art-form consolidation |
+| Transforms (GREL expressions) | Rewrites cell values with a formula, e.g. strip `₹` and commas, then convert to number | 2.2, 2.7 |
+| Remove matching rows | Deletes the rows selected by a facet | 2.3, 2.6, removing missing prices |
+| Fill down / blank down | Copies a value into empty cells below it, or blanks repeats | Only if the file's structure needs it |
+| Undo/Redo history → Extract | Exports every operation as JSON that can be replayed on the raw file | The audit trail |
+
+OpenRefine has **no mean or median imputation**. It edits values; it doesn't compute statistics
+to fill gaps.
+
+**Orange: statistics and imputation**
+
+| Widget | What it does |
+|---|---|
+| Feature Statistics | Mean, median, mode, dispersion, min, max and missing % per column |
+| Impute | Per column: don't impute, average (mean) / most frequent (mode), as a distinct value, model-based, random values, fixed value, or remove rows. **No median option**: read the median from Feature Statistics and enter it as a fixed value |
+| Preprocess | Impute, normalise, discretise, remove sparse features — as one recorded chain |
+| Outliers | Isolation Forest, Local Outlier Factor, One-class SVM, covariance estimator |
+| Select Rows / Select Columns | Filter rows by condition; drop columns |
+
+**Expected for this dataset:** the columns are mainly text plus price and art form, so there are
+few numeric columns to impute. Most missing-value handling will be row removal (missing price) and
+flags (missing art form or description). Mean and median become relevant for derived numeric
+features, and for showing in the report why the median resists skew.
+
 ## 2 — Cleaning steps
 
 | # | Step | Check | Method | Type |
