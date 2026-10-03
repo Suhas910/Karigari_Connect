@@ -54,6 +54,13 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Why:** Markdown renders on GitHub, shows clean diffs in git history, and can be read and
   edited reliably by both of us.
 
+## 2026-10-03 — Setup guide written
+
+- **What:** [guides/00_setup.md](guides/00_setup.md): install steps, Orange add-ons, start-up
+  checks, dataset download.
+- **Versions pinned:** OpenRefine 3.10.1, Orange 3.40.0 (Apple Silicon), Protégé 5.6.9
+  (from the Homebrew cask index, 2026-10-03).
+
 ## Pending
 
 - Install OpenRefine, Orange (+ add-ons), Protégé
