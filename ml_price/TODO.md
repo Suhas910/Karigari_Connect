@@ -13,17 +13,19 @@ Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS
 - [x] Install Orange add-ons: Text 1.16.3, Associate 1.4.0, Explain 0.6.11, Image Analytics 0.13.0, Textable 3.2.7 (extra)
 - [x] Install Protégé (quarantine mark removed; see guide 00)
 - [x] Claude-side ontology tools: owlready2 + rdflib in `.venv`
-- [ ] Download the primary dataset CSVs into `data/raw/handicraft/`
-- [ ] Record SHA-256 checksums of the raw files
-- [ ] Write the data card (`reports/00_data_card.md`)
+- [x] Download the primary dataset CSVs into `data/raw/handicraft/`
+- [x] Record SHA-256 checksums of the raw files
+- [x] Write the data card ([reports/00_data_card.md](reports/00_data_card.md))
 - [x] Final report format: Markdown (Word conversion only at the end, if asked)
 
 ## 1 — Raw audit (State 0, no changes)
 
-- [ ] Profile each of the 3 CSVs separately
-- [ ] Check that schemas match across files
-- [ ] Check the encoding and the price format
-- [ ] Report: `reports/cleaning/step_00_raw_audit.md`
+- [x] Profile the 3 CSVs (pandas, read-only) — [step_00](reports/cleaning/step_00_raw_audit.md)
+- [x] Check that schemas match across files (identical 5-column header)
+- [x] Check the encoding and the price format (UTF-8; price already a whole number)
+- [x] Report: `reports/cleaning/step_00_raw_audit.md`
+- [ ] Cross-check in OpenRefine + Orange ([guide 01](guides/01_raw_audit.md)), add screenshots
+- [ ] Decide D1 (primary art form), D2 (design variants), D3 (blank art forms) — see step_00 §7
 
 ## 2 — Cleaning and processing
 

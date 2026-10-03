@@ -106,6 +106,23 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Also available:** xgboost 2.0.3 and catboost 1.2.8, so the Gradient Boosting widget can use
   either library besides scikit-learn.
 
+## 2026-10-03 — Raw data received; State 0 audit
+
+- **What:** The 3 CSVs were downloaded into `data/raw/handicraft/`. Sizes match Kaggle's listing
+  byte for byte, and SHA-256 checksums are saved in `data/raw/SHA256SUMS.txt`.
+- **Tool:** pandas 3.0.6, read-only (run by Claude), to be cross-checked in OpenRefine and Orange
+  through [guide 01](guides/01_raw_audit.md).
+- **Main findings** ([step_00 report](reports/cleaning/step_00_raw_audit.md)):
+  - 37,273 rows; no exact duplicates; no missing or invalid prices
+  - Price is heavily skewed: mean 2,061 vs median 850, skewness 3.61, which falls to 0.51 under log
+  - The IQR rule flags 3,183 rows on raw price but only 10 on log price
+  - Art form is multi-label (1–6 labels, 204 distinct), and the most common labels are generic
+  - 4,749 design variants (same title and price, different image), a leakage risk for the split
+- **Plan impact:** steps 2.4 (variants) and 2.8 (art forms) become the main cleaning work. Three
+  decisions (D1–D3) are raised for the project owner.
+- **Data card:** [reports/00_data_card.md](reports/00_data_card.md)
+
 ## Pending
 
-- Download the primary dataset CSVs into `data/raw/handicraft/`
+- Guide 01 cross-check in OpenRefine + Orange
+- Decisions D1–D3
