@@ -1,0 +1,3 @@
+# Raw downloads must stay byte-identical to the source (checksums in data/raw/SHA256SUMS.txt):
+# no line-ending conversion.
+data/raw/** -text

@@ -122,6 +122,14 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   decisions (D1–D3) are raised for the project owner.
 - **Data card:** [reports/00_data_card.md](reports/00_data_card.md)
 
+## 2026-10-03 — Raw files stored byte-exact
+
+- **Problem:** the global git setting `core.autocrlf=input` converted the CSVs' Windows line
+  endings (CRLF) to LF when committing, so the stored files no longer matched their SHA-256
+  checksums.
+- **Fix:** `ml_price/.gitattributes` marks `data/raw/**` as `-text` (no conversion) and the files
+  were re-added. Verified: the SHA-256 of each stored file equals `SHA256SUMS.txt`.
+
 ## Pending
 
 - Guide 01 cross-check in OpenRefine + Orange
