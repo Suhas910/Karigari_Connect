@@ -42,6 +42,10 @@ these to act on.
 - **Protégé** — knowledge graph and reasoning
 - **Google AI Studio** — LLM extraction
 - **Kaggle website** — data download
+- **Claude's checking tools** (not used by hand): Python `owlready2` 0.51 (same HermiT reasoner
+  as Protégé, plus SWRL rules) and `rdflib` 7.6.0, in `ml_price/.venv`. Claude uses them to open
+  the `.owl` files saved from Protégé, run the reasoner and SPARQL queries, and write the
+  knowledge-graph report from the results.
 
 ## Experiment stages (scores re-measured after each)
 

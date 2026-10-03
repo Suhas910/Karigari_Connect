@@ -44,6 +44,14 @@ Protégé and possible for OpenRefine:
 This is needed only the first time. (On current macOS, the old right-click → Open trick no longer
 skips the check.)
 
+**Protégé specifically:** the 5.6.9 Mac build has no developer signature at all, so macOS may not
+show an Open Anyway button. What worked on this Mac (2026-10-03): remove the "downloaded from the
+internet" mark from that one app. This affects only Protégé.
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/Protégé.app"
+```
+
 ## 2. Orange add-ons
 
 1. Open Orange.

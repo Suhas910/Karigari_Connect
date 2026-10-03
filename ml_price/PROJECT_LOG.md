@@ -72,7 +72,20 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   OpenRefine and Orange can and can't do for cleaning (OpenRefine has no mean/median
   imputation; Orange Impute has mean/mode but no median option).
 
+## 2026-10-03 — Protégé running; Claude-side ontology tools set up
+
+- **Problem:** Protégé 5.6.9 wouldn't open. `spctl` showed "rejected — no usable signature": the
+  app is unsigned and carried the quarantine mark.
+- **Fix (run by the project owner):** `xattr -dr com.apple.quarantine "/Applications/Protégé.app"`.
+  Protégé now runs.
+- **Added:** a local Python environment (`ml_price/.venv`, git-ignored) with `owlready2` 0.51 and
+  `rdflib` 7.6.0, so Claude can open the saved `.owl` files directly.
+- **Why:** `owlready2` bundles HermiT, the same reasoner as Protégé, so Claude's checks match what
+  Protégé shows. A test ontology confirmed that HermiT ran and inferred a new class membership.
+- **Workflow:** you build the graph in Protégé and save it to `tool_exports/protege/`; Claude
+  reasons over it, queries it, and writes the report.
+
 ## Pending
 
-- Install OpenRefine, Orange (+ add-ons), Protégé
+- Install OpenRefine, Orange (+ add-ons) — Protégé done
 - Download the primary dataset CSVs into `data/raw/handicraft/`

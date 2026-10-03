@@ -3,3 +3,6 @@
 data/raw/**/images/
 .ipynb_checkpoints/
 .DS_Store
+
+# Claude's local Python environment (recreate with: python3 -m venv .venv && .venv/bin/pip install owlready2 rdflib)
+.venv/
