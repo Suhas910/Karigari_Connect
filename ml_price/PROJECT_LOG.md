@@ -85,7 +85,13 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Workflow:** you build the graph in Protégé and save it to `tool_exports/protege/`; Claude
   reasons over it, queries it, and writes the report.
 
+## 2026-10-03 — OpenRefine and Orange confirmed installed
+
+- **Checked:** OpenRefine 3.10.1 and Orange 3.40.0 are in `/Applications` (installed through
+  Homebrew). Both pass Gatekeeper (notarised Developer ID), so no workaround is needed.
+- **Not yet installed:** the Orange add-ons. Orange's bundled Python has only the core packages.
+
 ## Pending
 
-- Install OpenRefine, Orange (+ add-ons) — Protégé done
+- Install the Orange add-ons: Text, Associate, Explain (Image Analytics optional)
 - Download the primary dataset CSVs into `data/raw/handicraft/`
