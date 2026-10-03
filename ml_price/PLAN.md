@@ -39,6 +39,7 @@ these to act on.
   - Associate
   - Explain
   - Image Analytics (optional)
+  - Textable (extra, added by the project owner) — word counts and concordance; can back up the "top words per price band" analysis
 - **Protégé** — knowledge graph and reasoning
 - **Google AI Studio** — LLM extraction
 - **Kaggle website** — data download

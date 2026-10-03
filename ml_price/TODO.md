@@ -10,7 +10,7 @@ Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS
 - [x] Datasets selected ([DATASETS.md](DATASETS.md))
 - [x] Install OpenRefine 3.10.1
 - [x] Install Orange 3.40.0
-- [ ] Install Orange add-ons: Text, Associate, Explain (Image Analytics optional)
+- [x] Install Orange add-ons: Text 1.16.3, Associate 1.4.0, Explain 0.6.11, Image Analytics 0.13.0, Textable 3.2.7 (extra)
 - [x] Install Protégé (quarantine mark removed; see guide 00)
 - [x] Claude-side ontology tools: owlready2 + rdflib in `.venv`
 - [ ] Download the primary dataset CSVs into `data/raw/handicraft/`

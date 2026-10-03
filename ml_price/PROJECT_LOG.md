@@ -91,7 +91,21 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   Homebrew). Both pass Gatekeeper (notarised Developer ID), so no workaround is needed.
 - **Not yet installed:** the Orange add-ons. Orange's bundled Python has only the core packages.
 
+## 2026-10-03 — Orange add-ons verified
+
+- **Checked** in Orange's bundled Python. Every add-on below is installed and loads without error:
+
+  | Add-on | Version |
+  |---|---|
+  | Text | 1.16.3 |
+  | Associate | 1.4.0 |
+  | Explain | 0.6.11 (uses shap 0.52.0) |
+  | Image Analytics | 0.13.0 |
+  | Textable | 3.2.7 (extra, added by the project owner) |
+
+- **Also available:** xgboost 2.0.3 and catboost 1.2.8, so the Gradient Boosting widget can use
+  either library besides scikit-learn.
+
 ## Pending
 
-- Install the Orange add-ons: Text, Associate, Explain (Image Analytics optional)
 - Download the primary dataset CSVs into `data/raw/handicraft/`
