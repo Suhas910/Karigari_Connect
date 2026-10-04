@@ -1,45 +1,62 @@
 # Experiments
 
-All scores are on the **frozen test set** (7,514 rows), in rupees on the original price.
-Source: `reports/models/experiments.csv`, written by `scripts/evaluate_stage.py`. The split is from
+All scores are on the **frozen test set**, in rupees on the original price. Source:
+`reports/models/experiments.csv`, written by `scripts/evaluate_stage.py`. Split:
 `scripts/make_split.py`.
 
-## The frozen split (v2, 2026-10-04)
+## The frozen split (v3, 2026-10-04)
 
 | | Value |
 |---|---|
-| Train / test rows | 29,743 / 7,514 (20.2% test) |
-| Grouping | **Product family**: rows sharing a `variant_group` *or* an identical description are joined, and a family goes entirely to one side. 12,304 families; the largest has 392 rows |
-| Stratified by | `primary_artform`. 3 small art forms ended up train-only and 1 test-only (grouping takes priority) |
+| Train / test rows | 29,805 / 7,452 (20.0% test) |
+| Grouping | **Product family**: rows are joined when they share a `variant_group`, an identical description, **or near-identical text** (TF-IDF cosine ≥ 0.8 on title + description). A family goes entirely to one side. 2,575 families; the largest has 629 rows (1.7%) |
+| Stratified by | `primary_artform` (16 small art forms ended up train-only and 2 test-only; grouping takes priority) |
 | Shared variant groups / descriptions across sides | 0 / 0 |
+| Test rows with a ≥ 0.9-similar training row | 1.5% (v2: 72%) |
+| "Copy the most similar training item's price" | R² 0.255 (v2: 0.841) |
 | Median price, train / test | ₹850 / ₹890 |
 
-**Why v2?** The v1 split grouped by `variant_group` only. A check found that **71% of test rows
-had a description identical to a training row**, and 83% of those had the same price, so the
-model was recognising products it had effectively already seen. Under v1, Random Forest at S5b
-scored R² 0.788, but only 0.600 on test rows with unseen descriptions. v1 was discarded.
+### Why it took three versions
 
-## Regression — target: price
+The catalogue lists many near-copies of one product: colour, size and design variants with
+lightly reworded text. A random split puts near-copies on both sides, and the test then checks
+*memory*, not *pricing ability*.
 
-| Stage | Change | Train rows | Features | Median baseline R² | Median per art form R² | Linear Reg. R² | Random Forest R² | RF MAE (₹) | RF MAPE (%) |
-|---|---|---|---|---|---|---|---|---|---|
-| S0 | Raw; artform list text as one category | 29,759 | 1 | −0.193 | 0.356 | 0.457 | 0.455 | 1,259 | 102.1 |
-| S1 | Types fixed | 29,759 | 1 | −0.193 | 0.356 | 0.457 | 0.455 | 1,259 | 102.1 |
-| S2 | 16 rows removed | 29,743 | 1 | −0.193 | 0.356 | 0.457 | 0.455 | 1,259 | 102.2 |
-| S4 | Primary art form + label count | 29,743 | 2 | −0.193 | 0.193 | 0.320 | 0.384 | 1,380 | 113.9 |
-| S5 | log(price) target | 29,743 | 2 | −0.193 | 0.193 | 0.207 | 0.277 | 1,342 | 77.2 |
-| S5b | + title length, description length, description-repeat count | 29,743 | 5 | −0.193 | 0.193 | 0.300 | **0.616** | **840** | **41.8** |
+| Version | Grouped by | Leak found | Effect |
+|---|---|---|---|
+| v1 | `variant_group` (same title + price) | 71% of test rows shared an exact description with training | RF R² inflated to 0.788 |
+| v2 | + identical description | 72% of test rows still had a ≥ 0.9-similar training row ("Mint Green - Saanjh Bela … Earrings" vs "Green - Saanjh Bela … Earrings") | Copying the nearest training price alone scored R² 0.841; RF reached 0.857 |
+| **v3** | + near-identical text (cosine ≥ 0.8) | — | Copy-nearest falls to 0.255; scores measure pricing of genuinely new products |
 
-Median-baseline MAE is ₹1,741 at every stage; the baseline doesn't change.
-(S3 only added the variant IDs used by the split, so it has no row of its own.)
+**Threshold choice:** 0.8 keeps families product-sized. At 0.7 near-matches chain into one family
+of 2,585 rows.
 
-## Classification — target: price band (low / mid / high, training-set tertiles)
+v1 and v2 scores are discarded and appear here only to explain the change.
+
+## Regression — target: price (v3)
+
+| Stage | Change | Feat. | Median / art form R² | Linear R² | Ridge R² | Random Forest R² | Best MAE (₹) | Best MAPE (%) |
+|---|---|---|---|---|---|---|---|---|
+| S0 | Raw; artform list text as one category | 1 | 0.144 | 0.253 | 0.265 | **0.269** | 1,506 (RF) | 152.3 |
+| S1 | Types fixed | 1 | 0.144 | 0.253 | 0.265 | 0.269 | 1,506 | 152.3 |
+| S2 | 16 rows removed | 1 | 0.144 | 0.253 | 0.265 | 0.269 | 1,507 | 152.4 |
+| S4 | Primary art form + label count | 2 | 0.156 | 0.197 | 0.208 | **0.288** | 1,476 (RF) | 143.2 |
+| S5 | log(price) target | 2 | 0.156 | 0.196 | 0.213 | **0.270** | 1,304 (RF) | 94.3 |
+| S5b | + title/description length, description-repeat | 5 | 0.156 | **0.303** | 0.292 | 0.175 | 1,266 (Ridge) | 83.5 |
+| S6a | + all art-form labels (multi-hot) | 6 | 0.156 | 0.338 | **0.373** | 0.099 | 1,242 (Ridge) | 83.4 |
+| S6b | + TF-IDF of title + description | 7 | 0.156 | 0.518 | **0.707** | 0.603 | **730 (Ridge)** | **42.0** |
+
+The median baseline (one price for everything) scores R² −0.19 and MAE ₹1,741 throughout.
+
+## Classification — price band (low / mid / high, training-set tertiles)
 
 | Stage | Logistic Regression macro-F1 |
 |---|---|
-| S0–S2 | 0.604 |
-| S4–S5 | 0.543 |
-| S5b | 0.606 |
+| S0–S2 | 0.534 |
+| S4–S5 | 0.478 |
+| S5b | 0.501 |
+| S6a | 0.539 |
+| **S6b** | **0.762** |
 
 ## Progress chart
 
@@ -47,26 +64,25 @@ Median-baseline MAE is ₹1,741 at every stage; the baseline doesn't change.
 
 ## What the stages show
 
-1. **S1 and S2 change nothing.** Fixing types and removing 16 rows (0.04%) can't move the
-   scores. Expected, and reported anyway.
-2. **S4 made scores worse** (Random Forest R² 0.455 → 0.384). The raw `artform` text is the whole
-   *combination* of labels (733 distinct lists), and the combination carries price information
-   (e.g. `ajrakh block printing | natural dyed`). Keeping only one primary label threw that away.
-   **Fix planned for S6/S7:** encode all labels as multi-hot features, not just the primary one.
-3. **S5 (log target) lowers R² but cuts the percentage error** (RF MAPE 113.9% → 77.2%).
-   Training on log(price) optimises *relative* error. Cheap items get better predictions,
-   expensive ones worse, and R² on the rupee scale is dominated by the expensive tail. Both
-   numbers are reported for that reason.
-4. **S5b is the first real gain:** R² 0.616, MAE ₹840 (down from ₹1,259 at S0). Only the
-   non-linear model benefits; Linear Regression barely moves, so the length features act through
-   interactions, not straight lines.
-   - **Caveat to verify:** `desc_repeat` was counted over the whole dataset, test rows included.
-     It contains no prices, but it is a whole-dataset statistic. To be recomputed on training
-     data only in the next stage, to confirm the gain holds.
+1. **S1, S2: no change.** Structural fixes don't change what a model can learn. Expected.
+2. **S4: mixed.** Random Forest rises slightly (0.269 → 0.288); the linear models fall, because one
+   primary label loses the label *combinations* that the raw list text encoded.
+3. **S5 (log target):** R² roughly flat, percentage error falls sharply (RF MAPE 143 → 94%).
+   Log training optimises relative error.
+4. **S5b and S6a hurt Random Forest** (0.270 → 0.175 → 0.099) while helping linear models.
+   Length and repeat counts let a forest memorise product families; on unseen families that
+   memory misleads it. Under the leaky v2 split the same features looked like a big *gain* —
+   the clearest demonstration in this project of why the split matters.
+5. **S6b: text is the main signal.** The words in the title and description (materials, item
+   type, size, craft names) take Ridge from 0.373 to **0.707** and MAE to **₹730**, against
+   ₹1,506 at S0. Ridge beats plain Linear Regression here (0.707 vs 0.518), because with
+   thousands of word features the unregularised model over-fits; Ridge's penalty prevents that.
+6. **Price bands:** F1 0.534 → **0.762**, following the same pattern.
 
 ## Stages that made scores worse
 
-| Stage | Effect | Reason |
-|---|---|---|
-| S4 | RF R² −0.071 | Label combinations collapsed into one primary label |
-| S5 | RF R² −0.107 (MAPE −36.7 pts) | Log target trades rupee-scale fit for relative fit |
+| Stage | Model | Effect | Reason |
+|---|---|---|---|
+| S4 | Linear / Ridge | R² −0.06 | Label combinations collapsed into one label |
+| S5b | Random Forest | R² −0.10 | Length/repeat features enable family memorisation |
+| S6a | Random Forest | R² −0.08 | Same, plus many sparse label columns |

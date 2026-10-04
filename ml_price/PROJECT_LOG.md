@@ -175,8 +175,23 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   S5 0.277 (log target; MAPE improved) → S5b **0.616**, MAE ₹840.
 - **Full table and reasons:** [EXPERIMENTS.md](EXPERIMENTS.md)
 
+## 2026-10-04 — Second leak found; split v3; stages S6a–S6b
+
+- **Checked:** `desc_repeat` equals the within-split count for every row, so it carries no
+  cross-split information.
+- **New stages:** S6a (all art-form labels, multi-hot) and S6b (TF-IDF of title + description);
+  Ridge added as a reference model at every stage.
+- **Second leak:** S6b scored R² 0.857 on v2. Check: 72% of test rows had a training row with
+  ≥ 0.9 text similarity (colour variants with reworded descriptions), and copying that row's
+  price alone scored R² 0.841.
+- **Fix, split v3:** families also join on near-identical text (cosine ≥ 0.8; 0.7 chained into
+  a 2,585-row blob). Copy-nearest drops to R² 0.255. All stages re-scored; v2 discarded.
+- **Honest results (v3):** S0 best R² 0.269 (MAE ₹1,506) → S6b Ridge **0.707** (MAE ₹730,
+  MAPE 42%). Price-band F1 0.534 → 0.762. Length/repeat features, which looked strong on v2,
+  hurt Random Forest on unseen families.
+- **Details:** [EXPERIMENTS.md](EXPERIMENTS.md)
+
 ## Pending
 
-- Recompute desc_repeat on train only; multi-hot art-form labels; S6 TF-IDF
 - Outlier handling (2.9) on training data
 - Orange cross-check of one stage (Test and Score on the saved train/test files)

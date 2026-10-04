@@ -87,9 +87,10 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [ ] S3 outliers handled (training data only)
 - [x] S4 art forms consolidated (scores fell; see EXPERIMENTS)
 - [x] S5 log(price) target
-- [ ] Recompute `desc_repeat` on training data only; confirm the S5b gain
-- [ ] Multi-hot features for all art-form labels (fixes the S4 drop)
-- [ ] S6 TF-IDF text features
+- [x] `desc_repeat` checked: equals within-split count (no leak); its v2 "gain" was family memorisation
+- [x] Multi-hot features for all art-form labels (S6a)
+- [x] S6 TF-IDF text features (S6b: Ridge R² 0.707)
+- [x] Split v3: near-duplicate families (second leak fixed)
 - [ ] S7 knowledge-graph and rule features
 - [ ] S8 cluster ID and material-combination features
 - [ ] S9 sentence embeddings

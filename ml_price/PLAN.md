@@ -52,7 +52,7 @@ these to act on.
 
 Fixed evaluation harness:
 
-- **Frozen test set**, grouped by `variant_group` and stratified by `primary_artform` (changed 2026-10-04; see PROJECT_LOG). Created once, never changed; outlier handling applies to training data only.
+- **Frozen test set**, grouped by product family (variant group + identical description + near-identical text, cosine ≥ 0.8) and stratified by `primary_artform` (v3, 2026-10-04; see EXPERIMENTS). Created once, never changed; outlier handling applies to training data only.
 - **Reference models:**
   - median baseline
   - Linear Regression

@@ -7,7 +7,8 @@ Errors are always measured in rupees on the original price, even when a model tr
 import sys, time, json
 import numpy as np, pandas as pd
 from sklearn.dummy import DummyRegressor
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
@@ -41,22 +42,38 @@ STAGES = {
     "S5b": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"],
                 num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
                 change="+ title/description length and description-repeat count"),
+    "S6a": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"], multi=["artform_all"],
+                num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
+                change="+ all art-form labels as multi-hot features"),
+    "S6b": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"], multi=["artform_all"],
+                text=True, num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
+                change="+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)"),
 }
 cfg = STAGES[STAGE]
+cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
 for c in cfg["num"]:
     d[c] = pd.to_numeric(d[c])
 tr, te = d[d.split == "train"], d[d.split == "test"]
-X = cfg["cat"] + cfg["num"]
+d["text"] = d.product_title + " " + d.product_description if cfg["text"] else ""
+tr, te = d[d.split == "train"], d[d.split == "test"]
+X = cfg["cat"] + cfg["num"] + cfg["multi"] + (["text"] if cfg["text"] else [])
 ytr = np.log(tr.price) if cfg["log"] else tr.price
 back = np.exp if cfg["log"] else (lambda v: v)
 
-pre = ColumnTransformer([("cat", OneHotEncoder(handle_unknown="ignore", min_frequency=1), cfg["cat"])],
-                        remainder="passthrough")
+parts = [("cat", OneHotEncoder(handle_unknown="ignore"), cfg["cat"])]
+for c in cfg["multi"]:  # one 0/1 column per art-form label, learned from training rows only
+    parts.append((c, CountVectorizer(tokenizer=lambda t: t.split(" | "), token_pattern=None,
+                                     lowercase=False, binary=True), c))
+if cfg["text"]:         # vocabulary and IDF weights learned from training rows only
+    parts.append(("text", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), min_df=5,
+                                          sublinear_tf=True, stop_words="english"), "text"))
+pre = ColumnTransformer(parts, remainder="passthrough")
 models = {
     "Median baseline": DummyRegressor(strategy="median"),
     "Median per art form": None,  # computed directly below
     "Linear Regression": make_pipeline(pre, LinearRegression()),
+    "Ridge (alpha=1)": make_pipeline(pre, Ridge(alpha=1.0)),
     "Random Forest": make_pipeline(pre, RandomForestRegressor(n_estimators=200, min_samples_leaf=2,
                                                               n_jobs=-1, random_state=42)),
 }
@@ -78,7 +95,7 @@ for name, m in models.items():
 # Price-band classification (low / mid / high by training-set tertiles), logistic regression
 cuts = tr.price.quantile([1 / 3, 2 / 3]).values
 band = lambda p: np.digitize(p, cuts)
-clf = make_pipeline(pre, LogisticRegression(max_iter=2000))
+clf = make_pipeline(pre, LogisticRegression(max_iter=5000))
 clf.fit(tr[X], band(tr.price))
 f1 = f1_score(band(te.price), clf.predict(te[X]), average="macro")
 rows.append(dict(stage=STAGE, change=cfg["change"], train_rows=len(tr), test_rows=len(te), features=len(X),

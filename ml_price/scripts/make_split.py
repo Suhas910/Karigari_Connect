@@ -1,13 +1,21 @@
 """Create the frozen train/test split (run once).
 
-- Grouped by product family: rows sharing a variant_group OR an identical description are joined
-  (union-find) into one family, and a family lands entirely on one side. (v1 grouped by
-  variant_group only; 71% of test rows then shared an exact description with a training row.)
+- Grouped by product family (v3): rows are joined (union-find) when they share a variant_group, OR
+  an identical description, OR near-identical text (TF-IDF cosine similarity >= 0.8 between
+  title + description, checked over each row's 30 nearest neighbours). A family lands entirely
+  on one side.
+  History: v1 grouped by variant_group only -> 71% of test rows shared an exact description with
+  training. v2 added exact descriptions -> 72% of test rows still had a >= 0.9-similar training
+  row (colour variants with reworded text); copying the nearest training price scored R2 0.841.
 - Stratified by primary_artform: every art form appears in both sets in similar proportion.
 - 80 / 20, fixed seed 42. Rows are identified by image_file (unique per row).
 """
 import pandas as pd
 from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
+
+SIM = 0.8  # near-duplicate threshold; 0.7 chains into one 2,585-row family, 0.8 keeps the largest at 629
 
 d = pd.read_csv("data/final/handicraft_clean.csv.gz", dtype=str, keep_default_na=False)
 assert d.image_file.is_unique
@@ -20,9 +28,16 @@ def find(x):
         parent[x] = parent[parent[x]]
         x = parent[x]
     return x
-for v, desc in zip(d.variant_group, d.product_description):
+for i, (v, desc) in enumerate(zip(d.variant_group, d.product_description)):
+    parent[find(f"r:{i}")] = find("v:" + v)
     parent[find("v:" + v)] = find("d:" + desc)
-d["family"] = [find("v:" + v) for v in d.variant_group]
+X = TfidfVectorizer(sublinear_tf=True, min_df=2).fit_transform(d.product_title + " " + d.product_description)
+dist, idx = NearestNeighbors(n_neighbors=30, metric="cosine").fit(X).kneighbors(X)
+for i in range(len(d)):
+    for j, ds in zip(idx[i], dist[i]):
+        if 1 - ds >= SIM:
+            parent[find(f"r:{i}")] = find(f"r:{j}")
+d["family"] = [find(f"r:{i}") for i in range(len(d))]
 fam_ids = {f: i for i, f in enumerate(pd.unique(d.family))}
 d["family"] = d.family.map(fam_ids)
 print("families:", d.family.nunique(), "| largest:", d.family.value_counts().max())
