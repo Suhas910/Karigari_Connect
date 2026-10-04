@@ -337,10 +337,15 @@ actual price, 1.0 = fair.
 - Market range ₹13,840 – ₹40,430; floor ₹6,558 (40 h × ₹88.94/h skilled, Telangana + ₹3,000
   materials).
 - Verdict: **below the fair-wage floor**.
-- Cautions: few similar products. (The screenshot below also shows "Pochampally ikat is
-  under-priced". That caution came from the per-product audit and was removed by the
-  family-level revision: the advisor now warns only for crafts with at least 5 families of
-  evidence, e.g. kalamkari block printing.)
+- Cautions: few similar products. (An earlier version also warned "Pochampally ikat is
+  under-priced". That came from the per-product audit and was removed by the family-level
+  revision: the advisor now warns only for crafts with at least 5 families of evidence, e.g.
+  kalamkari block printing.)
+- Optional RAG explanation (Part 18): Gemini cites listings 4–6, handloom silk Pochampally sarees
+  with zari, and gives ₹37,990 as a zero-width range (the overconfidence measured in Part 18).
+
+The screenshot was retaken after both changes, with the page opened as `?demo=1&rag=1` so the
+example runs by itself.
 
 ![advisor](../../figures/P16_advisor_demo.jpg)
 

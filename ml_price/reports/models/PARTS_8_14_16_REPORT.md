@@ -221,8 +221,8 @@ The deep dip at ₹1,590 (decile D7, ×0.58) is about half the bag family. Witho
 **Effect on the advisor (Part 16).** `train_advisor.py` now reads the family-level table, so the
 "under-priced craft" caution needs at least 5 families of evidence. Checked: a Pochampally saree no
 longer gets the caution, and a kalamkari block-print dupatta does ("62% of the real price across 8
-product families"). The demo screenshot below predates this change and still shows the old
-Pochampally caution.
+product families"). The demo screenshot below was retaken after this change: only the
+"few similar products" caution remains for the saree, plus the optional RAG explanation (part 18).
 
 ---
 

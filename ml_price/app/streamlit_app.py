@@ -20,10 +20,12 @@ with st.form("listing"):
         hrs = st.number_input("Labour hours", min_value=0.0, value=40.0, step=1.0)
         state = st.text_input("State code (e.g. KA, TG, UP)", "TG")
         skill = st.selectbox("Self-declared skill", ["skilled", "semi_skilled", "unskilled", "highly_skilled"])
-    use_rag = st.checkbox("Also ask Gemini to explain the price from the similar listings (RAG, part 18; needs the API key in .env)")
+    qp = st.query_params            # ?demo=1 runs the example straight away (used for report screenshots); &rag=1 ticks RAG
+    use_rag = st.checkbox("Also ask Gemini to explain the price from the similar listings (RAG, part 18; needs the API key in .env)",
+                          value=qp.get("rag") == "1")
     go = st.form_submit_button("Advise")
 
-if go:
+if go or qp.get("demo") == "1":
     r = advise(title, desc, labels, listed_price=listed or None, material_cost=mat if hrs else None,
                labour_hours=hrs or None, state_code=state.strip().upper() or None, skill_level=skill)
     lo, hi = r["suggested_range"]

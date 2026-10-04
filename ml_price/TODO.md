@@ -105,7 +105,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 - [x] Bias audit re-run on the final model (S12-img) and audited per product family: one bag line (453 test rows at ₹1,590) had driven the Pochampally / Kutch findings; kalamkari block printing and the pull toward the middle hold up ([revision](reports/models/PARTS_8_14_16_REPORT.md))
 - [x] Advisor caution now needs ≥ 5 families of evidence (retrained)
-- [ ] Optional: retake the advisor screenshot (current one shows the old Pochampally caution)
+- [x] Advisor screenshot retaken (corrected cautions + RAG explanation); headless Chrome via `?demo=1&rag=1`
 
 ## 6c — Syllabus gap parts (requested 2026-10-04)
 

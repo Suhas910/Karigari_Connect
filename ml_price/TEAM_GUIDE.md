@@ -42,7 +42,7 @@ cd ml_price && python3 -m venv .venv && .venv/bin/python -m pip install -r requi
 .venv/bin/streamlit run app/streamlit_app.py
 ```
 
-The page opens at http://localhost:8501. Paste a product title and description, choose art-form
+The page opens at http://localhost:8501 (add `?demo=1` to the address to run the saree example straight away). Paste a product title and description, choose art-form
 labels, optionally add material cost, labour hours and a state code (KA, TG, UP …), and press
 **Advise**. You get:
 
