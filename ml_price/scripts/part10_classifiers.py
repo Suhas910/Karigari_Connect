@@ -38,13 +38,13 @@ MODELS = {  # name: (estimator, param grid, train X, test X)
     "Naive Bayes (multinomial)": (MultinomialNB(), {"alpha": [0.1, 0.5, 1.0]}, Ntr, Nte),
     "KNN (cosine, text)": (KNeighborsClassifier(metric="cosine", weights="distance"), {"n_neighbors": [5, 15, 35]}, Ttr, Tte),
     "Decision Tree": (DecisionTreeClassifier(random_state=42), {"max_depth": [8, 16, None], "min_samples_leaf": [5]}, Dtr, Dte),
-    "Random Forest": (RandomForestClassifier(n_estimators=300, n_jobs=3, random_state=42), {"min_samples_leaf": [1, 5]}, Dtr, Dte),
+    "Random Forest": (RandomForestClassifier(n_estimators=300, n_jobs=4, random_state=42), {"min_samples_leaf": [1, 5]}, Dtr, Dte),
     "Gradient Boosting": (HistGradientBoostingClassifier(random_state=42), {"learning_rate": [0.05, 0.1], "max_iter": [300]}, Dtr, Dte),
 }
 rows, cms = [], {}
 for name, (est, grid, Xa, Xb) in MODELS.items():
     t = time.time()
-    gs = GridSearchCV(est, grid, scoring="f1_macro", cv=cv, n_jobs=3).fit(Xa, ytr)
+    gs = GridSearchCV(est, grid, scoring="f1_macro", cv=cv, n_jobs=4).fit(Xa, ytr)
     pred, prob = gs.predict(Xb), gs.predict_proba(Xb)
     p, r, f, _ = precision_recall_fscore_support(yte, pred, average="macro")
     rows.append(dict(model=name, best_params=gs.best_params_, cv_f1=round(gs.best_score_, 4),

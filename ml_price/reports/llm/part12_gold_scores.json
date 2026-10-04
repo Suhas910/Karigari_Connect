@@ -1,0 +1,53 @@
+{
+ "model": "gemini-3.5-flash",
+ "rows": 80,
+ "keywords": {
+  "precision": 0.638,
+  "recall": 0.926,
+  "f1": 0.755,
+  "exact_match": 0.425,
+  "false_materials": 50,
+  "missed_materials": 7,
+  "exact_match_by_group": {
+   "trap: bamboo pen": 0.0,
+   "trap: wooden blocks": 0.0,
+   "trap: german silver": 0.0,
+   "trap: silk-like": 0.8,
+   "random": 0.65
+  }
+ },
+ "llm_v1_zero_shot": {
+  "precision": 0.798,
+  "recall": 1.0,
+  "f1": 0.888,
+  "exact_match": 0.738,
+  "false_materials": 24,
+  "missed_materials": 0,
+  "exact_match_by_group": {
+   "trap: bamboo pen": 0.8,
+   "trap: wooden blocks": 1.0,
+   "trap: german silver": 0.0,
+   "trap: silk-like": 1.0,
+   "random": 0.775
+  },
+  "seconds": 262.4,
+  "missing_ids": []
+ },
+ "llm_v2_engineered": {
+  "precision": 0.979,
+  "recall": 0.979,
+  "f1": 0.979,
+  "exact_match": 0.95,
+  "false_materials": 2,
+  "missed_materials": 2,
+  "exact_match_by_group": {
+   "trap: bamboo pen": 1.0,
+   "trap: wooden blocks": 1.0,
+   "trap: german silver": 0.8,
+   "trap: silk-like": 1.0,
+   "random": 0.95
+  },
+  "seconds": 190.7,
+  "missing_ids": []
+ }
+}

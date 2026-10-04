@@ -256,7 +256,7 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 
 - **Problem:** part 10 (grid search, `n_jobs=-1`) ran up to 8 worker processes at once, each
   holding a copy of the training features. Memory use reached about 12 GB of 16 GB.
-- **Change:** every script now uses `n_jobs=3` (first 4, lowered to 3 at the project owner's request). Results are unchanged (fixed random seeds); runs
+- **Change:** every script now uses `n_jobs=4` (first 4, lowered to 3, then raised back to 4 at the project owner's request). Results are unchanged (fixed random seeds); runs
   take somewhat longer.
 
 ## 2026-10-04 — Parts 8, 14, 15, 16
@@ -275,6 +275,22 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   byte-identical).
 - **Report:** [PARTS_8_14_16_REPORT.md](reports/models/PARTS_8_14_16_REPORT.md)
 
+## 2026-10-04 — Part 12: LLM extraction; worker cap 4; demo server note
+
+- **Key:** stored in `ml_price/.env` (git-ignored, permissions 600); `.env.example` committed with
+  no secret.
+- **Gold set:** 80 training products (40 keyword traps + 40 random), labelled by Claude against
+  written rules.
+- **Results (materials, F1 / exact match):** keywords 0.755 / 0.425; Gemini zero-shot
+  0.888 / 0.738 (every German-silver item called Silver); engineered prompt with 6 rules +
+  3 examples **0.979 / 0.950**.
+- **Not run:** all-rows extraction (S10), because of the rate limit (about 2.6 h for all rows;
+  about 27 min for unique descriptions). Pending decision.
+- **Housekeeping:** worker cap raised from 3 to 4 at the project owner's request. The demo
+  server had been stopped on purpose after its screenshot; the stale browser tab showing
+  "Connection error" was closed.
+- **Report:** [PART12_REPORT.md](reports/llm/PART12_REPORT.md)
+
 ## Pending
 
-- Part 12 (LLM attribute extraction), part 13 (image features), final report
+- S10 decision (LLM attributes for all unique descriptions); part 13 (image features) likely skipped; final report + viva sheet

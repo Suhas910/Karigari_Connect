@@ -3,7 +3,7 @@ Gradient Boosting, KNN; cross-validation and hyperparameter tuning; R2).
 
 Target: log(price); scores reported in rupees on the frozen test set.
 Tuning: GridSearchCV, 5-fold GroupKFold on training rows (groups = product family), scored by
-negative MAE on log price. n_jobs=3 (memory cap).
+negative MAE on log price. n_jobs=4 (memory cap).
 Inputs: 'sparse' = S9 features (one-hot, labels, TF-IDF, scaled numeric); 'dense' = text SVD (100) + KG +
 numeric + segment; 'small' = 20 SVD dims + 4 scaled numeric (for polynomial expansion).
 """
@@ -25,7 +25,7 @@ Str, Ste = sparse(tr, te, kgc)
 Dtr, Dte, Ttr, Tte = dense(tr, te, kgc)
 Smtr, Smte = np.hstack([Ttr[:, :20], Dtr[:, -21:-17]]), np.hstack([Tte[:, :20], Dte[:, -21:-17]])  # 20 SVD + 4 numeric
 cv = list(GroupKFold(5).split(Str, groups=tr.family))
-N = 3
+N = 4
 
 MODELS = {
     "Median baseline": (DummyRegressor(strategy="median"), {}, "sparse"),

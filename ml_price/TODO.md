@@ -72,7 +72,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] 9 Price range: quantile GBM 58% → conformal 83% coverage; Ridge band 77% [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 10 Classifiers: 7 models, grouped-CV tuning; Gradient Boosting F1 0.810, AUC 0.925 [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 11 Similar-items: FAISS index; 10-NN median R² 0.613; similarity flags uncertainty [report](reports/models/PARTS_9_11_REPORT.md)
-- [ ] 12 LLM attribute extraction: prompt + accuracy on a hand-labelled sample
+- [x] 12 LLM extraction: 80-product gold set; keywords F1 0.755 → zero-shot 0.888 → engineered prompt 0.979 ([report](reports/llm/PART12_REPORT.md))
 - [ ] 13 Image features (stretch goal): CNN embeddings
 - [x] 14 SHAP: Ridge (exact match with shap library) + tree beeswarm; per-product reasons [report](reports/models/PARTS_8_14_16_REPORT.md)
 - [x] 15 Bias audit: pull to the middle; kalamkari / Kutch / ikat undervalued; ethics section [report](reports/models/PARTS_8_14_16_REPORT.md)
@@ -94,7 +94,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] S7 knowledge-graph and rule features (RF 0.110 → 0.527 without text)
 - [x] S8 cluster ID (Ridge R² 0.714, best so far)
 - [ ] S9 sentence embeddings
-- [ ] S10 LLM-extracted attributes
+- [ ] S10 LLM-extracted attributes for all products (needs ~320 API requests on unique descriptions; decision pending)
 - [ ] S11 image features
 - [ ] S12 hyperparameter tuning
 - [x] S13 quantile bands (part 9)

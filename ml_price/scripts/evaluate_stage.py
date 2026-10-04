@@ -99,7 +99,7 @@ models = {
     "Linear Regression": make_pipeline(pre, LinearRegression()),
     "Ridge (alpha=1)": make_pipeline(pre, Ridge(alpha=1.0)),
     "Random Forest": make_pipeline(pre, RandomForestRegressor(n_estimators=200, min_samples_leaf=2,
-                                                              n_jobs=3, random_state=42)),
+                                                              n_jobs=4, random_state=42)),
 }
 rows = []
 for name, m in models.items():

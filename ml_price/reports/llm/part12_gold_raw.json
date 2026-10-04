@@ -1,0 +1,1644 @@
+{
+ "llm_v1_zero_shot": {
+  "1": {
+   "id": 1,
+   "materials": [
+    "Cotton",
+    "Silk",
+    "Paper"
+   ],
+   "item_type": "jewellery box",
+   "set_size": null,
+   "size_text": "13",
+   "handloom": "unknown"
+  },
+  "2": {
+   "id": 2,
+   "materials": [
+    "Cotton",
+    "Silk"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "3": {
+   "id": 3,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": "67",
+   "handloom": "unknown"
+  },
+  "4": {
+   "id": 4,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "bangle",
+   "set_size": 2,
+   "size_text": "Set of 2",
+   "handloom": "unknown"
+  },
+  "5": {
+   "id": 5,
+   "materials": [
+    "Cotton",
+    "Silk"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "6": {
+   "id": 6,
+   "materials": [
+    "Cotton",
+    "Silk",
+    "Paper"
+   ],
+   "item_type": "tissue box",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "7": {
+   "id": 7,
+   "materials": [
+    "Cotton",
+    "Silk"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "8": {
+   "id": 8,
+   "materials": [
+    "Cotton",
+    "Leather"
+   ],
+   "item_type": "wallet",
+   "set_size": null,
+   "size_text": "110",
+   "handloom": "unknown"
+  },
+  "9": {
+   "id": 9,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "keychain pouch",
+   "set_size": null,
+   "size_text": "11",
+   "handloom": "unknown"
+  },
+  "10": {
+   "id": 10,
+   "materials": [
+    "Cotton",
+    "Leather"
+   ],
+   "item_type": "wallet",
+   "set_size": null,
+   "size_text": "95",
+   "handloom": "unknown"
+  },
+  "11": {
+   "id": 11,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "unstitched dress material",
+   "set_size": 2,
+   "size_text": "2pc",
+   "handloom": "unknown"
+  },
+  "12": {
+   "id": 12,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "stole",
+   "set_size": null,
+   "size_text": "07",
+   "handloom": "yes"
+  },
+  "13": {
+   "id": 13,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "unstitched dress material",
+   "set_size": 2,
+   "size_text": "2pc",
+   "handloom": "unknown"
+  },
+  "14": {
+   "id": 14,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": "43",
+   "handloom": "unknown"
+  },
+  "15": {
+   "id": 15,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "unstitched dress material",
+   "set_size": 3,
+   "size_text": "3pc",
+   "handloom": "unknown"
+  },
+  "16": {
+   "id": 16,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": "01",
+   "handloom": "unknown"
+  },
+  "17": {
+   "id": 17,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": "21",
+   "handloom": "unknown"
+  },
+  "18": {
+   "id": 18,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "unstitched dress material",
+   "set_size": 2,
+   "size_text": "2pc",
+   "handloom": "unknown"
+  },
+  "19": {
+   "id": 19,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "unstitched dress material",
+   "set_size": 2,
+   "size_text": "Kurta with Dupatta",
+   "handloom": "unknown"
+  },
+  "20": {
+   "id": 20,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": "62",
+   "handloom": "unknown"
+  },
+  "21": {
+   "id": 21,
+   "materials": [
+    "Cotton",
+    "Silver"
+   ],
+   "item_type": "kurta set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "22": {
+   "id": 22,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "23": {
+   "id": 23,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "24": {
+   "id": 24,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "25": {
+   "id": 25,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "26": {
+   "id": 26,
+   "materials": [
+    "Silver",
+    "Stone"
+   ],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "27": {
+   "id": 27,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "28": {
+   "id": 28,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "hair clip",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "29": {
+   "id": 29,
+   "materials": [
+    "Silver"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "30": {
+   "id": 30,
+   "materials": [
+    "Silver",
+    "Stone"
+   ],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "31": {
+   "id": 31,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "32": {
+   "id": 32,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "33": {
+   "id": 33,
+   "materials": [
+    "Zari"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "34": {
+   "id": 34,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "suit set",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "35": {
+   "id": 35,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "suit set",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "36": {
+   "id": 36,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "37": {
+   "id": 37,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "38": {
+   "id": 38,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "39": {
+   "id": 39,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "40": {
+   "id": 40,
+   "materials": [
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "41": {
+   "id": 41,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "42": {
+   "id": 42,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "coaster",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "43": {
+   "id": 43,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "44": {
+   "id": 44,
+   "materials": [
+    "Silver",
+    "Stone"
+   ],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "45": {
+   "id": 45,
+   "materials": [
+    "Glass",
+    "Stone"
+   ],
+   "item_type": "vase",
+   "set_size": null,
+   "size_text": "1.5 x 1.5 in",
+   "handloom": "unknown"
+  },
+  "46": {
+   "id": 46,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "47": {
+   "id": 47,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "stole",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "48": {
+   "id": 48,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "49": {
+   "id": 49,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "50": {
+   "id": 50,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "51": {
+   "id": 51,
+   "materials": [
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "52": {
+   "id": 52,
+   "materials": [
+    "Silver",
+    "Cotton"
+   ],
+   "item_type": "hair clip",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "53": {
+   "id": 53,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shopping bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "54": {
+   "id": 54,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "napkin",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "55": {
+   "id": 55,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "56": {
+   "id": 56,
+   "materials": [
+    "Silver",
+    "Stone"
+   ],
+   "item_type": "necklace set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "57": {
+   "id": 57,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "58": {
+   "id": 58,
+   "materials": [
+    "Cotton",
+    "Silk"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "59": {
+   "id": 59,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "kurta material",
+   "set_size": null,
+   "size_text": "2.65M",
+   "handloom": "unknown"
+  },
+  "60": {
+   "id": 60,
+   "materials": [
+    "Paper",
+    "Cotton"
+   ],
+   "item_type": "notebook",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "61": {
+   "id": 61,
+   "materials": [
+    "Leather"
+   ],
+   "item_type": "keychain",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "62": {
+   "id": 62,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "63": {
+   "id": 63,
+   "materials": [
+    "Silk"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "64": {
+   "id": 64,
+   "materials": [],
+   "item_type": "bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "65": {
+   "id": 65,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "66": {
+   "id": 66,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "67": {
+   "id": 67,
+   "materials": [
+    "Bamboo",
+    "Wood"
+   ],
+   "item_type": "earrings",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "68": {
+   "id": 68,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "69": {
+   "id": 69,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "70": {
+   "id": 70,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "bangle",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "71": {
+   "id": 71,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "72": {
+   "id": 72,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "laptop bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "73": {
+   "id": 73,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "kurta set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "74": {
+   "id": 74,
+   "materials": [
+    "Glass"
+   ],
+   "item_type": "rakhi / bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "75": {
+   "id": 75,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "76": {
+   "id": 76,
+   "materials": [
+    "Silver",
+    "Glass"
+   ],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "77": {
+   "id": 77,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "78": {
+   "id": 78,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "hand bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "79": {
+   "id": 79,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "80": {
+   "id": 80,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  }
+ },
+ "llm_v2_engineered": {
+  "1": {
+   "id": 1,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Paper"
+   ],
+   "item_type": "jewellery box",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "2": {
+   "id": 2,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "3": {
+   "id": 3,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "4": {
+   "id": 4,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "bangle",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "5": {
+   "id": 5,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "6": {
+   "id": 6,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Paper"
+   ],
+   "item_type": "tissue box",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "7": {
+   "id": 7,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "8": {
+   "id": 8,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "wallet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "9": {
+   "id": 9,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "keychain pouch",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "10": {
+   "id": 10,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "wallet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "11": {
+   "id": 11,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "12": {
+   "id": 12,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "stole",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "13": {
+   "id": 13,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "14": {
+   "id": 14,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "15": {
+   "id": 15,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "16": {
+   "id": 16,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "17": {
+   "id": 17,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "18": {
+   "id": 18,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "19": {
+   "id": 19,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "20": {
+   "id": 20,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "21": {
+   "id": 21,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "kurta set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "22": {
+   "id": 22,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "23": {
+   "id": 23,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "24": {
+   "id": 24,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "25": {
+   "id": 25,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "26": {
+   "id": 26,
+   "materials": [],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "27": {
+   "id": 27,
+   "materials": [],
+   "item_type": "bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "28": {
+   "id": 28,
+   "materials": [],
+   "item_type": "hair clip",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "29": {
+   "id": 29,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "30": {
+   "id": 30,
+   "materials": [],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "31": {
+   "id": 31,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "32": {
+   "id": 32,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "33": {
+   "id": 33,
+   "materials": [
+    "Zari"
+   ],
+   "item_type": "kurta set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "34": {
+   "id": 34,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "suit set",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "35": {
+   "id": 35,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "suit set",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "36": {
+   "id": 36,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "37": {
+   "id": 37,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "38": {
+   "id": 38,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "39": {
+   "id": 39,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "40": {
+   "id": 40,
+   "materials": [
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "41": {
+   "id": 41,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "42": {
+   "id": 42,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "coaster",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "43": {
+   "id": 43,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "44": {
+   "id": 44,
+   "materials": [
+    "Stone"
+   ],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "45": {
+   "id": 45,
+   "materials": [
+    "Stone",
+    "Glass"
+   ],
+   "item_type": "vase",
+   "set_size": null,
+   "size_text": "1.5 x 1.5 in",
+   "handloom": "no"
+  },
+  "46": {
+   "id": 46,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "47": {
+   "id": 47,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "stole",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "48": {
+   "id": 48,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "49": {
+   "id": 49,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "50": {
+   "id": 50,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "51": {
+   "id": 51,
+   "materials": [
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "52": {
+   "id": 52,
+   "materials": [],
+   "item_type": "hair clip",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "53": {
+   "id": 53,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "shopping bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "54": {
+   "id": 54,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "roti napkin",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "55": {
+   "id": 55,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "56": {
+   "id": 56,
+   "materials": [
+    "Stone"
+   ],
+   "item_type": "necklace set",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "57": {
+   "id": 57,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "58": {
+   "id": 58,
+   "materials": [
+    "Cotton",
+    "Silk"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "59": {
+   "id": 59,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "kurta material",
+   "set_size": null,
+   "size_text": "2.65M",
+   "handloom": "unknown"
+  },
+  "60": {
+   "id": 60,
+   "materials": [
+    "Cotton",
+    "Paper"
+   ],
+   "item_type": "notebook",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "61": {
+   "id": 61,
+   "materials": [
+    "Leather"
+   ],
+   "item_type": "keychain",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "62": {
+   "id": 62,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "63": {
+   "id": 63,
+   "materials": [],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "64": {
+   "id": 64,
+   "materials": [],
+   "item_type": "bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "65": {
+   "id": 65,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "66": {
+   "id": 66,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "67": {
+   "id": 67,
+   "materials": [
+    "Bamboo",
+    "Wood"
+   ],
+   "item_type": "earrings",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "68": {
+   "id": 68,
+   "materials": [
+    "Silk",
+    "Cotton"
+   ],
+   "item_type": "shoulder bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "69": {
+   "id": 69,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "70": {
+   "id": 70,
+   "materials": [],
+   "item_type": "bangle",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "71": {
+   "id": 71,
+   "materials": [
+    "Wool"
+   ],
+   "item_type": "dress material",
+   "set_size": 3,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "72": {
+   "id": 72,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "laptop bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "73": {
+   "id": 73,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "74": {
+   "id": 74,
+   "materials": [],
+   "item_type": "bracelet",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "75": {
+   "id": 75,
+   "materials": [
+    "Silk",
+    "Cotton",
+    "Zari"
+   ],
+   "item_type": "fabric",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  },
+  "76": {
+   "id": 76,
+   "materials": [],
+   "item_type": "necklace set",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "no"
+  },
+  "77": {
+   "id": 77,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "sling bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "78": {
+   "id": 78,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "hand bag",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "79": {
+   "id": 79,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "dress material",
+   "set_size": 2,
+   "size_text": null,
+   "handloom": "unknown"
+  },
+  "80": {
+   "id": 80,
+   "materials": [
+    "Cotton"
+   ],
+   "item_type": "saree",
+   "set_size": null,
+   "size_text": null,
+   "handloom": "yes"
+  }
+ }
+}
