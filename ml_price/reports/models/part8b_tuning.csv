@@ -1,0 +1,25 @@
+params,std_test_score,rank_test_score,cv_mae_log
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 1}",0.03779079747113767,1,0.3263
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 1}",0.03835124201655261,2,0.3263
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 1}",0.03875197280891446,3,0.3269
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 0.3}",0.03576938168182309,4,0.3288
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 1}",0.03958798316266352,5,0.3293
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 0.3}",0.03789628660005036,6,0.3299
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 0.3}",0.03505626299848896,7,0.3306
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 0.3}",0.03552550996681358,8,0.3313
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 3}",0.03762030345288272,9,0.3322
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 3}",0.037325601459421376,10,0.3324
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 3}",0.0386776384837715,11,0.3345
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 3}",0.03885753390119871,12,0.3373
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 3}",0.03055341532947321,13,0.3397
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 3}",0.03050529757730897,14,0.3398
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 1}",0.03197975151498299,15,0.3491
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 1}",0.03199111136530805,16,0.3492
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 10}",0.03187457935669169,17,0.3494
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 10}",0.03186463124947531,18,0.3495
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 10}",0.03561018926104067,19,0.3573
+"{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 10}",0.03548819210780627,20,0.3575
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 10}",0.0368218665062932,21,0.3614
+"{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 10}",0.036885839203422144,22,0.3653
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 0.3}",0.03421422626097904,23,0.3795
+"{'pre__TF-IDF text__max_features': 5000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 0.3}",0.034079081398471586,24,0.3804

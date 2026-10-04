@@ -330,6 +330,19 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   project, and Claude's shell can't read Documents. Copy it to `tool_exports/orange/` by hand.
 - **Report:** [EDA_REPORT.md](reports/eda/EDA_REPORT.md)
 
+## 2026-10-04 — Part 8b: ablation and final tuning (S12)
+
+- Script `scripts/part8b_ablation_tuning.py`. Rebuilt S10-swap reproduces test R² 0.7729 exactly.
+- **Ablation** (grouped CV on training rows): without TF-IDF, CV R² 0.738 → 0.395. Every other
+  group changes it by less than 0.01, with CV and test disagreeing in sign. All groups kept.
+- **Tuning:** 24 settings × 5 grouped folds. First run's best (20k terms) was at the grid edge,
+  so the grid was widened to 50k; 20k still won. Best: 20k terms, min_df 2, α 1.
+- **S12** added to `evaluate_stage.py`: **Ridge R² 0.790, MAE ₹646, MAPE 35.9%, band F1 0.811**.
+- **Progress chart fixed:** it had plotted plain Linear Regression (collapsed since S9) and no
+  Ridge, so the lines were flat and unreadable. Now Ridge / RF / baseline + band-F1 panel.
+- Advisor (part 16) left on the part 8 model; retraining on S12 needs a Gemini call per query.
+- **Report:** [PART8B_ABLATION_TUNING.md](reports/models/PART8B_ABLATION_TUNING.md)
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet

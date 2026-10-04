@@ -1,0 +1,49 @@
+{'removed': '(nothing: full S10-swap)', 'cv_r2': 0.7378, 'cv_mae': 690.6, 'cv_mape': 37.8, 'test_r2': 0.7729, 'test_mae': 680.9, 'test_mape': 37.0, 'seconds': 12.6}
+{'removed': 'primary art form (one-hot)', 'cv_r2': 0.738, 'cv_mae': 687.0, 'cv_mape': 37.6, 'test_r2': 0.7754, 'test_mae': 674.8, 'test_mape': 36.4, 'seconds': 11.2}
+{'removed': 'all art-form labels (multi-hot)', 'cv_r2': 0.7342, 'cv_mae': 682.2, 'cv_mape': 37.5, 'test_r2': 0.7841, 'test_mae': 675.1, 'test_mape': 37.4, 'seconds': 10.9}
+{'removed': 'TF-IDF text', 'cv_r2': 0.3946, 'cv_mae': 1090.2, 'cv_mape': 63.7, 'test_r2': 0.2566, 'test_mae': 1137.4, 'test_mape': 60.5, 'seconds': 2.0}
+{'removed': 'lengths + repeat count', 'cv_r2': 0.7279, 'cv_mae': 699.1, 'cv_mape': 38.3, 'test_r2': 0.7766, 'test_mae': 679.1, 'test_mape': 36.9, 'seconds': 11.2}
+{'removed': 'knowledge-graph rules (techniques, skill)', 'cv_r2': 0.7416, 'cv_mae': 685.7, 'cv_mape': 37.6, 'test_r2': 0.7671, 'test_mae': 690.0, 'test_mape': 37.4, 'seconds': 9.7}
+{'removed': 'LLM materials + handloom', 'cv_r2': 0.7298, 'cv_mae': 699.5, 'cv_mape': 38.0, 'test_r2': 0.7733, 'test_mae': 676.0, 'test_mape': 37.5, 'seconds': 9.9}
+{'removed': 'title size + set size', 'cv_r2': 0.7332, 'cv_mae': 691.8, 'cv_mape': 37.9, 'test_r2': 0.7591, 'test_mae': 684.1, 'test_mape': 36.6, 'seconds': 11.1}
+{'removed': 'K-Means segment', 'cv_r2': 0.7392, 'cv_mae': 689.3, 'cv_mape': 38.2, 'test_r2': 0.7627, 'test_mae': 688.5, 'test_mape': 37.1, 'seconds': 11.3}
+                                  removed  cv_r2  cv_mae  cv_mape  test_r2  test_mae  test_mape  cv_r2_change  test_r2_change
+                 (nothing: full S10-swap) 0.7378   690.6     37.8   0.7729     680.9       37.0        0.0000          0.0000
+               primary art form (one-hot) 0.7380   687.0     37.6   0.7754     674.8       36.4        0.0002          0.0025
+          all art-form labels (multi-hot) 0.7342   682.2     37.5   0.7841     675.1       37.4       -0.0036          0.0112
+                              TF-IDF text 0.3946  1090.2     63.7   0.2566    1137.4       60.5       -0.3432         -0.5163
+                   lengths + repeat count 0.7279   699.1     38.3   0.7766     679.1       36.9       -0.0099          0.0037
+knowledge-graph rules (techniques, skill) 0.7416   685.7     37.6   0.7671     690.0       37.4        0.0038         -0.0058
+                 LLM materials + handloom 0.7298   699.5     38.0   0.7733     676.0       37.5       -0.0080          0.0004
+                    title size + set size 0.7332   691.8     37.9   0.7591     684.1       36.6       -0.0046         -0.0138
+                          K-Means segment 0.7392   689.3     38.2   0.7627     688.5       37.1        0.0014         -0.0102
+                                                                                       params  std_test_score  rank_test_score  cv_mae_log
+  {'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 1}        0.037791                1      0.3263
+  {'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 1}        0.038351                2      0.3263
+  {'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 1}        0.038752                3      0.3269
+{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 0.3}        0.035769                4      0.3288
+  {'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 1}        0.039588                5      0.3293
+{'pre__TF-IDF text__max_features': 50000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 0.3}        0.037896                6      0.3299
+{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 2, 'ridge__alpha': 0.3}        0.035056                7      0.3306
+{'pre__TF-IDF text__max_features': 20000, 'pre__TF-IDF text__min_df': 5, 'ridge__alpha': 0.3}        0.035526                8      0.3313
+{
+ "best_params": {
+  "pre__TF-IDF text__max_features": 20000,
+  "pre__TF-IDF text__min_df": 2,
+  "ridge__alpha": 1
+ },
+ "best_cv_mae_log": 0.3263,
+ "default_cv_mae_log": 0.3492,
+ "test_tuned": {
+  "r2": 0.7903,
+  "mae": 645.9,
+  "mape": 35.9,
+  "band_f1_from_regression": 0.8344
+ },
+ "test_default": {
+  "r2": 0.7729,
+  "mae": 680.9,
+  "mape": 37.0
+ },
+ "seconds": 153.3
+}

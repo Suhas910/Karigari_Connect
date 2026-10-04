@@ -93,12 +93,12 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] Split v3: near-duplicate families (second leak fixed)
 - [x] S7 knowledge-graph and rule features (RF 0.110 → 0.527 without text)
 - [x] S8 cluster ID (Ridge R² 0.714, best so far)
-- [ ] S9 sentence embeddings
+- [ ] Sentence embeddings (optional; TF-IDF + LLM attributes cover the text). Note: stage "S9" in EXPERIMENTS is feature scaling
 - [x] S10 LLM attributes for all products (Flash-Lite, 12,875 descriptions): S10-swap Ridge R² 0.773 (best)
 - [ ] S11 image features
-- [ ] S12 hyperparameter tuning
+- [x] S12 hyperparameter tuning: TF-IDF 20k terms, min_df 2, α 1 → **Ridge R² 0.790, MAE ₹646, band F1 0.811 (final best)** ([report](reports/models/PART8B_ABLATION_TUNING.md))
 - [x] S13 quantile bands (part 9)
-- [ ] Ablation: remove one feature group at a time
+- [x] Ablation: remove one feature group at a time (text −0.34 CV R²; every other group < 0.01, kept all)
 - [x] Progress chart → `figures/experiments_progress.png` (updated each stage)
 
 ## 7 — Final report

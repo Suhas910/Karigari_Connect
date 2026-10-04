@@ -101,3 +101,9 @@ S10-swap,"S9 with keyword materials replaced by LLM materials, + title size feat
 S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Ridge (alpha=1),0.7729,680.9,37.0,4.1,
 S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Random Forest,0.5858,860.4,47.6,180.1,
 S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Logistic Regression (price band),,,,,0.7885
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Median baseline,-0.1457,1487.4,73.9,0.0,
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Median per art form,0.1556,1423.4,104.9,0.0,
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Linear Regression,-482850029708.9849,25265483.1,376973.5,113.2,
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Ridge (alpha=1),0.7903,646.0,35.9,4.5,
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Random Forest,0.5643,882.0,50.0,218.8,
+S12,"S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept",29805,7452,52,Logistic Regression (price band),,,,,0.8114

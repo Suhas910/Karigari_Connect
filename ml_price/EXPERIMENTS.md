@@ -51,7 +51,8 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S8 | S7 + K-Means segment id | 45 | 0.156 | 0.561 | 0.714 | 0.588 | 735 (Ridge) | 40.9 |
 | S9 | S8 + numeric features standardised | 45 | 0.156 | −7.5 × 10⁸ ‡ | 0.752 | 0.588 | 691 (Ridge) | 37.3 |
 | S10 | S9 + LLM materials / handloom + title size and set size | 69 | 0.156 | — | 0.768 | 0.590 | 684 (Ridge) | 37.0 |
-| **S10-swap** | S9 with keyword materials **replaced** by LLM materials, + title size features | 52 | 0.156 | — | **0.773** | 0.586 | **681 (Ridge)** | **37.0** |
+| S10-swap | S9 with keyword materials **replaced** by LLM materials, + title size features | 52 | 0.156 | — | 0.773 | 0.586 | 681 (Ridge) | 37.0 |
+| **S12** | S10-swap **tuned** by grouped CV: TF-IDF 20,000 terms, min_df 2 (part 8b) | 52 | 0.156 | collapses ‡ | **0.790** | 0.564 | **646 (Ridge)** | **35.9** |
 
 ‡ Plain Linear Regression collapses at S9. Several knowledge-graph columns are exact duplicates
 (`kg_zari` = `kg_mat_Zari`, `kg_tech_Jewellery` overlaps a label column), so the unregularised
@@ -111,7 +112,8 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S8 | 0.786 |
 | S9 | 0.770 |
 | S10 | 0.783 |
-| **S10-swap** | **0.789** |
+| S10-swap | 0.789 |
+| **S12** | **0.811** |
 
 ## Progress chart
 
@@ -149,6 +151,19 @@ The two tools agree to within 0.01 R². The small gaps are expected:
    materials with the LLM ones: **0.773, MAE ₹681, band F1 0.789**, the best results in the
    project. The keyword errors (bamboo pen, wooden blocks, German silver) were noise, and
    removing them helps more than adding beside them.
+11. **Ablation (part 8b):** removing one feature group at a time from S10-swap, scored by grouped
+   CV on training rows. **Only the TF-IDF text matters a lot** (CV R² 0.738 → 0.395 without it).
+   Every other group moves CV R² by less than 0.01, and CV and test often disagree in sign for
+   those small changes, so they are within noise. The most useful small groups: lengths + repeat
+   count (−0.010), LLM materials (−0.008), title size (−0.005). With the text present, the other
+   groups mostly repeat what the words already say. No group was removed: the differences are too
+   small to justify it, and choosing on the test set would be selection on test data.
+12. **S12, tuning (part 8b):** grouped 5-fold CV over Ridge α (0.3–10) × TF-IDF vocabulary (5k,
+   20k, 50k terms) × min_df (2, 5), 24 settings. Best: **20,000 terms, min_df 2, α 1** (CV MAE on
+   log price 0.349 → 0.326). 50,000 terms was worse, so the optimum isn't at the edge of the grid.
+   Scored once on test: **Ridge R² 0.790, MAE ₹646, MAPE 35.9%, band F1 0.811**, the final best
+   model. Random Forest fell slightly (0.586 → 0.564): a forest can't use 20,000 sparse word columns
+   well.
 
 ## Stages that made scores worse
 

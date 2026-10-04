@@ -60,6 +60,8 @@ STAGES["S9"] = dict(STAGES["S8"], scale=True, change="S8 + numeric features stan
 STAGES["S10"] = dict(STAGES["S9"], llm=True, change="S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles")
 STAGES["S10-swap"] = dict(STAGES["S9"], llm=True, drop_kw_mat=True,
                           change="S9 with keyword materials replaced by LLM materials, + title size features")
+STAGES["S12"] = dict(STAGES["S10-swap"], tfidf_max=20000, tfidf_min_df=2,
+                     change="S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
@@ -96,7 +98,7 @@ for c in cfg["multi"]:  # one 0/1 column per art-form label, learned from traini
     parts.append((c, CountVectorizer(tokenizer=lambda t: t.split(" | "), token_pattern=None,
                                      lowercase=False, binary=True), c))
 if cfg["text"]:         # vocabulary and IDF weights learned from training rows only
-    parts.append(("text", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), min_df=5,
+    parts.append(("text", TfidfVectorizer(max_features=cfg.get("tfidf_max", 5000), ngram_range=(1, 2), min_df=cfg.get("tfidf_min_df", 5),
                                           sublinear_tf=True, stop_words="english"), "text"))
 if cfg.get("scale"):  # standardise numeric columns so Ridge's penalty treats them evenly with the text features
     from sklearn.preprocessing import StandardScaler
