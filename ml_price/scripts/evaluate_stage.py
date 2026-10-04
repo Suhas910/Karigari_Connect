@@ -54,6 +54,8 @@ STAGES["S7"] = dict(S6B, kg=True, change="S6b + knowledge-graph features (techni
 STAGES["S7-only"] = dict(STAGES["S6a"], kg=True, change="S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)")
 STAGES["S6c-z"] = dict(S6B, drop="z", change="S6b, training rows flagged by z-score > 3 on log price removed")
 STAGES["S6c-iso"] = dict(S6B, drop="iso", change="S6b, training rows flagged by Isolation Forest (1%) removed")
+STAGES["S8"] = dict(STAGES["S7"], seg=True, change="S7 + K-Means segment id (17 text segments, fitted on train)")
+STAGES["S8-only"] = dict(STAGES["S7-only"], seg=True, change="S7-only + K-Means segment id (no TF-IDF)")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
@@ -66,6 +68,10 @@ if cfg.get("kg"):  # rule-derived features from scripts/build_kg.py (no prices i
     d = d.merge(kg, on="image_file", how="left")
     d[kgc] = d[kgc].astype(float)
     cfg = dict(cfg, num=cfg["num"] + kgc)
+if cfg.get("seg"):
+    d = d.merge(pd.read_csv("data/features/segment_features.csv"), on="image_file", how="left")
+    d["segment"] = "seg" + d.segment.astype(str)
+    cfg = dict(cfg, cat=cfg["cat"] + ["segment"])
 if cfg.get("drop"):  # outlier handling: training rows only, the test set is never touched
     flags = pd.read_csv("data/splits/train_outlier_flags.csv").set_index("image_file")[cfg["drop"]]
     d = d[~(d.image_file.map(flags).fillna(False).astype(bool) & (d.split == "train"))]

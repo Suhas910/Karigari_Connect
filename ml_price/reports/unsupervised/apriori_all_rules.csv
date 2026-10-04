@@ -1,0 +1,1084 @@
+antecedent,consequent,support,confidence,lift
+AF:ajrakh block printing,AF:natural dyed,0.0219,0.6285,6.6215
+AF:ajrakh block printing,BAND:high,0.0183,0.5255,1.6092
+AF:ajrakh block printing,TECH:Printing,0.0349,1.0,4.7887
+AF:bagh block printing,AF:natural dyed,0.0164,0.8191,8.6296
+AF:bagh block printing,BAND:high,0.0149,0.7454,2.2826
+AF:bagh block printing,MAT:Wood,0.0102,0.5075,2.9442
+AF:bagh block printing,TECH:Printing,0.02,1.0,4.7887
+AF:bagru block printing,AF:natural dyed,0.0192,0.7559,7.9642
+AF:bagru block printing,MAT:Cotton,0.0203,0.7995,1.5222
+AF:bagru block printing,MAT:Wood,0.0196,0.7718,4.4769
+AF:bagru block printing,TECH:Printing,0.0254,1.0,4.7887
+AF:bandhani tie dye,BAND:high,0.0276,0.6816,2.0871
+AF:bandhani tie dye,MAT:Cotton,0.0324,0.7982,1.5197
+TECH:ResistDyeing,AF:bandhani tie dye,0.0406,0.7083,17.4605
+AF:bandhani tie dye,TECH:ResistDyeing,0.0406,1.0,17.4605
+AF:batik block printing,MAT:Cotton,0.0232,0.9843,1.8742
+AF:batik block printing,TECH:Printing,0.0236,1.0,4.7887
+AF:bead work,BAND:low,0.0309,0.642,1.8194
+TECH:BeadWork,AF:bead work,0.0481,0.9728,20.2342
+AF:bead work,TECH:BeadWork,0.0481,1.0,20.2342
+AF:dharwad weaving,AF:plain solid,0.0117,1.0,11.4371
+AF:dharwad weaving,MAT:Cotton,0.0117,1.0,1.904
+AF:dharwad weaving,TECH:Weaving,0.0117,1.0,4.768
+AF:embroidery,TECH:Embroidery,0.0213,1.0,10.7483
+AF:fabart,BAND:low,0.0839,0.7962,2.2564
+AF:hand knitted,TECH:YarnCraft,0.0102,1.0,40.7172
+AF:srikalahasti penwork kalamkari,AF:hand painted,0.0135,0.8117,13.0778
+TECH:Painting,AF:hand painted,0.0621,0.657,10.5842
+AF:hand painted,TECH:Painting,0.0621,1.0,10.5842
+AF:handloom,BAND:high,0.0721,0.783,2.3976
+AF:handloom,TECH:Weaving,0.0921,1.0,4.768
+AF:handmade jewellery,AF:handmade,0.0102,0.8189,4.6705
+TECH:Jewellery,AF:handmade,0.0102,0.8037,4.5838
+AF:handmade jewellery,TECH:Jewellery,0.0124,1.0,79.0584
+TECH:Jewellery,AF:handmade jewellery,0.0124,0.9814,79.0584
+AF:handmade stationery,BAND:mid,0.017,0.5116,1.5959
+AF:handmade stationery,MAT:Cotton,0.0323,0.9727,1.852
+MAT:Paper,AF:handmade stationery,0.0294,0.5341,16.096
+AF:handmade stationery,MAT:Paper,0.0294,0.8868,16.096
+TECH:PaperCraft,AF:handmade stationery,0.0332,0.8318,25.0673
+AF:handmade stationery,TECH:PaperCraft,0.0332,1.0,25.0673
+AF:jacquard weaving,BAND:high,0.0141,0.5257,1.6097
+AF:jacquard weaving,MAT:Cotton,0.0266,0.9925,1.8897
+AF:jacquard weaving,TECH:Weaving,0.0268,1.0,4.768
+AF:kalamkari block printing,BAND:mid,0.0175,0.6032,1.8817
+AF:kalamkari block printing,MAT:Cotton,0.027,0.9273,1.7656
+AF:kalamkari block printing,TECH:Printing,0.0291,1.0,4.7887
+AF:kalamkari screen printing,MAT:Cotton,0.0108,1.0,1.904
+AF:kalamkari screen printing,TECH:Printing,0.0108,1.0,4.7887
+AF:kota doria weaving,BAND:high,0.0217,0.6684,2.0468
+AF:kota doria weaving,MAT:Cotton,0.0316,0.9721,1.8509
+AF:kota doria weaving,TECH:Weaving,0.0325,1.0,4.768
+AF:lucknowi chikankari,BAND:high,0.0104,0.9936,3.0426
+AF:lucknowi chikankari,TECH:Embroidery,0.0105,1.0,10.7483
+AF:madhubani folk art,TECH:Painting,0.0122,1.0,10.5842
+AF:mangalagiri weaving,MAT:Cotton,0.0104,1.0,1.904
+AF:mangalagiri weaving,TECH:Weaving,0.0104,1.0,4.768
+AF:meenakari work,TECH:MetalCraft,0.0119,1.0,11.5703
+AF:metal work,TECH:MetalCraft,0.0107,1.0,11.5703
+AF:srikalahasti penwork kalamkari,AF:natural dyed,0.0149,0.8968,9.4478
+AF:natural dyed,BAND:high,0.0573,0.6041,1.8499
+AF:natural dyed,TECH:Printing,0.0753,0.7929,3.7968
+MAT:Silver,AF:oxidised metal craft,0.0471,0.6369,12.3025
+AF:oxidised metal craft,MAT:Silver,0.0471,0.9106,12.3025
+AF:oxidised metal craft,TECH:MetalCraft,0.0518,1.0,11.5703
+TECH:MetalCraft,AF:oxidised metal craft,0.0518,0.599,11.5703
+AF:patchwork,BAND:mid,0.0167,0.7677,2.3947
+AF:patchwork,MAT:Cotton,0.0192,0.88,1.6755
+TECH:Applique,AF:patchwork,0.0218,0.8045,36.8874
+AF:patchwork,TECH:Applique,0.0218,1.0,36.8874
+AF:plain solid,BAND:high,0.0455,0.5203,1.5934
+AF:plain solid,TECH:Weaving,0.0499,0.5702,2.7188
+AF:pochampally ikat weaving,MAT:Cotton,0.0284,0.883,1.6812
+AF:pochampally ikat weaving,TECH:Weaving,0.0321,1.0,4.768
+AF:sanganeri block printing,MAT:Cotton,0.0378,0.8723,1.6608
+AF:sanganeri block printing,TECH:Printing,0.0433,1.0,4.7887
+AF:srikalahasti penwork kalamkari,BAND:high,0.013,0.7854,2.4052
+AF:srikalahasti penwork kalamkari,MAT:Bamboo,0.0111,0.67,26.8061
+AF:srikalahasti penwork kalamkari,MAT:Cotton,0.0133,0.8016,1.5263
+AF:srikalahasti penwork kalamkari,MAT:Silk,0.0114,0.6883,5.7703
+AF:srikalahasti penwork kalamkari,TECH:Painting,0.0166,1.0,10.5842
+AF:wood carving,BAND:low,0.0117,0.6404,1.8148
+AF:wood carving,MAT:Wood,0.018,0.9817,5.6945
+AF:wood carving,TECH:WoodCraft,0.0183,1.0,24.6119
+MAT:Silk,BAND:high,0.0836,0.7007,2.1457
+MAT:Wool,BAND:high,0.0464,0.774,2.3703
+MAT:Zari,BAND:high,0.0458,0.8101,2.4807
+TECH:ResistDyeing,BAND:high,0.0318,0.5559,1.7025
+TECH:Weaving,BAND:high,0.1396,0.6658,2.0389
+TECH:BeadWork,BAND:low,0.0313,0.6334,1.795
+TECH:NaturalFibreCraft,BAND:low,0.0118,0.6489,1.839
+TECH:Applique,BAND:mid,0.0195,0.7203,2.2468
+TECH:MetalCraft,BAND:mid,0.0435,0.5031,1.5693
+TECH:PaperCraft,BAND:mid,0.0213,0.5341,1.6659
+MAT:Bamboo,TECH:Painting,0.0182,0.7289,7.7144
+MAT:Brass,TECH:MetalCraft,0.0163,0.9117,10.5481
+MAT:Clay,TECH:Painting,0.011,0.5223,5.528
+TECH:Applique,MAT:Cotton,0.0245,0.9022,1.7178
+TECH:PaperCraft,MAT:Cotton,0.0323,0.8091,1.5405
+TECH:Printing,MAT:Cotton,0.1749,0.8374,1.5944
+TECH:ResistDyeing,MAT:Cotton,0.0479,0.836,1.5917
+TECH:Weaving,MAT:Cotton,0.167,0.7964,1.5162
+TECH:PaperCraft,MAT:Paper,0.0361,0.9041,16.4113
+MAT:Paper,TECH:PaperCraft,0.0361,0.6547,16.4113
+MAT:Zari,MAT:Silk,0.0312,0.5525,4.6323
+MAT:Silver,TECH:MetalCraft,0.049,0.6614,7.6523
+TECH:MetalCraft,MAT:Silver,0.049,0.5664,7.6523
+TECH:WoodCraft,MAT:Wood,0.0329,0.8092,4.6944
+MAT:Zari,TECH:Weaving,0.0339,0.5988,2.8552
+AF:ajrakh block printing + BAND:high,AF:natural dyed,0.0159,0.87,9.1655
+AF:ajrakh block printing + AF:natural dyed,BAND:high,0.0159,0.7274,2.2275
+AF:ajrakh block printing + MAT:Cotton,AF:natural dyed,0.013,0.5802,6.1128
+AF:ajrakh block printing + TECH:Printing,AF:natural dyed,0.0219,0.6285,6.6215
+AF:ajrakh block printing + AF:natural dyed,TECH:Printing,0.0219,1.0,4.7887
+AF:ajrakh block printing,AF:natural dyed + TECH:Printing,0.0219,0.6285,8.3514
+AF:ajrakh block printing + TECH:Printing,BAND:high,0.0183,0.5255,1.6092
+AF:ajrakh block printing + BAND:high,TECH:Printing,0.0183,1.0,4.7887
+AF:ajrakh block printing,BAND:high + TECH:Printing,0.0183,0.5255,6.7541
+AF:ajrakh block printing + BAND:mid,TECH:Printing,0.0117,1.0,4.7887
+AF:ajrakh block printing + MAT:Cotton,TECH:Printing,0.0224,1.0,4.7887
+AF:ajrakh block printing,MAT:Cotton + TECH:Printing,0.0224,0.642,3.6711
+AF:ajrakh block printing + MAT:Silk,TECH:Printing,0.0104,1.0,4.7887
+AF:bagh block printing + BAND:high,AF:natural dyed,0.0135,0.9011,9.4938
+AF:bagh block printing + AF:natural dyed,BAND:high,0.0135,0.82,2.5112
+AF:bagh block printing,AF:natural dyed + BAND:high,0.0135,0.6717,11.7143
+AF:bagh block printing + MAT:Cotton,AF:natural dyed,0.0117,0.8079,8.5113
+AF:bagh block printing,AF:natural dyed + MAT:Cotton,0.0117,0.5846,8.0777
+AF:bagh block printing + TECH:Printing,AF:natural dyed,0.0164,0.8191,8.6296
+AF:bagh block printing + AF:natural dyed,TECH:Printing,0.0164,1.0,4.7887
+AF:bagh block printing,AF:natural dyed + TECH:Printing,0.0164,0.8191,10.8841
+AF:bagh block printing + TECH:Printing,BAND:high,0.0149,0.7454,2.2826
+AF:bagh block printing + BAND:high,TECH:Printing,0.0149,1.0,4.7887
+AF:bagh block printing,BAND:high + TECH:Printing,0.0149,0.7454,9.5802
+AF:bagh block printing + MAT:Cotton,TECH:Printing,0.0145,1.0,4.7887
+AF:bagh block printing,MAT:Cotton + TECH:Printing,0.0145,0.7236,4.138
+AF:bagh block printing + MAT:Wood,TECH:Printing,0.0102,1.0,4.7887
+AF:bagh block printing + TECH:Printing,MAT:Wood,0.0102,0.5075,2.9442
+AF:bagh block printing,MAT:Wood + TECH:Printing,0.0102,0.5075,6.6347
+AF:bagru block printing + AF:natural dyed,BAND:high,0.0103,0.534,1.6353
+AF:bagru block printing + BAND:high,AF:natural dyed,0.0103,0.9217,9.7105
+AF:bagru block printing + MAT:Cotton,AF:natural dyed,0.0144,0.7096,7.4757
+AF:bagru block printing,AF:natural dyed + MAT:Cotton,0.0144,0.5673,7.8386
+AF:bagru block printing + MAT:Wood,AF:natural dyed,0.0187,0.9521,10.0313
+AF:bagru block printing + AF:natural dyed,MAT:Wood,0.0187,0.9721,5.6389
+AF:bagru block printing,AF:natural dyed + MAT:Wood,0.0187,0.7348,16.0334
+AF:bagru block printing + TECH:Printing,AF:natural dyed,0.0192,0.7559,7.9642
+AF:bagru block printing + AF:natural dyed,TECH:Printing,0.0192,1.0,4.7887
+AF:bagru block printing,AF:natural dyed + TECH:Printing,0.0192,0.7559,10.0449
+AF:bagru block printing + MAT:Wood,BAND:high,0.0107,0.547,1.6751
+AF:bagru block printing + BAND:high,MAT:Wood,0.0107,0.9639,5.5912
+AF:bagru block printing + BAND:high,TECH:Printing,0.0111,1.0,4.7887
+AF:bagru block printing + MAT:Cotton,MAT:Wood,0.015,0.7393,4.2885
+AF:bagru block printing,MAT:Cotton + MAT:Wood,0.015,0.591,7.7431
+AF:bagru block printing + TECH:Printing,MAT:Cotton,0.0203,0.7995,1.5222
+AF:bagru block printing + MAT:Cotton,TECH:Printing,0.0203,1.0,4.7887
+AF:bagru block printing,MAT:Cotton + TECH:Printing,0.0203,0.7995,4.5718
+AF:bagru block printing + MAT:Wood,TECH:Printing,0.0196,1.0,4.7887
+AF:bagru block printing + TECH:Printing,MAT:Wood,0.0196,0.7718,4.4769
+AF:bagru block printing,MAT:Wood + TECH:Printing,0.0196,0.7718,10.0888
+AF:bandhani tie dye + MAT:Cotton,BAND:high,0.021,0.6487,1.9865
+AF:bandhani tie dye,BAND:high + MAT:Cotton,0.021,0.5178,2.588
+AF:bandhani tie dye + TECH:ResistDyeing,BAND:high,0.0276,0.6816,2.0871
+BAND:high + TECH:ResistDyeing,AF:bandhani tie dye,0.0276,0.8683,21.4054
+AF:bandhani tie dye + BAND:high,TECH:ResistDyeing,0.0276,1.0,17.4605
+AF:bandhani tie dye,BAND:high + TECH:ResistDyeing,0.0276,0.6816,21.4054
+AF:bandhani tie dye + TECH:ResistDyeing,MAT:Cotton,0.0324,0.7982,1.5197
+MAT:Cotton + TECH:ResistDyeing,AF:bandhani tie dye,0.0324,0.6762,16.6712
+AF:bandhani tie dye + MAT:Cotton,TECH:ResistDyeing,0.0324,1.0,17.4605
+TECH:ResistDyeing,AF:bandhani tie dye + MAT:Cotton,0.0324,0.5653,17.4605
+AF:bandhani tie dye,MAT:Cotton + TECH:ResistDyeing,0.0324,0.7982,16.6712
+AF:batik block printing + TECH:Printing,MAT:Cotton,0.0232,0.9843,1.8742
+AF:batik block printing + MAT:Cotton,TECH:Printing,0.0232,1.0,4.7887
+AF:batik block printing,MAT:Cotton + TECH:Printing,0.0232,0.9843,5.6289
+AF:bead work + AF:handmade,BAND:low,0.0118,0.5825,1.6508
+AF:handmade + TECH:BeadWork,AF:bead work,0.0203,0.9984,20.7648
+AF:bead work + AF:handmade,TECH:BeadWork,0.0203,1.0,20.2342
+BAND:low + TECH:BeadWork,AF:bead work,0.0309,0.9861,20.5092
+AF:bead work + BAND:low,TECH:BeadWork,0.0309,1.0,20.2342
+AF:bead work + TECH:BeadWork,BAND:low,0.0309,0.642,1.8194
+TECH:BeadWork,AF:bead work + BAND:low,0.0309,0.6246,20.2342
+AF:bead work,BAND:low + TECH:BeadWork,0.0309,0.642,20.5092
+BAND:mid + TECH:BeadWork,AF:bead work,0.0131,0.9489,19.7363
+AF:bead work + BAND:mid,TECH:BeadWork,0.0131,1.0,20.2342
+MAT:Wood + TECH:BeadWork,AF:bead work,0.0129,1.0,20.799
+AF:bead work + MAT:Wood,TECH:BeadWork,0.0129,1.0,20.2342
+AF:dharwad weaving + AF:plain solid,MAT:Cotton,0.0117,1.0,1.904
+AF:dharwad weaving + MAT:Cotton,AF:plain solid,0.0117,1.0,11.4371
+AF:dharwad weaving,AF:plain solid + MAT:Cotton,0.0117,1.0,18.4551
+AF:dharwad weaving + TECH:Weaving,AF:plain solid,0.0117,1.0,11.4371
+AF:dharwad weaving + AF:plain solid,TECH:Weaving,0.0117,1.0,4.768
+AF:dharwad weaving,AF:plain solid + TECH:Weaving,0.0117,1.0,20.0572
+AF:dharwad weaving + TECH:Weaving,MAT:Cotton,0.0117,1.0,1.904
+AF:dharwad weaving + MAT:Cotton,TECH:Weaving,0.0117,1.0,4.768
+AF:dharwad weaving,MAT:Cotton + TECH:Weaving,0.0117,1.0,5.9873
+AF:fabart + AF:oxidised metal craft,TECH:MetalCraft,0.011,1.0,11.5703
+AF:fabart + TECH:MetalCraft,AF:oxidised metal craft,0.011,1.0,19.3163
+AF:fabart + MAT:Cotton,BAND:low,0.0342,0.9231,2.616
+AF:handmade + TECH:Painting,AF:hand painted,0.0122,0.9481,15.2739
+AF:hand painted + AF:handmade,TECH:Painting,0.0122,1.0,10.5842
+AF:hand painted + AF:srikalahasti penwork kalamkari,AF:natural dyed,0.0118,0.8753,9.2219
+AF:hand painted + AF:natural dyed,AF:srikalahasti penwork kalamkari,0.0118,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari,AF:hand painted,0.0118,0.7923,12.765
+AF:srikalahasti penwork kalamkari,AF:hand painted + AF:natural dyed,0.0118,0.7105,60.334
+AF:natural dyed + TECH:Painting,AF:hand painted,0.0118,0.7923,12.765
+AF:hand painted + AF:natural dyed,TECH:Painting,0.0118,1.0,10.5842
+AF:hand painted + AF:srikalahasti penwork kalamkari,BAND:high,0.0101,0.7506,2.2986
+AF:srikalahasti penwork kalamkari + BAND:high,AF:hand painted,0.0101,0.7758,12.4983
+AF:srikalahasti penwork kalamkari,AF:hand painted + BAND:high,0.0101,0.6093,27.9393
+AF:srikalahasti penwork kalamkari + MAT:Cotton,AF:hand painted,0.0108,0.8131,13.1002
+AF:hand painted + AF:srikalahasti penwork kalamkari,MAT:Cotton,0.0108,0.803,1.5289
+AF:hand painted + MAT:Cotton,AF:srikalahasti penwork kalamkari,0.0108,0.8798,53.0807
+AF:srikalahasti penwork kalamkari,AF:hand painted + MAT:Cotton,0.0108,0.6518,53.0807
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:hand painted,0.0135,0.8117,13.0778
+AF:hand painted + AF:srikalahasti penwork kalamkari,TECH:Painting,0.0135,1.0,10.5842
+AF:srikalahasti penwork kalamkari,AF:hand painted + TECH:Painting,0.0135,0.8117,13.0778
+BAND:high + TECH:Painting,AF:hand painted,0.0218,0.6132,9.8793
+AF:hand painted + BAND:high,TECH:Painting,0.0218,1.0,10.5842
+BAND:low + TECH:Painting,AF:hand painted,0.015,0.616,9.9246
+AF:hand painted + BAND:low,TECH:Painting,0.015,1.0,10.5842
+AF:hand painted + BAND:mid,MAT:Wood,0.016,0.634,3.6775
+AF:hand painted + MAT:Wood,BAND:mid,0.016,0.662,2.0651
+BAND:mid + TECH:Painting,AF:hand painted,0.0253,0.7306,11.7709
+AF:hand painted + BAND:mid,TECH:Painting,0.0253,1.0,10.5842
+MAT:Bamboo + TECH:Painting,AF:hand painted,0.0106,0.5838,9.4054
+AF:hand painted + MAT:Bamboo,TECH:Painting,0.0106,1.0,10.5842
+MAT:Cotton + TECH:Painting,AF:hand painted,0.0123,0.7176,11.5619
+AF:hand painted + MAT:Cotton,TECH:Painting,0.0123,1.0,10.5842
+MAT:Wood + TECH:Painting,AF:hand painted,0.0242,0.6863,11.057
+AF:hand painted + MAT:Wood,TECH:Painting,0.0242,1.0,10.5842
+AF:handloom + AF:natural dyed,BAND:high,0.012,0.7868,2.4094
+AF:natural dyed + TECH:Weaving,AF:handloom,0.0153,0.6083,6.6023
+AF:handloom + AF:natural dyed,TECH:Weaving,0.0153,1.0,4.768
+AF:handloom + AF:plain solid,BAND:high,0.0192,0.6441,1.9725
+AF:plain solid + MAT:Silk,AF:handloom,0.0105,0.5032,5.4619
+AF:plain solid + MAT:Zari,AF:handloom,0.0141,0.679,7.3702
+AF:handloom + MAT:Zari,AF:plain solid,0.0141,0.6284,7.1866
+AF:plain solid + TECH:Weaving,AF:handloom,0.0298,0.5976,6.4861
+AF:handloom + AF:plain solid,TECH:Weaving,0.0298,1.0,4.768
+AF:handloom + MAT:Cotton,BAND:high,0.0377,0.6812,2.0861
+AF:handloom + MAT:Silk,BAND:high,0.0215,0.7658,2.3452
+AF:handloom + MAT:Wool,BAND:high,0.0263,0.9949,3.0467
+BAND:high + MAT:Wool,AF:handloom,0.0263,0.5665,6.1485
+AF:handloom + MAT:Zari,BAND:high,0.017,0.7582,2.3218
+AF:handloom + TECH:Weaving,BAND:high,0.0721,0.783,2.3976
+BAND:high + TECH:Weaving,AF:handloom,0.0721,0.5166,5.6069
+AF:handloom + BAND:high,TECH:Weaving,0.0721,1.0,4.768
+AF:handloom,BAND:high + TECH:Weaving,0.0721,0.783,5.6069
+AF:handloom + BAND:mid,MAT:Cotton,0.0167,0.8907,1.6958
+AF:handloom + BAND:mid,TECH:Weaving,0.0187,1.0,4.768
+BAND:mid + TECH:Weaving,AF:handloom,0.0187,0.5119,5.5564
+AF:handloom + MAT:Zari,MAT:Cotton,0.0191,0.8493,1.617
+AF:handloom + MAT:Cotton,TECH:Weaving,0.0554,1.0,4.768
+AF:handloom,MAT:Cotton + TECH:Weaving,0.0554,0.6009,3.5976
+AF:handloom + MAT:Zari,MAT:Silk,0.0126,0.5627,4.7175
+MAT:Silk + TECH:Weaving,AF:handloom,0.0281,0.7433,8.0682
+AF:handloom + MAT:Silk,TECH:Weaving,0.0281,1.0,4.768
+MAT:Wool + TECH:Weaving,AF:handloom,0.0264,0.9937,10.7855
+AF:handloom + MAT:Wool,TECH:Weaving,0.0264,1.0,4.768
+MAT:Zari + TECH:Weaving,AF:handloom,0.0225,0.664,7.2073
+AF:handloom + MAT:Zari,TECH:Weaving,0.0225,1.0,4.768
+AF:handloom + TECH:Printing,TECH:Weaving,0.0128,1.0,4.768
+AF:handmade jewellery + TECH:Jewellery,AF:handmade,0.0102,0.8189,4.6705
+AF:handmade + AF:handmade jewellery,TECH:Jewellery,0.0102,1.0,79.0584
+AF:handmade + TECH:Jewellery,AF:handmade jewellery,0.0102,1.0,80.5541
+AF:handmade jewellery,AF:handmade + TECH:Jewellery,0.0102,0.8189,80.5541
+TECH:Jewellery,AF:handmade + AF:handmade jewellery,0.0102,0.8037,79.0584
+AF:handmade + MAT:Wood,BAND:low,0.0174,0.6089,1.7256
+AF:handmade + TECH:BeadWork,BAND:low,0.0119,0.5832,1.6528
+AF:handmade + MAT:Cotton,BAND:mid,0.0437,0.5574,1.7386
+AF:handmade + TECH:Printing,BAND:mid,0.0187,0.6945,2.1664
+AF:handmade + TECH:Printing,MAT:Cotton,0.0268,0.9975,1.8992
+AF:handmade stationery + BAND:low,MAT:Cotton,0.0158,0.9772,1.8605
+BAND:low + MAT:Paper,AF:handmade stationery,0.014,0.7085,21.3509
+AF:handmade stationery + BAND:low,MAT:Paper,0.014,0.8672,15.7415
+BAND:low + TECH:PaperCraft,AF:handmade stationery,0.0162,0.8926,26.8996
+AF:handmade stationery + BAND:low,TECH:PaperCraft,0.0162,1.0,25.0673
+AF:handmade stationery + BAND:mid,MAT:Cotton,0.0164,0.9684,1.8438
+AF:handmade stationery + MAT:Cotton,BAND:mid,0.0164,0.5094,1.5888
+BAND:mid + MAT:Paper,AF:handmade stationery,0.0154,0.6939,20.9129
+AF:handmade stationery + BAND:mid,MAT:Paper,0.0154,0.9051,16.4297
+AF:handmade stationery + MAT:Paper,BAND:mid,0.0154,0.5222,1.629
+BAND:mid + TECH:PaperCraft,AF:handmade stationery,0.017,0.7969,24.0143
+AF:handmade stationery + TECH:PaperCraft,BAND:mid,0.017,0.5116,1.5959
+AF:handmade stationery + BAND:mid,TECH:PaperCraft,0.017,1.0,25.0673
+AF:handmade stationery,BAND:mid + TECH:PaperCraft,0.017,0.5116,24.0143
+MAT:Cotton + MAT:Paper,AF:handmade stationery,0.0287,0.9919,29.8915
+AF:handmade stationery + MAT:Paper,MAT:Cotton,0.0287,0.9738,1.8541
+AF:handmade stationery + MAT:Cotton,MAT:Paper,0.0287,0.8877,16.1138
+MAT:Paper,AF:handmade stationery + MAT:Cotton,0.0287,0.5201,16.1138
+AF:handmade stationery,MAT:Cotton + MAT:Paper,0.0287,0.8635,29.8915
+MAT:Cotton + TECH:PaperCraft,AF:handmade stationery,0.0323,1.0,30.1365
+AF:handmade stationery + TECH:PaperCraft,MAT:Cotton,0.0323,0.9727,1.852
+AF:handmade stationery + MAT:Cotton,TECH:PaperCraft,0.0323,1.0,25.0673
+TECH:PaperCraft,AF:handmade stationery + MAT:Cotton,0.0323,0.8091,25.0673
+AF:handmade stationery,MAT:Cotton + TECH:PaperCraft,0.0323,0.9727,30.1365
+AF:handmade stationery + TECH:Printing,MAT:Cotton,0.0164,0.9959,1.8962
+AF:handmade stationery + MAT:Cotton,TECH:Printing,0.0164,0.5083,2.4342
+MAT:Paper + TECH:PaperCraft,AF:handmade stationery,0.0294,0.8158,24.5858
+AF:handmade stationery + TECH:PaperCraft,MAT:Paper,0.0294,0.8868,16.096
+AF:handmade stationery + MAT:Paper,TECH:PaperCraft,0.0294,1.0,25.0673
+TECH:PaperCraft,AF:handmade stationery + MAT:Paper,0.0294,0.7376,25.0673
+MAT:Paper,AF:handmade stationery + TECH:PaperCraft,0.0294,0.5341,16.096
+AF:handmade stationery,MAT:Paper + TECH:PaperCraft,0.0294,0.8868,24.5858
+MAT:Paper + TECH:Printing,AF:handmade stationery,0.0137,0.9927,29.9171
+AF:handmade stationery + TECH:Printing,MAT:Paper,0.0137,0.833,15.1202
+TECH:PaperCraft + TECH:Printing,AF:handmade stationery,0.0165,1.0,30.1365
+AF:handmade stationery + TECH:Printing,TECH:PaperCraft,0.0165,1.0,25.0673
+AF:jacquard weaving + MAT:Cotton,BAND:high,0.0139,0.5233,1.6026
+AF:jacquard weaving + BAND:high,MAT:Cotton,0.0139,0.9881,1.8813
+AF:jacquard weaving,BAND:high + MAT:Cotton,0.0139,0.5194,2.5961
+AF:jacquard weaving + TECH:Weaving,BAND:high,0.0141,0.5257,1.6097
+AF:jacquard weaving + BAND:high,TECH:Weaving,0.0141,1.0,4.768
+AF:jacquard weaving,BAND:high + TECH:Weaving,0.0141,0.5257,3.7643
+AF:jacquard weaving + TECH:Weaving,MAT:Cotton,0.0266,0.9925,1.8897
+AF:jacquard weaving + MAT:Cotton,TECH:Weaving,0.0266,1.0,4.768
+AF:jacquard weaving,MAT:Cotton + TECH:Weaving,0.0266,0.9925,5.9424
+AF:kalamkari block printing + AF:natural dyed,MAT:Cotton,0.013,0.9626,1.8328
+AF:kalamkari block printing + MAT:Wood,AF:natural dyed,0.0107,1.0,10.5355
+AF:kalamkari block printing + AF:natural dyed,MAT:Wood,0.0107,0.798,4.6291
+AF:kalamkari block printing + AF:natural dyed,TECH:Printing,0.0135,1.0,4.7887
+AF:kalamkari block printing + BAND:mid,MAT:Cotton,0.0171,0.9751,1.8567
+AF:kalamkari block printing + MAT:Cotton,BAND:mid,0.0171,0.6343,1.9787
+AF:kalamkari block printing,BAND:mid + MAT:Cotton,0.0171,0.5882,3.8305
+AF:kalamkari block printing + BAND:mid,TECH:Printing,0.0175,1.0,4.7887
+AF:kalamkari block printing + TECH:Printing,BAND:mid,0.0175,0.6032,1.8817
+AF:kalamkari block printing,BAND:mid + TECH:Printing,0.0175,0.6032,8.1281
+AF:kalamkari block printing + MAT:Wood,MAT:Cotton,0.0103,0.9562,1.8207
+AF:kalamkari block printing + TECH:Printing,MAT:Cotton,0.027,0.9273,1.7656
+AF:kalamkari block printing + MAT:Cotton,TECH:Printing,0.027,1.0,4.7887
+AF:kalamkari block printing,MAT:Cotton + TECH:Printing,0.027,0.9273,5.303
+AF:kalamkari block printing + MAT:Wood,TECH:Printing,0.0107,1.0,4.7887
+AF:kalamkari screen printing + MAT:Cotton,TECH:Printing,0.0108,1.0,4.7887
+AF:kalamkari screen printing + TECH:Printing,MAT:Cotton,0.0108,1.0,1.904
+AF:kalamkari screen printing,MAT:Cotton + TECH:Printing,0.0108,1.0,5.7185
+AF:kota doria weaving + MAT:Cotton,BAND:high,0.0208,0.6589,2.0176
+AF:kota doria weaving + BAND:high,MAT:Cotton,0.0208,0.9583,1.8245
+AF:kota doria weaving,BAND:high + MAT:Cotton,0.0208,0.6405,3.2014
+AF:kota doria weaving + TECH:Weaving,BAND:high,0.0217,0.6684,2.0468
+AF:kota doria weaving + BAND:high,TECH:Weaving,0.0217,1.0,4.768
+AF:kota doria weaving,BAND:high + TECH:Weaving,0.0217,0.6684,4.7865
+AF:kota doria weaving + MAT:Wood,MAT:Cotton,0.013,1.0,1.904
+AF:kota doria weaving + TECH:Printing,MAT:Cotton,0.0148,1.0,1.904
+AF:kota doria weaving + TECH:Weaving,MAT:Cotton,0.0316,0.9721,1.8509
+AF:kota doria weaving + MAT:Cotton,TECH:Weaving,0.0316,1.0,4.768
+AF:kota doria weaving,MAT:Cotton + TECH:Weaving,0.0316,0.9721,5.8203
+MAT:Wood + TECH:Weaving,AF:kota doria weaving,0.013,0.6222,19.1573
+AF:kota doria weaving + MAT:Wood,TECH:Weaving,0.013,1.0,4.768
+TECH:Printing + TECH:Weaving,AF:kota doria weaving,0.0148,0.5364,16.5162
+AF:kota doria weaving + TECH:Printing,TECH:Weaving,0.0148,1.0,4.768
+AF:lucknowi chikankari + TECH:Embroidery,BAND:high,0.0104,0.9936,3.0426
+AF:lucknowi chikankari + BAND:high,TECH:Embroidery,0.0104,1.0,10.7483
+AF:lucknowi chikankari,BAND:high + TECH:Embroidery,0.0104,0.9936,21.5688
+AF:mangalagiri weaving + TECH:Weaving,MAT:Cotton,0.0104,1.0,1.904
+AF:mangalagiri weaving + MAT:Cotton,TECH:Weaving,0.0104,1.0,4.768
+AF:mangalagiri weaving,MAT:Cotton + TECH:Weaving,0.0104,1.0,5.9873
+AF:srikalahasti penwork kalamkari + BAND:high,AF:natural dyed,0.0114,0.8737,9.205
+AF:natural dyed + AF:srikalahasti penwork kalamkari,BAND:high,0.0114,0.7652,2.3434
+AF:srikalahasti penwork kalamkari,AF:natural dyed + BAND:high,0.0114,0.6862,11.968
+AF:srikalahasti penwork kalamkari + MAT:Bamboo,AF:natural dyed,0.0101,0.9094,9.5806
+AF:natural dyed + MAT:Bamboo,AF:srikalahasti penwork kalamkari,0.0101,0.971,58.5824
+AF:natural dyed + AF:srikalahasti penwork kalamkari,MAT:Bamboo,0.0101,0.6795,27.1829
+AF:srikalahasti penwork kalamkari,AF:natural dyed + MAT:Bamboo,0.0101,0.6093,58.5824
+AF:srikalahasti penwork kalamkari + MAT:Cotton,AF:natural dyed,0.0121,0.9116,9.6044
+AF:natural dyed + AF:srikalahasti penwork kalamkari,MAT:Cotton,0.0121,0.8149,1.5516
+AF:srikalahasti penwork kalamkari,AF:natural dyed + MAT:Cotton,0.0121,0.7308,10.0976
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:natural dyed,0.0149,0.8968,9.4478
+AF:natural dyed + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0149,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari,TECH:Painting,0.0149,1.0,10.5842
+AF:srikalahasti penwork kalamkari,AF:natural dyed + TECH:Painting,0.0149,0.8968,60.334
+AF:natural dyed + MAT:Cotton,BAND:high,0.0374,0.5169,1.5829
+AF:natural dyed + MAT:Silk,BAND:high,0.0275,0.8378,2.5654
+AF:natural dyed + MAT:Wood,BAND:high,0.023,0.5022,1.5379
+AF:natural dyed + MAT:Zari,BAND:high,0.0103,0.8547,2.6175
+AF:natural dyed + TECH:Painting,BAND:high,0.0114,0.7652,2.3434
+BAND:high + TECH:Printing,AF:natural dyed,0.0436,0.5606,5.9061
+AF:natural dyed + TECH:Printing,BAND:high,0.0436,0.5796,1.7748
+AF:natural dyed + BAND:high,TECH:Printing,0.0436,0.7607,3.6427
+AF:natural dyed + TECH:Weaving,BAND:high,0.0172,0.6845,2.0961
+AF:natural dyed + BAND:low,MAT:Cotton,0.0185,1.0,1.904
+AF:natural dyed + BAND:low,MAT:Wood,0.0136,0.7337,4.2561
+AF:natural dyed + BAND:low,TECH:Printing,0.0178,0.9601,4.5979
+AF:natural dyed + BAND:mid,MAT:Cotton,0.0164,0.8627,1.6425
+AF:natural dyed + BAND:mid,TECH:Printing,0.0139,0.7271,3.4819
+MAT:Bamboo + TECH:Painting,AF:natural dyed,0.0101,0.5543,5.8401
+AF:natural dyed + TECH:Painting,MAT:Bamboo,0.0101,0.6795,27.1829
+AF:natural dyed + MAT:Bamboo,TECH:Painting,0.0101,0.971,10.2769
+AF:natural dyed + MAT:Wood,MAT:Cotton,0.0374,0.8163,1.5541
+AF:natural dyed + MAT:Cotton,MAT:Wood,0.0374,0.5169,2.9986
+MAT:Cotton + TECH:Painting,AF:natural dyed,0.0121,0.7078,7.4575
+AF:natural dyed + TECH:Painting,MAT:Cotton,0.0121,0.8149,1.5516
+AF:natural dyed + MAT:Cotton,TECH:Printing,0.0563,0.7775,3.7231
+AF:natural dyed,MAT:Cotton + TECH:Printing,0.0563,0.5928,3.3899
+MAT:Silk + MAT:Wood,AF:natural dyed,0.0138,0.6816,7.1809
+MAT:Silk + TECH:Printing,AF:natural dyed,0.0222,0.65,6.8476
+AF:natural dyed + MAT:Silk,TECH:Printing,0.0222,0.6745,3.2299
+AF:natural dyed + MAT:Wood,TECH:Printing,0.0458,1.0,4.7887
+MAT:Wood + TECH:Printing,AF:natural dyed,0.0458,0.5991,6.3121
+AF:natural dyed + TECH:Printing,MAT:Wood,0.0458,0.609,3.5328
+MAT:Wood + TECH:Weaving,AF:natural dyed,0.0106,0.5064,5.3355
+MAT:Zari + TECH:Printing,AF:natural dyed,0.0104,0.7524,7.9272
+AF:natural dyed + MAT:Zari,TECH:Printing,0.0104,0.8659,4.1467
+TECH:Printing + TECH:Weaving,AF:natural dyed,0.0182,0.6566,6.9171
+AF:natural dyed + TECH:Weaving,TECH:Printing,0.0182,0.7233,3.4635
+BAND:low + MAT:Silver,AF:oxidised metal craft,0.021,0.6089,11.7626
+AF:oxidised metal craft + BAND:low,MAT:Silver,0.021,0.8505,11.4916
+BAND:low + TECH:MetalCraft,AF:oxidised metal craft,0.0247,0.8242,15.9202
+AF:oxidised metal craft + BAND:low,TECH:MetalCraft,0.0247,1.0,11.5703
+AF:oxidised metal craft + BAND:mid,MAT:Silver,0.0243,0.9718,13.1305
+BAND:mid + MAT:Silver,AF:oxidised metal craft,0.0243,0.7863,15.189
+AF:oxidised metal craft + MAT:Silver,BAND:mid,0.0243,0.516,1.6096
+AF:oxidised metal craft + BAND:mid,TECH:MetalCraft,0.025,1.0,11.5703
+BAND:mid + TECH:MetalCraft,AF:oxidised metal craft,0.025,0.5756,11.1188
+AF:oxidised metal craft + MAT:Silver,TECH:MetalCraft,0.0471,1.0,11.5703
+MAT:Silver + TECH:MetalCraft,AF:oxidised metal craft,0.0471,0.963,18.6013
+AF:oxidised metal craft + TECH:MetalCraft,MAT:Silver,0.0471,0.9106,12.3025
+MAT:Silver,AF:oxidised metal craft + TECH:MetalCraft,0.0471,0.6369,12.3025
+AF:oxidised metal craft,MAT:Silver + TECH:MetalCraft,0.0471,0.9106,18.6013
+TECH:MetalCraft,AF:oxidised metal craft + MAT:Silver,0.0471,0.5454,11.5703
+AF:patchwork + BAND:mid,MAT:Cotton,0.0143,0.8537,1.6254
+AF:patchwork + MAT:Cotton,BAND:mid,0.0143,0.7448,2.3231
+AF:patchwork,BAND:mid + MAT:Cotton,0.0143,0.6554,4.2678
+BAND:mid + TECH:Applique,AF:patchwork,0.0167,0.8574,39.3146
+AF:patchwork + TECH:Applique,BAND:mid,0.0167,0.7677,2.3947
+AF:patchwork + BAND:mid,TECH:Applique,0.0167,1.0,36.8874
+TECH:Applique,AF:patchwork + BAND:mid,0.0167,0.6176,36.8874
+AF:patchwork,BAND:mid + TECH:Applique,0.0167,0.7677,39.3146
+AF:patchwork + TECH:Applique,MAT:Cotton,0.0192,0.88,1.6755
+MAT:Cotton + TECH:Applique,AF:patchwork,0.0192,0.7846,35.9786
+AF:patchwork + MAT:Cotton,TECH:Applique,0.0192,1.0,36.8874
+TECH:Applique,AF:patchwork + MAT:Cotton,0.0192,0.7079,36.8874
+AF:patchwork,MAT:Cotton + TECH:Applique,0.0192,0.88,35.9786
+AF:plain solid + MAT:Silk,BAND:high,0.0112,0.5354,1.6394
+AF:plain solid + MAT:Wool,BAND:high,0.0169,0.8093,2.4783
+AF:plain solid + MAT:Zari,BAND:high,0.0139,0.6694,2.0497
+AF:plain solid + TECH:Weaving,BAND:high,0.0344,0.6898,2.1123
+AF:plain solid + BAND:high,TECH:Weaving,0.0344,0.7559,3.6042
+AF:plain solid + BAND:low,MAT:Cotton,0.0169,0.7921,1.5082
+AF:plain solid + BAND:mid,TECH:Weaving,0.0107,0.5171,2.4654
+AF:plain solid + MAT:Zari,MAT:Cotton,0.0164,0.7903,1.5048
+AF:plain solid + MAT:Cotton,TECH:Weaving,0.0381,0.7034,3.3539
+AF:plain solid + MAT:Silk,TECH:Weaving,0.0108,0.5177,2.4683
+MAT:Zari + TECH:Weaving,AF:plain solid,0.017,0.5035,5.7582
+AF:plain solid + MAT:Zari,TECH:Weaving,0.017,0.8194,3.9067
+AF:pochampally ikat weaving + BAND:high,MAT:Cotton,0.0113,0.8342,1.5882
+AF:pochampally ikat weaving + BAND:high,TECH:Weaving,0.0136,1.0,4.768
+AF:pochampally ikat weaving + BAND:low,MAT:Cotton,0.0114,1.0,1.904
+AF:pochampally ikat weaving + BAND:low,TECH:Weaving,0.0114,1.0,4.768
+AF:pochampally ikat weaving + TECH:Weaving,MAT:Cotton,0.0284,0.883,1.6812
+AF:pochampally ikat weaving + MAT:Cotton,TECH:Weaving,0.0284,1.0,4.768
+AF:pochampally ikat weaving,MAT:Cotton + TECH:Weaving,0.0284,0.883,5.2866
+AF:sanganeri block printing + BAND:high,TECH:Printing,0.015,1.0,4.7887
+AF:sanganeri block printing + BAND:low,MAT:Cotton,0.0163,0.9568,1.8217
+AF:sanganeri block printing + BAND:low,TECH:Printing,0.0171,1.0,4.7887
+AF:sanganeri block printing + BAND:mid,MAT:Cotton,0.0102,0.9018,1.717
+AF:sanganeri block printing + BAND:mid,TECH:Printing,0.0113,1.0,4.7887
+AF:sanganeri block printing + MAT:Wood,MAT:Cotton,0.0172,0.9211,1.7539
+AF:sanganeri block printing + TECH:Printing,MAT:Cotton,0.0378,0.8723,1.6608
+AF:sanganeri block printing + MAT:Cotton,TECH:Printing,0.0378,1.0,4.7887
+AF:sanganeri block printing,MAT:Cotton + TECH:Printing,0.0378,0.8723,4.9882
+AF:sanganeri block printing + MAT:Wood,TECH:Printing,0.0187,1.0,4.7887
+AF:srikalahasti penwork kalamkari + MAT:Silk,BAND:high,0.0114,1.0,3.0623
+AF:srikalahasti penwork kalamkari + BAND:high,MAT:Silk,0.0114,0.8763,7.3468
+AF:srikalahasti penwork kalamkari,BAND:high + MAT:Silk,0.0114,0.6883,8.2351
+AF:srikalahasti penwork kalamkari + TECH:Painting,BAND:high,0.013,0.7854,2.4052
+AF:srikalahasti penwork kalamkari + BAND:high,TECH:Painting,0.013,1.0,10.5842
+AF:srikalahasti penwork kalamkari,BAND:high + TECH:Painting,0.013,0.7854,22.0845
+AF:srikalahasti penwork kalamkari + MAT:Bamboo,MAT:Cotton,0.0101,0.9094,1.7314
+AF:srikalahasti penwork kalamkari + MAT:Cotton,MAT:Bamboo,0.0101,0.7601,30.4091
+MAT:Bamboo + MAT:Cotton,AF:srikalahasti penwork kalamkari,0.0101,0.9617,58.0209
+AF:srikalahasti penwork kalamkari,MAT:Bamboo + MAT:Cotton,0.0101,0.6093,58.0209
+MAT:Bamboo + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0111,0.6096,36.7782
+AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Bamboo,0.0111,0.67,26.8061
+AF:srikalahasti penwork kalamkari + MAT:Bamboo,TECH:Painting,0.0111,1.0,10.5842
+AF:srikalahasti penwork kalamkari,MAT:Bamboo + TECH:Painting,0.0111,0.67,36.7782
+AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Cotton,0.0133,0.8016,1.5263
+MAT:Cotton + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0133,0.7765,46.8476
+AF:srikalahasti penwork kalamkari + MAT:Cotton,TECH:Painting,0.0133,1.0,10.5842
+AF:srikalahasti penwork kalamkari,MAT:Cotton + TECH:Painting,0.0133,0.8016,46.8476
+MAT:Silk + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0114,0.9742,58.7781
+AF:srikalahasti penwork kalamkari + MAT:Silk,TECH:Painting,0.0114,1.0,10.5842
+AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Silk,0.0114,0.6883,5.7703
+AF:srikalahasti penwork kalamkari,MAT:Silk + TECH:Painting,0.0114,0.6883,58.7781
+AF:wood carving + BAND:low,MAT:Wood,0.0115,0.9799,5.6845
+AF:wood carving + MAT:Wood,BAND:low,0.0115,0.6393,1.8116
+AF:wood carving,BAND:low + MAT:Wood,0.0115,0.6275,9.3563
+AF:wood carving + BAND:low,TECH:WoodCraft,0.0117,1.0,24.6119
+AF:wood carving + TECH:WoodCraft,BAND:low,0.0117,0.6404,1.8148
+BAND:low + TECH:WoodCraft,AF:wood carving,0.0117,0.5656,30.9338
+AF:wood carving,BAND:low + TECH:WoodCraft,0.0117,0.6404,30.9338
+AF:wood carving + MAT:Wood,TECH:WoodCraft,0.018,1.0,24.6119
+AF:wood carving + TECH:WoodCraft,MAT:Wood,0.018,0.9817,5.6945
+MAT:Wood + TECH:WoodCraft,AF:wood carving,0.018,0.5459,29.8552
+AF:wood carving,MAT:Wood + TECH:WoodCraft,0.018,0.9817,29.8552
+MAT:Cotton + MAT:Silk,BAND:high,0.0491,0.6864,2.1018
+MAT:Cotton + MAT:Zari,BAND:high,0.0323,0.7739,2.37
+MAT:Zari,BAND:high + MAT:Cotton,0.0323,0.5709,2.8536
+MAT:Cotton + TECH:Embroidery,BAND:high,0.0241,0.518,1.5863
+MAT:Cotton + TECH:Painting,BAND:high,0.0103,0.6,1.8374
+MAT:Cotton + TECH:ResistDyeing,BAND:high,0.0241,0.5032,1.5408
+MAT:Cotton + TECH:Weaving,BAND:high,0.1017,0.6091,1.8652
+BAND:high + MAT:Cotton,TECH:Weaving,0.1017,0.5085,2.4244
+MAT:Paper + TECH:Painting,BAND:high,0.0122,0.6552,2.0065
+BAND:high + MAT:Paper,TECH:Painting,0.0122,0.926,9.8011
+MAT:Silk + MAT:Wood,BAND:high,0.0166,0.8192,2.5087
+MAT:Silk + MAT:Zari,BAND:high,0.0294,0.9398,2.8781
+BAND:high + MAT:Zari,MAT:Silk,0.0294,0.641,5.3743
+MAT:Zari,BAND:high + MAT:Silk,0.0294,0.5193,6.2133
+MAT:Silk + TECH:Embroidery,BAND:high,0.0163,0.6374,1.952
+MAT:Silk + TECH:Painting,BAND:high,0.0117,1.0,3.0623
+MAT:Silk + TECH:Printing,BAND:high,0.0247,0.7227,2.2131
+MAT:Silk + TECH:Weaving,BAND:high,0.0301,0.7957,2.4368
+BAND:high + MAT:Wood,TECH:Printing,0.0395,0.7454,3.5696
+MAT:Wood + TECH:Printing,BAND:high,0.0395,0.5162,1.5808
+BAND:high + TECH:Printing,MAT:Wood,0.0395,0.5075,2.9442
+MAT:Wood + TECH:Weaving,BAND:high,0.0134,0.6415,1.9644
+MAT:Wool + TECH:Printing,BAND:high,0.0141,0.9953,3.0477
+MAT:Wool + TECH:Weaving,BAND:high,0.0265,0.995,3.0468
+BAND:high + MAT:Wool,TECH:Weaving,0.0265,0.5701,2.7182
+MAT:Zari + TECH:Printing,BAND:high,0.0121,0.8738,2.6758
+MAT:Zari + TECH:Weaving,BAND:high,0.0258,0.7611,2.3308
+BAND:high + MAT:Zari,TECH:Weaving,0.0258,0.5626,2.6827
+TECH:Embroidery + TECH:Weaving,BAND:high,0.0106,0.9031,2.7656
+TECH:Printing + TECH:Weaving,BAND:high,0.0179,0.6481,1.9845
+BAND:low + MAT:Silk,MAT:Cotton,0.0104,0.8036,1.5301
+BAND:low + TECH:PaperCraft,MAT:Cotton,0.0158,0.8722,1.6607
+BAND:low + TECH:Printing,MAT:Cotton,0.0551,0.9699,1.8466
+BAND:low + TECH:ResistDyeing,MAT:Cotton,0.0108,1.0,1.904
+BAND:low + TECH:Weaving,MAT:Cotton,0.0332,0.991,1.8868
+BAND:low + TECH:PaperCraft,MAT:Paper,0.0159,0.8796,15.9667
+BAND:low + MAT:Paper,TECH:PaperCraft,0.0159,0.8051,20.1813
+BAND:low + MAT:Silver,TECH:MetalCraft,0.0216,0.6274,7.2596
+BAND:low + TECH:MetalCraft,MAT:Silver,0.0216,0.7223,9.7587
+BAND:low + TECH:WoodCraft,MAT:Wood,0.017,0.8217,4.7667
+MAT:Cotton + MAT:Paper,BAND:mid,0.0151,0.5226,1.6303
+BAND:mid + TECH:Applique,MAT:Cotton,0.017,0.8729,1.6619
+MAT:Cotton + TECH:Applique,BAND:mid,0.017,0.6968,2.1737
+TECH:Applique,BAND:mid + MAT:Cotton,0.017,0.6287,4.0941
+MAT:Cotton + TECH:PaperCraft,BAND:mid,0.0164,0.5094,1.5888
+BAND:mid + TECH:Printing,MAT:Cotton,0.0669,0.9014,1.7163
+BAND:mid + TECH:ResistDyeing,MAT:Cotton,0.013,0.8876,1.69
+BAND:mid + TECH:Weaving,MAT:Cotton,0.0321,0.8771,1.6699
+BAND:mid + TECH:PaperCraft,MAT:Paper,0.0197,0.9228,16.751
+MAT:Paper + TECH:PaperCraft,BAND:mid,0.0197,0.5451,1.7004
+BAND:mid + MAT:Paper,TECH:PaperCraft,0.0197,0.8879,22.2567
+BAND:mid + TECH:MetalCraft,MAT:Silver,0.0245,0.564,7.6207
+BAND:mid + MAT:Silver,TECH:MetalCraft,0.0245,0.7928,9.1734
+MAT:Silver + TECH:MetalCraft,BAND:mid,0.0245,0.501,1.5629
+BAND:mid + TECH:Painting,MAT:Wood,0.0193,0.5572,3.2321
+MAT:Wood + TECH:Painting,BAND:mid,0.0193,0.5466,1.7049
+BAND:mid + TECH:WoodCraft,MAT:Wood,0.0144,0.8632,5.0072
+MAT:Cotton + TECH:Painting,MAT:Bamboo,0.0101,0.5902,23.6118
+MAT:Bamboo + MAT:Cotton,TECH:Painting,0.0101,0.9617,10.1784
+MAT:Paper + TECH:PaperCraft,MAT:Cotton,0.0287,0.7944,1.5126
+MAT:Cotton + TECH:PaperCraft,MAT:Paper,0.0287,0.8877,16.1138
+MAT:Cotton + MAT:Paper,TECH:PaperCraft,0.0287,0.9919,24.8635
+TECH:PaperCraft,MAT:Cotton + MAT:Paper,0.0287,0.7183,24.8635
+MAT:Paper,MAT:Cotton + TECH:PaperCraft,0.0287,0.5201,16.1138
+MAT:Paper + TECH:Printing,MAT:Cotton,0.0138,0.9976,1.8994
+MAT:Cotton + MAT:Wood,TECH:Printing,0.0658,0.8624,4.1299
+MAT:Wood + TECH:Printing,MAT:Cotton,0.0658,0.8605,1.6384
+MAT:Wood + TECH:Weaving,MAT:Cotton,0.0166,0.7942,1.5122
+MAT:Zari + TECH:Weaving,MAT:Cotton,0.0287,0.8484,1.6153
+MAT:Cotton + MAT:Zari,TECH:Weaving,0.0287,0.6887,3.2835
+MAT:Zari,MAT:Cotton + TECH:Weaving,0.0287,0.508,3.0416
+TECH:PaperCraft + TECH:Printing,MAT:Cotton,0.0164,0.9959,1.8962
+MAT:Cotton + TECH:PaperCraft,TECH:Printing,0.0164,0.5083,2.4342
+TECH:PaperCraft + TECH:Printing,MAT:Paper,0.0137,0.833,15.1202
+MAT:Paper + TECH:Printing,TECH:PaperCraft,0.0137,0.9927,24.8848
+MAT:Silk + MAT:Wood,TECH:Printing,0.0202,0.9983,4.7808
+MAT:Silk + TECH:Printing,MAT:Wood,0.0202,0.5919,3.4338
+MAT:Wood + TECH:Weaving,TECH:Printing,0.0158,0.7588,3.6339
+TECH:Printing + TECH:Weaving,MAT:Wood,0.0158,0.5728,3.3228
+AF:ajrakh block printing + BAND:high + TECH:Printing,AF:natural dyed,0.0159,0.87,9.1655
+AF:ajrakh block printing + AF:natural dyed + TECH:Printing,BAND:high,0.0159,0.7274,2.2275
+AF:ajrakh block printing + AF:natural dyed + BAND:high,TECH:Printing,0.0159,1.0,4.7887
+AF:ajrakh block printing + BAND:high,AF:natural dyed + TECH:Printing,0.0159,0.87,11.5601
+AF:ajrakh block printing + AF:natural dyed,BAND:high + TECH:Printing,0.0159,0.7274,9.3491
+AF:ajrakh block printing + MAT:Cotton + TECH:Printing,AF:natural dyed,0.013,0.5802,6.1128
+AF:ajrakh block printing + AF:natural dyed + MAT:Cotton,TECH:Printing,0.013,1.0,4.7887
+AF:ajrakh block printing + MAT:Cotton,AF:natural dyed + TECH:Printing,0.013,0.5802,7.7098
+AF:ajrakh block printing + AF:natural dyed,MAT:Cotton + TECH:Printing,0.013,0.5926,3.3891
+AF:bagh block printing + BAND:high + TECH:Printing,AF:natural dyed,0.0135,0.9011,9.4938
+AF:bagh block printing + AF:natural dyed + TECH:Printing,BAND:high,0.0135,0.82,2.5112
+AF:bagh block printing + AF:natural dyed + BAND:high,TECH:Printing,0.0135,1.0,4.7887
+AF:bagh block printing + TECH:Printing,AF:natural dyed + BAND:high,0.0135,0.6717,11.7143
+AF:bagh block printing + BAND:high,AF:natural dyed + TECH:Printing,0.0135,0.9011,11.9741
+AF:bagh block printing + AF:natural dyed,BAND:high + TECH:Printing,0.0135,0.82,10.5396
+AF:bagh block printing,AF:natural dyed + BAND:high + TECH:Printing,0.0135,0.6717,15.3998
+AF:bagh block printing + MAT:Cotton + TECH:Printing,AF:natural dyed,0.0117,0.8079,8.5113
+AF:bagh block printing + AF:natural dyed + MAT:Cotton,TECH:Printing,0.0117,1.0,4.7887
+AF:bagh block printing + TECH:Printing,AF:natural dyed + MAT:Cotton,0.0117,0.5846,8.0777
+AF:bagh block printing + MAT:Cotton,AF:natural dyed + TECH:Printing,0.0117,0.8079,10.735
+AF:bagh block printing + AF:natural dyed,MAT:Cotton + TECH:Printing,0.0117,0.7137,4.0813
+AF:bagh block printing,AF:natural dyed + MAT:Cotton + TECH:Printing,0.0117,0.5846,10.3898
+AF:bagru block printing + AF:natural dyed + TECH:Printing,BAND:high,0.0103,0.534,1.6353
+AF:bagru block printing + BAND:high + TECH:Printing,AF:natural dyed,0.0103,0.9217,9.7105
+AF:bagru block printing + AF:natural dyed + BAND:high,TECH:Printing,0.0103,1.0,4.7887
+AF:bagru block printing + AF:natural dyed,BAND:high + TECH:Printing,0.0103,0.534,6.8637
+AF:bagru block printing + BAND:high,AF:natural dyed + TECH:Printing,0.0103,0.9217,12.2474
+AF:bagru block printing + MAT:Cotton + MAT:Wood,AF:natural dyed,0.0141,0.9397,9.9006
+AF:bagru block printing + AF:natural dyed + MAT:Cotton,MAT:Wood,0.0141,0.9791,5.6795
+AF:bagru block printing + MAT:Wood,AF:natural dyed + MAT:Cotton,0.0141,0.7197,9.9441
+AF:bagru block printing + MAT:Cotton,AF:natural dyed + MAT:Wood,0.0141,0.6947,15.1582
+AF:bagru block printing + AF:natural dyed,MAT:Cotton + MAT:Wood,0.0141,0.7347,9.6258
+AF:bagru block printing,AF:natural dyed + MAT:Cotton + MAT:Wood,0.0141,0.5554,14.8466
+AF:bagru block printing + MAT:Cotton + TECH:Printing,AF:natural dyed,0.0144,0.7096,7.4757
+AF:bagru block printing + AF:natural dyed + MAT:Cotton,TECH:Printing,0.0144,1.0,4.7887
+AF:bagru block printing + TECH:Printing,AF:natural dyed + MAT:Cotton,0.0144,0.5673,7.8386
+AF:bagru block printing + MAT:Cotton,AF:natural dyed + TECH:Printing,0.0144,0.7096,9.4288
+AF:bagru block printing + AF:natural dyed,MAT:Cotton + TECH:Printing,0.0144,0.7504,4.2914
+AF:bagru block printing,AF:natural dyed + MAT:Cotton + TECH:Printing,0.0144,0.5673,10.0822
+AF:bagru block printing + AF:natural dyed + MAT:Wood,TECH:Printing,0.0187,1.0,4.7887
+AF:bagru block printing + MAT:Wood + TECH:Printing,AF:natural dyed,0.0187,0.9521,10.0313
+AF:bagru block printing + AF:natural dyed + TECH:Printing,MAT:Wood,0.0187,0.9721,5.6389
+AF:bagru block printing + MAT:Wood,AF:natural dyed + TECH:Printing,0.0187,0.9521,12.652
+AF:bagru block printing + AF:natural dyed,MAT:Wood + TECH:Printing,0.0187,0.9721,12.7073
+AF:bagru block printing + TECH:Printing,AF:natural dyed + MAT:Wood,0.0187,0.7348,16.0334
+AF:bagru block printing,AF:natural dyed + MAT:Wood + TECH:Printing,0.0187,0.7348,16.0334
+AF:bagru block printing + BAND:high + MAT:Wood,TECH:Printing,0.0107,1.0,4.7887
+AF:bagru block printing + MAT:Wood + TECH:Printing,BAND:high,0.0107,0.547,1.6751
+AF:bagru block printing + BAND:high + TECH:Printing,MAT:Wood,0.0107,0.9639,5.5912
+AF:bagru block printing + MAT:Wood,BAND:high + TECH:Printing,0.0107,0.547,7.0304
+AF:bagru block printing + BAND:high,MAT:Wood + TECH:Printing,0.0107,0.9639,12.5999
+AF:bagru block printing + MAT:Cotton + MAT:Wood,TECH:Printing,0.015,1.0,4.7887
+AF:bagru block printing + MAT:Cotton + TECH:Printing,MAT:Wood,0.015,0.7393,4.2885
+AF:bagru block printing + MAT:Wood,MAT:Cotton + TECH:Printing,0.015,0.7658,4.3793
+AF:bagru block printing + MAT:Cotton,MAT:Wood + TECH:Printing,0.015,0.7393,9.6641
+AF:bagru block printing + TECH:Printing,MAT:Cotton + MAT:Wood,0.015,0.591,7.7431
+AF:bagru block printing,MAT:Cotton + MAT:Wood + TECH:Printing,0.015,0.591,8.9784
+AF:bandhani tie dye + MAT:Cotton + TECH:ResistDyeing,BAND:high,0.021,0.6487,1.9865
+BAND:high + MAT:Cotton + TECH:ResistDyeing,AF:bandhani tie dye,0.021,0.8719,21.4938
+AF:bandhani tie dye + BAND:high + MAT:Cotton,TECH:ResistDyeing,0.021,1.0,17.4605
+AF:bandhani tie dye + TECH:ResistDyeing,BAND:high + MAT:Cotton,0.021,0.5178,2.588
+BAND:high + TECH:ResistDyeing,AF:bandhani tie dye + MAT:Cotton,0.021,0.6596,20.3737
+AF:bandhani tie dye + MAT:Cotton,BAND:high + TECH:ResistDyeing,0.021,0.6487,20.3737
+AF:bandhani tie dye + BAND:high,MAT:Cotton + TECH:ResistDyeing,0.021,0.7597,15.8676
+AF:bandhani tie dye,BAND:high + MAT:Cotton + TECH:ResistDyeing,0.021,0.5178,21.4938
+AF:handmade + BAND:low + TECH:BeadWork,AF:bead work,0.0118,0.9972,20.7403
+AF:bead work + AF:handmade + BAND:low,TECH:BeadWork,0.0118,1.0,20.2342
+AF:bead work + AF:handmade + TECH:BeadWork,BAND:low,0.0118,0.5825,1.6508
+AF:handmade + TECH:BeadWork,AF:bead work + BAND:low,0.0118,0.5815,18.8403
+AF:bead work + AF:handmade,BAND:low + TECH:BeadWork,0.0118,0.5825,18.6084
+AF:dharwad weaving + AF:plain solid + TECH:Weaving,MAT:Cotton,0.0117,1.0,1.904
+AF:dharwad weaving + MAT:Cotton + TECH:Weaving,AF:plain solid,0.0117,1.0,11.4371
+AF:dharwad weaving + AF:plain solid + MAT:Cotton,TECH:Weaving,0.0117,1.0,4.768
+AF:dharwad weaving + TECH:Weaving,AF:plain solid + MAT:Cotton,0.0117,1.0,18.4551
+AF:dharwad weaving + AF:plain solid,MAT:Cotton + TECH:Weaving,0.0117,1.0,5.9873
+AF:dharwad weaving + MAT:Cotton,AF:plain solid + TECH:Weaving,0.0117,1.0,20.0572
+AF:dharwad weaving,AF:plain solid + MAT:Cotton + TECH:Weaving,0.0117,1.0,26.2368
+AF:hand painted + AF:srikalahasti penwork kalamkari + TECH:Painting,AF:natural dyed,0.0118,0.8753,9.2219
+AF:hand painted + AF:natural dyed + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0118,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari + TECH:Painting,AF:hand painted,0.0118,0.7923,12.765
+AF:hand painted + AF:natural dyed + AF:srikalahasti penwork kalamkari,TECH:Painting,0.0118,1.0,10.5842
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:hand painted + AF:natural dyed,0.0118,0.7105,60.334
+AF:natural dyed + TECH:Painting,AF:hand painted + AF:srikalahasti penwork kalamkari,0.0118,0.7923,58.8909
+AF:hand painted + AF:srikalahasti penwork kalamkari,AF:natural dyed + TECH:Painting,0.0118,0.8753,58.8909
+AF:hand painted + AF:natural dyed,AF:srikalahasti penwork kalamkari + TECH:Painting,0.0118,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari,AF:hand painted + TECH:Painting,0.0118,0.7923,12.765
+AF:srikalahasti penwork kalamkari,AF:hand painted + AF:natural dyed + TECH:Painting,0.0118,0.7105,60.334
+AF:hand painted + AF:srikalahasti penwork kalamkari + TECH:Painting,BAND:high,0.0101,0.7506,2.2986
+AF:srikalahasti penwork kalamkari + BAND:high + TECH:Painting,AF:hand painted,0.0101,0.7758,12.4983
+AF:hand painted + AF:srikalahasti penwork kalamkari + BAND:high,TECH:Painting,0.0101,1.0,10.5842
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:hand painted + BAND:high,0.0101,0.6093,27.9393
+AF:hand painted + AF:srikalahasti penwork kalamkari,BAND:high + TECH:Painting,0.0101,0.7506,21.106
+AF:srikalahasti penwork kalamkari + BAND:high,AF:hand painted + TECH:Painting,0.0101,0.7758,12.4983
+AF:srikalahasti penwork kalamkari,AF:hand painted + BAND:high + TECH:Painting,0.0101,0.6093,27.9393
+AF:srikalahasti penwork kalamkari + MAT:Cotton + TECH:Painting,AF:hand painted,0.0108,0.8131,13.1002
+AF:hand painted + AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Cotton,0.0108,0.803,1.5289
+AF:hand painted + MAT:Cotton + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0108,0.8798,53.0807
+AF:hand painted + AF:srikalahasti penwork kalamkari + MAT:Cotton,TECH:Painting,0.0108,1.0,10.5842
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:hand painted + MAT:Cotton,0.0108,0.6518,53.0807
+MAT:Cotton + TECH:Painting,AF:hand painted + AF:srikalahasti penwork kalamkari,0.0108,0.6314,46.9278
+AF:srikalahasti penwork kalamkari + MAT:Cotton,AF:hand painted + TECH:Painting,0.0108,0.8131,13.1002
+AF:hand painted + AF:srikalahasti penwork kalamkari,MAT:Cotton + TECH:Painting,0.0108,0.803,46.9278
+AF:hand painted + MAT:Cotton,AF:srikalahasti penwork kalamkari + TECH:Painting,0.0108,0.8798,53.0807
+AF:srikalahasti penwork kalamkari,AF:hand painted + MAT:Cotton + TECH:Painting,0.0108,0.6518,53.0807
+BAND:mid + MAT:Wood + TECH:Painting,AF:hand painted,0.016,0.8313,13.393
+AF:hand painted + BAND:mid + TECH:Painting,MAT:Wood,0.016,0.634,3.6775
+AF:hand painted + BAND:mid + MAT:Wood,TECH:Painting,0.016,1.0,10.5842
+AF:hand painted + MAT:Wood + TECH:Painting,BAND:mid,0.016,0.662,2.0651
+AF:hand painted + BAND:mid,MAT:Wood + TECH:Painting,0.016,0.634,17.961
+AF:hand painted + MAT:Wood,BAND:mid + TECH:Painting,0.016,0.662,19.1205
+AF:natural dyed + BAND:high + TECH:Weaving,AF:handloom,0.012,0.6992,7.5893
+AF:handloom + AF:natural dyed + BAND:high,TECH:Weaving,0.012,1.0,4.768
+AF:handloom + AF:natural dyed + TECH:Weaving,BAND:high,0.012,0.7868,2.4094
+AF:handloom + AF:natural dyed,BAND:high + TECH:Weaving,0.012,0.7868,5.6345
+AF:handloom + AF:plain solid + TECH:Weaving,BAND:high,0.0192,0.6441,1.9725
+AF:plain solid + BAND:high + TECH:Weaving,AF:handloom,0.0192,0.558,6.057
+AF:handloom + AF:plain solid + BAND:high,TECH:Weaving,0.0192,1.0,4.768
+AF:handloom + AF:plain solid,BAND:high + TECH:Weaving,0.0192,0.6441,4.6129
+AF:plain solid + MAT:Cotton + MAT:Zari,AF:handloom,0.0133,0.8082,8.7718
+AF:handloom + AF:plain solid + MAT:Cotton,MAT:Zari,0.0133,0.7361,13.0197
+AF:handloom + MAT:Cotton + MAT:Zari,AF:plain solid,0.0133,0.696,7.9597
+AF:handloom + AF:plain solid + MAT:Zari,MAT:Cotton,0.0133,0.9406,1.7909
+AF:plain solid + MAT:Zari,AF:handloom + MAT:Cotton,0.0133,0.6387,11.5374
+AF:handloom + MAT:Zari,AF:plain solid + MAT:Cotton,0.0133,0.591,10.9078
+AF:handloom + AF:plain solid + MAT:Cotton,TECH:Weaving,0.0181,1.0,4.768
+AF:handloom + AF:plain solid,MAT:Cotton + TECH:Weaving,0.0181,0.6059,3.6275
+AF:plain solid + MAT:Silk + TECH:Weaving,AF:handloom,0.0105,0.972,10.5506
+AF:handloom + AF:plain solid + MAT:Silk,TECH:Weaving,0.0105,1.0,4.768
+AF:plain solid + MAT:Silk,AF:handloom + TECH:Weaving,0.0105,0.5032,5.4619
+AF:plain solid + MAT:Zari + TECH:Weaving,AF:handloom,0.0141,0.8287,8.9951
+AF:handloom + MAT:Zari + TECH:Weaving,AF:plain solid,0.0141,0.6284,7.1866
+AF:handloom + AF:plain solid + MAT:Zari,TECH:Weaving,0.0141,1.0,4.768
+AF:plain solid + MAT:Zari,AF:handloom + TECH:Weaving,0.0141,0.679,7.3702
+AF:handloom + MAT:Zari,AF:plain solid + TECH:Weaving,0.0141,0.6284,12.6031
+AF:handloom + MAT:Cotton + MAT:Silk,BAND:high,0.0128,0.7202,2.2055
+AF:handloom + MAT:Cotton + MAT:Zari,BAND:high,0.0138,0.7206,2.2066
+AF:handloom + BAND:high + MAT:Zari,MAT:Cotton,0.0138,0.8071,1.5367
+AF:handloom + MAT:Zari,BAND:high + MAT:Cotton,0.0138,0.6119,3.0587
+AF:handloom + MAT:Cotton + TECH:Weaving,BAND:high,0.0377,0.6812,2.0861
+AF:handloom + BAND:high + MAT:Cotton,TECH:Weaving,0.0377,1.0,4.768
+AF:handloom + MAT:Cotton,BAND:high + TECH:Weaving,0.0377,0.6812,4.8783
+AF:handloom + BAND:high,MAT:Cotton + TECH:Weaving,0.0377,0.5228,3.1301
+AF:handloom + MAT:Silk + MAT:Zari,BAND:high,0.0119,0.9416,2.8836
+AF:handloom + BAND:high + MAT:Silk,MAT:Zari,0.0119,0.5538,9.7962
+AF:handloom + BAND:high + MAT:Zari,MAT:Silk,0.0119,0.6988,5.8589
+AF:handloom + MAT:Zari,BAND:high + MAT:Silk,0.0119,0.5299,6.3397
+AF:handloom + MAT:Silk + TECH:Weaving,BAND:high,0.0215,0.7658,2.3452
+BAND:high + MAT:Silk + TECH:Weaving,AF:handloom,0.0215,0.7154,7.7649
+AF:handloom + BAND:high + MAT:Silk,TECH:Weaving,0.0215,1.0,4.768
+MAT:Silk + TECH:Weaving,AF:handloom + BAND:high,0.0215,0.5693,7.8917
+AF:handloom + MAT:Silk,BAND:high + TECH:Weaving,0.0215,0.7658,5.4843
+AF:handloom + MAT:Wool + TECH:Weaving,BAND:high,0.0263,0.9949,3.0467
+BAND:high + MAT:Wool + TECH:Weaving,AF:handloom,0.0263,0.9937,10.7852
+AF:handloom + BAND:high + MAT:Wool,TECH:Weaving,0.0263,1.0,4.768
+MAT:Wool + TECH:Weaving,AF:handloom + BAND:high,0.0263,0.9887,13.7055
+AF:handloom + MAT:Wool,BAND:high + TECH:Weaving,0.0263,0.9949,7.1249
+BAND:high + MAT:Wool,AF:handloom + TECH:Weaving,0.0263,0.5665,6.1485
+AF:handloom + MAT:Zari + TECH:Weaving,BAND:high,0.017,0.7582,2.3218
+BAND:high + MAT:Zari + TECH:Weaving,AF:handloom,0.017,0.6615,7.1794
+AF:handloom + BAND:high + MAT:Zari,TECH:Weaving,0.017,1.0,4.768
+MAT:Zari + TECH:Weaving,AF:handloom + BAND:high,0.017,0.5035,6.9795
+AF:handloom + MAT:Zari,BAND:high + TECH:Weaving,0.017,0.7582,5.4297
+BAND:mid + MAT:Cotton + TECH:Weaving,AF:handloom,0.0167,0.5199,5.6427
+AF:handloom + BAND:mid + MAT:Cotton,TECH:Weaving,0.0167,1.0,4.768
+AF:handloom + BAND:mid + TECH:Weaving,MAT:Cotton,0.0167,0.8907,1.6958
+AF:handloom + BAND:mid,MAT:Cotton + TECH:Weaving,0.0167,0.8907,5.3328
+AF:handloom + MAT:Cotton + MAT:Silk,TECH:Weaving,0.0177,1.0,4.768
+MAT:Cotton + MAT:Silk + TECH:Weaving,AF:handloom,0.0177,0.7266,7.887
+AF:handloom + MAT:Silk,MAT:Cotton + TECH:Weaving,0.0177,0.632,3.7841
+AF:handloom + MAT:Zari + TECH:Weaving,MAT:Cotton,0.0191,0.8493,1.617
+AF:handloom + MAT:Cotton + MAT:Zari,TECH:Weaving,0.0191,1.0,4.768
+MAT:Cotton + MAT:Zari + TECH:Weaving,AF:handloom,0.0191,0.6647,7.2148
+AF:handloom + MAT:Zari,MAT:Cotton + TECH:Weaving,0.0191,0.8493,5.0848
+MAT:Zari + TECH:Weaving,AF:handloom + MAT:Cotton,0.0191,0.5639,10.1865
+MAT:Silk + MAT:Zari + TECH:Weaving,AF:handloom,0.0126,0.8286,8.9933
+AF:handloom + MAT:Silk + MAT:Zari,TECH:Weaving,0.0126,1.0,4.768
+AF:handloom + MAT:Zari + TECH:Weaving,MAT:Silk,0.0126,0.5627,4.7175
+AF:handloom + MAT:Zari,MAT:Silk + TECH:Weaving,0.0126,0.5627,14.8942
+AF:handmade + BAND:mid + TECH:Printing,MAT:Cotton,0.0187,0.9982,1.9006
+AF:handmade + MAT:Cotton + TECH:Printing,BAND:mid,0.0187,0.695,2.1679
+AF:handmade + TECH:Printing,BAND:mid + MAT:Cotton,0.0187,0.6933,4.5145
+BAND:low + MAT:Cotton + MAT:Paper,AF:handmade stationery,0.0137,0.9976,30.0628
+AF:handmade stationery + BAND:low + MAT:Paper,MAT:Cotton,0.0137,0.9761,1.8584
+AF:handmade stationery + BAND:low + MAT:Cotton,MAT:Paper,0.0137,0.8662,15.7237
+BAND:low + MAT:Paper,AF:handmade stationery + MAT:Cotton,0.0137,0.6915,21.4251
+AF:handmade stationery + BAND:low,MAT:Cotton + MAT:Paper,0.0137,0.8465,29.3021
+BAND:low + MAT:Cotton + TECH:PaperCraft,AF:handmade stationery,0.0158,1.0,30.1365
+AF:handmade stationery + BAND:low + TECH:PaperCraft,MAT:Cotton,0.0158,0.9772,1.8605
+AF:handmade stationery + BAND:low + MAT:Cotton,TECH:PaperCraft,0.0158,1.0,25.0673
+BAND:low + TECH:PaperCraft,AF:handmade stationery + MAT:Cotton,0.0158,0.8722,27.0235
+AF:handmade stationery + BAND:low,MAT:Cotton + TECH:PaperCraft,0.0158,0.9772,30.2753
+BAND:low + MAT:Paper + TECH:PaperCraft,AF:handmade stationery,0.014,0.88,26.5201
+AF:handmade stationery + BAND:low + TECH:PaperCraft,MAT:Paper,0.014,0.8672,15.7415
+AF:handmade stationery + BAND:low + MAT:Paper,TECH:PaperCraft,0.014,1.0,25.0673
+BAND:low + TECH:PaperCraft,AF:handmade stationery + MAT:Paper,0.014,0.7741,26.307
+BAND:low + MAT:Paper,AF:handmade stationery + TECH:PaperCraft,0.014,0.7085,21.3509
+AF:handmade stationery + BAND:low,MAT:Paper + TECH:PaperCraft,0.014,0.8672,24.0442
+BAND:mid + MAT:Cotton + MAT:Paper,AF:handmade stationery,0.0149,0.9889,29.8017
+AF:handmade stationery + BAND:mid + MAT:Paper,MAT:Cotton,0.0149,0.9716,1.8499
+AF:handmade stationery + BAND:mid + MAT:Cotton,MAT:Paper,0.0149,0.9082,16.4847
+AF:handmade stationery + MAT:Cotton + MAT:Paper,BAND:mid,0.0149,0.5211,1.6254
+BAND:mid + MAT:Paper,AF:handmade stationery + MAT:Cotton,0.0149,0.6742,20.8896
+AF:handmade stationery + BAND:mid,MAT:Cotton + MAT:Paper,0.0149,0.8794,30.4436
+MAT:Cotton + MAT:Paper,AF:handmade stationery + BAND:mid,0.0149,0.5168,30.4436
+AF:handmade stationery + MAT:Paper,BAND:mid + MAT:Cotton,0.0149,0.5074,3.3042
+BAND:mid + MAT:Cotton + TECH:PaperCraft,AF:handmade stationery,0.0164,1.0,30.1365
+AF:handmade stationery + BAND:mid + TECH:PaperCraft,MAT:Cotton,0.0164,0.9684,1.8438
+AF:handmade stationery + MAT:Cotton + TECH:PaperCraft,BAND:mid,0.0164,0.5094,1.5888
+AF:handmade stationery + BAND:mid + MAT:Cotton,TECH:PaperCraft,0.0164,1.0,25.0673
+BAND:mid + TECH:PaperCraft,AF:handmade stationery + MAT:Cotton,0.0164,0.7717,23.9076
+MAT:Cotton + TECH:PaperCraft,AF:handmade stationery + BAND:mid,0.0164,0.5094,30.0027
+AF:handmade stationery + BAND:mid,MAT:Cotton + TECH:PaperCraft,0.0164,0.9684,30.0027
+AF:handmade stationery + MAT:Cotton,BAND:mid + TECH:PaperCraft,0.0164,0.5094,23.9076
+BAND:mid + MAT:Paper + TECH:PaperCraft,AF:handmade stationery,0.0154,0.7816,23.5538
+AF:handmade stationery + BAND:mid + TECH:PaperCraft,MAT:Paper,0.0154,0.9051,16.4297
+AF:handmade stationery + MAT:Paper + TECH:PaperCraft,BAND:mid,0.0154,0.5222,1.629
+AF:handmade stationery + BAND:mid + MAT:Paper,TECH:PaperCraft,0.0154,1.0,25.0673
+BAND:mid + TECH:PaperCraft,AF:handmade stationery + MAT:Paper,0.0154,0.7213,24.5121
+BAND:mid + MAT:Paper,AF:handmade stationery + TECH:PaperCraft,0.0154,0.6939,20.9129
+AF:handmade stationery + BAND:mid,MAT:Paper + TECH:PaperCraft,0.0154,0.9051,25.0955
+AF:handmade stationery + MAT:Paper,BAND:mid + TECH:PaperCraft,0.0154,0.5222,24.5121
+MAT:Cotton + MAT:Paper + TECH:PaperCraft,AF:handmade stationery,0.0287,1.0,30.1365
+AF:handmade stationery + MAT:Paper + TECH:PaperCraft,MAT:Cotton,0.0287,0.9738,1.8541
+AF:handmade stationery + MAT:Cotton + TECH:PaperCraft,MAT:Paper,0.0287,0.8877,16.1138
+AF:handmade stationery + MAT:Cotton + MAT:Paper,TECH:PaperCraft,0.0287,1.0,25.0673
+MAT:Paper + TECH:PaperCraft,AF:handmade stationery + MAT:Cotton,0.0287,0.7944,24.6129
+MAT:Cotton + TECH:PaperCraft,AF:handmade stationery + MAT:Paper,0.0287,0.8877,30.1698
+AF:handmade stationery + TECH:PaperCraft,MAT:Cotton + MAT:Paper,0.0287,0.8635,29.8915
+MAT:Cotton + MAT:Paper,AF:handmade stationery + TECH:PaperCraft,0.0287,0.9919,29.8915
+AF:handmade stationery + MAT:Paper,MAT:Cotton + TECH:PaperCraft,0.0287,0.9738,30.1698
+AF:handmade stationery + MAT:Cotton,MAT:Paper + TECH:PaperCraft,0.0287,0.8877,24.6129
+TECH:PaperCraft,AF:handmade stationery + MAT:Cotton + MAT:Paper,0.0287,0.7183,25.0673
+MAT:Paper,AF:handmade stationery + MAT:Cotton + TECH:PaperCraft,0.0287,0.5201,16.1138
+AF:handmade stationery,MAT:Cotton + MAT:Paper + TECH:PaperCraft,0.0287,0.8635,30.1365
+MAT:Cotton + MAT:Paper + TECH:Printing,AF:handmade stationery,0.0137,0.9927,29.9165
+AF:handmade stationery + MAT:Paper + TECH:Printing,MAT:Cotton,0.0137,0.9976,1.8993
+AF:handmade stationery + MAT:Cotton + TECH:Printing,MAT:Paper,0.0137,0.8344,15.1449
+MAT:Paper + TECH:Printing,AF:handmade stationery + MAT:Cotton,0.0137,0.9903,30.6815
+AF:handmade stationery + TECH:Printing,MAT:Cotton + MAT:Paper,0.0137,0.831,28.765
+MAT:Cotton + TECH:PaperCraft + TECH:Printing,AF:handmade stationery,0.0164,1.0,30.1365
+AF:handmade stationery + TECH:PaperCraft + TECH:Printing,MAT:Cotton,0.0164,0.9959,1.8962
+AF:handmade stationery + MAT:Cotton + TECH:PaperCraft,TECH:Printing,0.0164,0.5083,2.4342
+AF:handmade stationery + MAT:Cotton + TECH:Printing,TECH:PaperCraft,0.0164,1.0,25.0673
+TECH:PaperCraft + TECH:Printing,AF:handmade stationery + MAT:Cotton,0.0164,0.9959,30.8561
+MAT:Cotton + TECH:PaperCraft,AF:handmade stationery + TECH:Printing,0.0164,0.5083,30.8561
+AF:handmade stationery + TECH:Printing,MAT:Cotton + TECH:PaperCraft,0.0164,0.9959,30.8561
+AF:handmade stationery + MAT:Cotton,TECH:PaperCraft + TECH:Printing,0.0164,0.5083,30.8561
+MAT:Paper + TECH:PaperCraft + TECH:Printing,AF:handmade stationery,0.0137,1.0,30.1365
+AF:handmade stationery + TECH:PaperCraft + TECH:Printing,MAT:Paper,0.0137,0.833,15.1202
+AF:handmade stationery + MAT:Paper + TECH:Printing,TECH:PaperCraft,0.0137,1.0,25.0673
+TECH:PaperCraft + TECH:Printing,AF:handmade stationery + MAT:Paper,0.0137,0.833,28.3094
+MAT:Paper + TECH:Printing,AF:handmade stationery + TECH:PaperCraft,0.0137,0.9927,29.9171
+AF:handmade stationery + TECH:Printing,MAT:Paper + TECH:PaperCraft,0.0137,0.833,23.0952
+AF:jacquard weaving + MAT:Cotton + TECH:Weaving,BAND:high,0.0139,0.5233,1.6026
+AF:jacquard weaving + BAND:high + TECH:Weaving,MAT:Cotton,0.0139,0.9881,1.8813
+AF:jacquard weaving + BAND:high + MAT:Cotton,TECH:Weaving,0.0139,1.0,4.768
+AF:jacquard weaving + TECH:Weaving,BAND:high + MAT:Cotton,0.0139,0.5194,2.5961
+AF:jacquard weaving + MAT:Cotton,BAND:high + TECH:Weaving,0.0139,0.5233,3.7477
+AF:jacquard weaving + BAND:high,MAT:Cotton + TECH:Weaving,0.0139,0.9881,5.9161
+AF:jacquard weaving,BAND:high + MAT:Cotton + TECH:Weaving,0.0139,0.5194,5.1058
+AF:kalamkari block printing + MAT:Cotton + MAT:Wood,AF:natural dyed,0.0103,1.0,10.5355
+AF:kalamkari block printing + AF:natural dyed + MAT:Wood,MAT:Cotton,0.0103,0.9562,1.8207
+AF:kalamkari block printing + AF:natural dyed + MAT:Cotton,MAT:Wood,0.0103,0.7927,4.5986
+AF:kalamkari block printing + MAT:Wood,AF:natural dyed + MAT:Cotton,0.0103,0.9562,13.2133
+AF:kalamkari block printing + AF:natural dyed,MAT:Cotton + MAT:Wood,0.0103,0.7631,9.9973
+AF:kalamkari block printing + AF:natural dyed + TECH:Printing,MAT:Cotton,0.013,0.9626,1.8328
+AF:kalamkari block printing + AF:natural dyed + MAT:Cotton,TECH:Printing,0.013,1.0,4.7887
+AF:kalamkari block printing + AF:natural dyed,MAT:Cotton + TECH:Printing,0.013,0.9626,5.5046
+AF:kalamkari block printing + MAT:Wood + TECH:Printing,AF:natural dyed,0.0107,1.0,10.5355
+AF:kalamkari block printing + AF:natural dyed + TECH:Printing,MAT:Wood,0.0107,0.798,4.6291
+AF:kalamkari block printing + AF:natural dyed + MAT:Wood,TECH:Printing,0.0107,1.0,4.7887
+AF:kalamkari block printing + MAT:Wood,AF:natural dyed + TECH:Printing,0.0107,1.0,13.288
+AF:kalamkari block printing + AF:natural dyed,MAT:Wood + TECH:Printing,0.0107,0.798,10.4318
+AF:kalamkari block printing + BAND:mid + TECH:Printing,MAT:Cotton,0.0171,0.9751,1.8567
+AF:kalamkari block printing + BAND:mid + MAT:Cotton,TECH:Printing,0.0171,1.0,4.7887
+AF:kalamkari block printing + MAT:Cotton + TECH:Printing,BAND:mid,0.0171,0.6343,1.9787
+AF:kalamkari block printing + BAND:mid,MAT:Cotton + TECH:Printing,0.0171,0.9751,5.5764
+AF:kalamkari block printing + TECH:Printing,BAND:mid + MAT:Cotton,0.0171,0.5882,3.8305
+AF:kalamkari block printing + MAT:Cotton,BAND:mid + TECH:Printing,0.0171,0.6343,8.5471
+AF:kalamkari block printing,BAND:mid + MAT:Cotton + TECH:Printing,0.0171,0.5882,8.7926
+AF:kalamkari block printing + MAT:Cotton + MAT:Wood,TECH:Printing,0.0103,1.0,4.7887
+AF:kalamkari block printing + MAT:Wood + TECH:Printing,MAT:Cotton,0.0103,0.9562,1.8207
+AF:kalamkari block printing + MAT:Wood,MAT:Cotton + TECH:Printing,0.0103,0.9562,5.4683
+AF:kota doria weaving + MAT:Cotton + TECH:Weaving,BAND:high,0.0208,0.6589,2.0176
+AF:kota doria weaving + BAND:high + TECH:Weaving,MAT:Cotton,0.0208,0.9583,1.8245
+AF:kota doria weaving + BAND:high + MAT:Cotton,TECH:Weaving,0.0208,1.0,4.768
+AF:kota doria weaving + TECH:Weaving,BAND:high + MAT:Cotton,0.0208,0.6405,3.2014
+AF:kota doria weaving + MAT:Cotton,BAND:high + TECH:Weaving,0.0208,0.6589,4.7183
+AF:kota doria weaving + BAND:high,MAT:Cotton + TECH:Weaving,0.0208,0.9583,5.7375
+AF:kota doria weaving,BAND:high + MAT:Cotton + TECH:Weaving,0.0208,0.6405,6.2962
+AF:kota doria weaving + MAT:Wood + TECH:Weaving,MAT:Cotton,0.013,1.0,1.904
+MAT:Cotton + MAT:Wood + TECH:Weaving,AF:kota doria weaving,0.013,0.7834,24.1211
+AF:kota doria weaving + MAT:Cotton + MAT:Wood,TECH:Weaving,0.013,1.0,4.768
+MAT:Wood + TECH:Weaving,AF:kota doria weaving + MAT:Cotton,0.013,0.6222,19.707
+AF:kota doria weaving + MAT:Wood,MAT:Cotton + TECH:Weaving,0.013,1.0,5.9873
+AF:kota doria weaving + TECH:Printing + TECH:Weaving,MAT:Cotton,0.0148,1.0,1.904
+MAT:Cotton + TECH:Printing + TECH:Weaving,AF:kota doria weaving,0.0148,0.814,25.0632
+AF:kota doria weaving + MAT:Cotton + TECH:Printing,TECH:Weaving,0.0148,1.0,4.768
+TECH:Printing + TECH:Weaving,AF:kota doria weaving + MAT:Cotton,0.0148,0.5364,16.99
+AF:kota doria weaving + TECH:Printing,MAT:Cotton + TECH:Weaving,0.0148,1.0,5.9873
+AF:srikalahasti penwork kalamkari + BAND:high + TECH:Painting,AF:natural dyed,0.0114,0.8737,9.205
+AF:natural dyed + BAND:high + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0114,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari + BAND:high,TECH:Painting,0.0114,1.0,10.5842
+AF:natural dyed + AF:srikalahasti penwork kalamkari + TECH:Painting,BAND:high,0.0114,0.7652,2.3434
+AF:srikalahasti penwork kalamkari + BAND:high,AF:natural dyed + TECH:Painting,0.0114,0.8737,58.7832
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:natural dyed + BAND:high,0.0114,0.6862,11.968
+AF:natural dyed + TECH:Painting,AF:srikalahasti penwork kalamkari + BAND:high,0.0114,0.7652,58.7832
+AF:natural dyed + AF:srikalahasti penwork kalamkari,BAND:high + TECH:Painting,0.0114,0.7652,21.5169
+AF:srikalahasti penwork kalamkari,AF:natural dyed + BAND:high + TECH:Painting,0.0114,0.6862,60.334
+AF:srikalahasti penwork kalamkari + MAT:Bamboo + TECH:Painting,AF:natural dyed,0.0101,0.9094,9.5806
+AF:natural dyed + MAT:Bamboo + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0101,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Bamboo,0.0101,0.6795,27.1829
+AF:natural dyed + AF:srikalahasti penwork kalamkari + MAT:Bamboo,TECH:Painting,0.0101,1.0,10.5842
+MAT:Bamboo + TECH:Painting,AF:natural dyed + AF:srikalahasti penwork kalamkari,0.0101,0.5543,37.2951
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:natural dyed + MAT:Bamboo,0.0101,0.6093,58.5824
+AF:natural dyed + TECH:Painting,AF:srikalahasti penwork kalamkari + MAT:Bamboo,0.0101,0.6795,61.182
+AF:srikalahasti penwork kalamkari + MAT:Bamboo,AF:natural dyed + TECH:Painting,0.0101,0.9094,61.182
+AF:natural dyed + MAT:Bamboo,AF:srikalahasti penwork kalamkari + TECH:Painting,0.0101,0.971,58.5824
+AF:natural dyed + AF:srikalahasti penwork kalamkari,MAT:Bamboo + TECH:Painting,0.0101,0.6795,37.2951
+AF:srikalahasti penwork kalamkari,AF:natural dyed + MAT:Bamboo + TECH:Painting,0.0101,0.6093,60.334
+AF:srikalahasti penwork kalamkari + MAT:Cotton + TECH:Painting,AF:natural dyed,0.0121,0.9116,9.6044
+AF:natural dyed + AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Cotton,0.0121,0.8149,1.5516
+AF:natural dyed + MAT:Cotton + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0121,1.0,60.334
+AF:natural dyed + AF:srikalahasti penwork kalamkari + MAT:Cotton,TECH:Painting,0.0121,1.0,10.5842
+AF:srikalahasti penwork kalamkari + TECH:Painting,AF:natural dyed + MAT:Cotton,0.0121,0.7308,10.0976
+MAT:Cotton + TECH:Painting,AF:natural dyed + AF:srikalahasti penwork kalamkari,0.0121,0.7078,47.6236
+AF:natural dyed + TECH:Painting,AF:srikalahasti penwork kalamkari + MAT:Cotton,0.0121,0.8149,61.3335
+AF:srikalahasti penwork kalamkari + MAT:Cotton,AF:natural dyed + TECH:Painting,0.0121,0.9116,61.3335
+AF:natural dyed + AF:srikalahasti penwork kalamkari,MAT:Cotton + TECH:Painting,0.0121,0.8149,47.6236
+AF:srikalahasti penwork kalamkari,AF:natural dyed + MAT:Cotton + TECH:Painting,0.0121,0.7308,60.334
+AF:natural dyed + MAT:Cotton + MAT:Silk,BAND:high,0.0167,0.8569,2.624
+AF:natural dyed + MAT:Silk,BAND:high + MAT:Cotton,0.0167,0.5071,2.5349
+BAND:high + MAT:Cotton + TECH:Printing,AF:natural dyed,0.0265,0.5006,5.2744
+AF:natural dyed + BAND:high + MAT:Cotton,TECH:Printing,0.0265,0.7076,3.3886
+BAND:high + MAT:Silk + MAT:Wood,AF:natural dyed,0.0123,0.7409,7.8057
+AF:natural dyed + MAT:Silk + MAT:Wood,BAND:high,0.0123,0.8905,2.727
+AF:natural dyed + BAND:high + MAT:Wood,MAT:Silk,0.0123,0.5335,4.4731
+MAT:Silk + MAT:Wood,AF:natural dyed + BAND:high,0.0123,0.607,10.5855
+BAND:high + MAT:Silk + TECH:Printing,AF:natural dyed,0.0177,0.717,7.554
+AF:natural dyed + MAT:Silk + TECH:Printing,BAND:high,0.0177,0.7973,2.4415
+AF:natural dyed + BAND:high + MAT:Silk,TECH:Printing,0.0177,0.6419,3.0739
+MAT:Silk + TECH:Printing,AF:natural dyed + BAND:high,0.0177,0.5182,9.0373
+AF:natural dyed + MAT:Silk,BAND:high + TECH:Printing,0.0177,0.5378,6.9115
+AF:natural dyed + BAND:high + MAT:Wood,TECH:Printing,0.023,1.0,4.7887
+BAND:high + MAT:Wood + TECH:Printing,AF:natural dyed,0.023,0.5828,6.1405
+AF:natural dyed + BAND:high + TECH:Printing,MAT:Wood,0.023,0.5277,3.0611
+AF:natural dyed + MAT:Wood + TECH:Printing,BAND:high,0.023,0.5022,1.5379
+AF:natural dyed + MAT:Wood,BAND:high + TECH:Printing,0.023,0.5022,6.4545
+BAND:high + TECH:Printing + TECH:Weaving,AF:natural dyed,0.012,0.6685,7.0434
+AF:natural dyed + TECH:Printing + TECH:Weaving,BAND:high,0.012,0.6599,2.0208
+AF:natural dyed + BAND:high + TECH:Weaving,TECH:Printing,0.012,0.6973,3.339
+AF:natural dyed + BAND:low + MAT:Wood,MAT:Cotton,0.0136,1.0,1.904
+AF:natural dyed + BAND:low + MAT:Cotton,MAT:Wood,0.0136,0.7337,4.2561
+AF:natural dyed + BAND:low,MAT:Cotton + MAT:Wood,0.0136,0.7337,9.6122
+AF:natural dyed + BAND:low + TECH:Printing,MAT:Cotton,0.0178,1.0,1.904
+AF:natural dyed + BAND:low + MAT:Cotton,TECH:Printing,0.0178,0.9601,4.5979
+AF:natural dyed + BAND:low,MAT:Cotton + TECH:Printing,0.0178,0.9601,5.4906
+BAND:low + MAT:Wood + TECH:Printing,AF:natural dyed,0.0136,0.5745,6.0523
+AF:natural dyed + BAND:low + MAT:Wood,TECH:Printing,0.0136,1.0,4.7887
+AF:natural dyed + BAND:low + TECH:Printing,MAT:Wood,0.0136,0.7642,4.4328
+AF:natural dyed + BAND:low,MAT:Wood + TECH:Printing,0.0136,0.7337,9.5911
+AF:natural dyed + BAND:mid + TECH:Printing,MAT:Cotton,0.012,0.8668,1.6504
+AF:natural dyed + BAND:mid + MAT:Cotton,TECH:Printing,0.012,0.7306,3.4987
+AF:natural dyed + BAND:mid,MAT:Cotton + TECH:Printing,0.012,0.6303,3.6043
+MAT:Cotton + MAT:Silk + TECH:Printing,AF:natural dyed,0.0123,0.5891,6.2063
+AF:natural dyed + MAT:Cotton + MAT:Silk,TECH:Printing,0.0123,0.6328,3.0301
+AF:natural dyed + MAT:Cotton + MAT:Wood,TECH:Printing,0.0374,1.0,4.7887
+AF:natural dyed + MAT:Wood + TECH:Printing,MAT:Cotton,0.0374,0.8163,1.5541
+AF:natural dyed + MAT:Cotton + TECH:Printing,MAT:Wood,0.0374,0.6649,3.8569
+MAT:Cotton + MAT:Wood + TECH:Printing,AF:natural dyed,0.0374,0.5683,5.9873
+AF:natural dyed + MAT:Wood,MAT:Cotton + TECH:Printing,0.0374,0.8163,4.6678
+AF:natural dyed + MAT:Cotton,MAT:Wood + TECH:Printing,0.0374,0.5169,6.7574
+MAT:Cotton + TECH:Printing + TECH:Weaving,AF:natural dyed,0.0103,0.5672,5.976
+AF:natural dyed + MAT:Cotton + TECH:Weaving,TECH:Printing,0.0103,0.6754,3.2345
+AF:natural dyed + MAT:Silk + MAT:Wood,TECH:Printing,0.0138,1.0,4.7887
+MAT:Silk + MAT:Wood + TECH:Printing,AF:natural dyed,0.0138,0.6827,7.1929
+AF:natural dyed + MAT:Silk + TECH:Printing,MAT:Wood,0.0138,0.6218,3.6069
+MAT:Silk + MAT:Wood,AF:natural dyed + TECH:Printing,0.0138,0.6816,9.057
+AF:natural dyed + MAT:Wood + TECH:Weaving,TECH:Printing,0.0106,1.0,4.7887
+MAT:Wood + TECH:Printing + TECH:Weaving,AF:natural dyed,0.0106,0.6674,7.0311
+AF:natural dyed + TECH:Printing + TECH:Weaving,MAT:Wood,0.0106,0.5823,3.3776
+MAT:Wood + TECH:Weaving,AF:natural dyed + TECH:Printing,0.0106,0.5064,6.7295
+BAND:low + MAT:Silver + TECH:MetalCraft,AF:oxidised metal craft,0.021,0.9705,18.7473
+AF:oxidised metal craft + BAND:low + MAT:Silver,TECH:MetalCraft,0.021,1.0,11.5703
+AF:oxidised metal craft + BAND:low + TECH:MetalCraft,MAT:Silver,0.021,0.8505,11.4916
+BAND:low + MAT:Silver,AF:oxidised metal craft + TECH:MetalCraft,0.021,0.6089,11.7626
+BAND:low + TECH:MetalCraft,AF:oxidised metal craft + MAT:Silver,0.021,0.701,14.8708
+AF:oxidised metal craft + BAND:low,MAT:Silver + TECH:MetalCraft,0.021,0.8505,17.3752
+AF:oxidised metal craft + BAND:mid + TECH:MetalCraft,MAT:Silver,0.0243,0.9718,13.1305
+AF:oxidised metal craft + BAND:mid + MAT:Silver,TECH:MetalCraft,0.0243,1.0,11.5703
+BAND:mid + MAT:Silver + TECH:MetalCraft,AF:oxidised metal craft,0.0243,0.9918,19.1577
+AF:oxidised metal craft + MAT:Silver + TECH:MetalCraft,BAND:mid,0.0243,0.516,1.6096
+AF:oxidised metal craft + BAND:mid,MAT:Silver + TECH:MetalCraft,0.0243,0.9718,19.8533
+BAND:mid + TECH:MetalCraft,AF:oxidised metal craft + MAT:Silver,0.0243,0.5594,11.8671
+BAND:mid + MAT:Silver,AF:oxidised metal craft + TECH:MetalCraft,0.0243,0.7863,15.189
+AF:oxidised metal craft + MAT:Silver,BAND:mid + TECH:MetalCraft,0.0243,0.516,11.8671
+AF:patchwork + BAND:mid + TECH:Applique,MAT:Cotton,0.0143,0.8537,1.6254
+BAND:mid + MAT:Cotton + TECH:Applique,AF:patchwork,0.0143,0.8386,38.4522
+AF:patchwork + MAT:Cotton + TECH:Applique,BAND:mid,0.0143,0.7448,2.3231
+AF:patchwork + BAND:mid + MAT:Cotton,TECH:Applique,0.0143,1.0,36.8874
+BAND:mid + TECH:Applique,AF:patchwork + MAT:Cotton,0.0143,0.732,38.1399
+AF:patchwork + TECH:Applique,BAND:mid + MAT:Cotton,0.0143,0.6554,4.2678
+MAT:Cotton + TECH:Applique,AF:patchwork + BAND:mid,0.0143,0.5844,34.9036
+AF:patchwork + BAND:mid,MAT:Cotton + TECH:Applique,0.0143,0.8537,34.9036
+AF:patchwork + MAT:Cotton,BAND:mid + TECH:Applique,0.0143,0.7448,38.1399
+TECH:Applique,AF:patchwork + BAND:mid + MAT:Cotton,0.0143,0.5272,36.8874
+AF:patchwork,BAND:mid + MAT:Cotton + TECH:Applique,0.0143,0.6554,38.4522
+AF:plain solid + MAT:Cotton + TECH:Weaving,BAND:high,0.0243,0.6373,1.9517
+AF:plain solid + BAND:high + MAT:Cotton,TECH:Weaving,0.0243,0.9489,4.5243
+AF:plain solid + BAND:high,MAT:Cotton + TECH:Weaving,0.0243,0.5339,3.1968
+AF:plain solid + MAT:Zari + TECH:Weaving,BAND:high,0.0103,0.6043,1.8506
+AF:plain solid + BAND:high + MAT:Zari,TECH:Weaving,0.0103,0.7398,3.5272
+AF:plain solid + MAT:Zari + TECH:Weaving,MAT:Cotton,0.0162,0.9508,1.8103
+MAT:Cotton + MAT:Zari + TECH:Weaving,AF:plain solid,0.0162,0.5643,6.4534
+AF:plain solid + MAT:Cotton + MAT:Zari,TECH:Weaving,0.0162,0.9857,4.6999
+AF:plain solid + MAT:Zari,MAT:Cotton + TECH:Weaving,0.0162,0.779,4.6643
+AF:pochampally ikat weaving + BAND:high + TECH:Weaving,MAT:Cotton,0.0113,0.8342,1.5882
+AF:pochampally ikat weaving + BAND:high + MAT:Cotton,TECH:Weaving,0.0113,1.0,4.768
+AF:pochampally ikat weaving + BAND:high,MAT:Cotton + TECH:Weaving,0.0113,0.8342,4.9944
+AF:pochampally ikat weaving + BAND:low + TECH:Weaving,MAT:Cotton,0.0114,1.0,1.904
+AF:pochampally ikat weaving + BAND:low + MAT:Cotton,TECH:Weaving,0.0114,1.0,4.768
+AF:pochampally ikat weaving + BAND:low,MAT:Cotton + TECH:Weaving,0.0114,1.0,5.9873
+AF:sanganeri block printing + BAND:high + MAT:Cotton,TECH:Printing,0.0113,1.0,4.7887
+AF:sanganeri block printing + BAND:high,MAT:Cotton + TECH:Printing,0.0113,0.7539,4.3113
+AF:sanganeri block printing + BAND:low + TECH:Printing,MAT:Cotton,0.0163,0.9568,1.8217
+AF:sanganeri block printing + BAND:low + MAT:Cotton,TECH:Printing,0.0163,1.0,4.7887
+AF:sanganeri block printing + BAND:low,MAT:Cotton + TECH:Printing,0.0163,0.9568,5.4714
+AF:sanganeri block printing + BAND:mid + TECH:Printing,MAT:Cotton,0.0102,0.9018,1.717
+AF:sanganeri block printing + BAND:mid + MAT:Cotton,TECH:Printing,0.0102,1.0,4.7887
+AF:sanganeri block printing + BAND:mid,MAT:Cotton + TECH:Printing,0.0102,0.9018,5.1569
+AF:sanganeri block printing + MAT:Cotton + MAT:Wood,TECH:Printing,0.0172,1.0,4.7887
+AF:sanganeri block printing + MAT:Wood + TECH:Printing,MAT:Cotton,0.0172,0.9211,1.7539
+AF:sanganeri block printing + MAT:Wood,MAT:Cotton + TECH:Printing,0.0172,0.9211,5.2676
+AF:srikalahasti penwork kalamkari + MAT:Silk + TECH:Painting,BAND:high,0.0114,1.0,3.0623
+BAND:high + MAT:Silk + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0114,0.9742,58.7781
+AF:srikalahasti penwork kalamkari + BAND:high + MAT:Silk,TECH:Painting,0.0114,1.0,10.5842
+AF:srikalahasti penwork kalamkari + BAND:high + TECH:Painting,MAT:Silk,0.0114,0.8763,7.3468
+MAT:Silk + TECH:Painting,AF:srikalahasti penwork kalamkari + BAND:high,0.0114,0.9742,74.8361
+AF:srikalahasti penwork kalamkari + MAT:Silk,BAND:high + TECH:Painting,0.0114,1.0,28.1179
+AF:srikalahasti penwork kalamkari + TECH:Painting,BAND:high + MAT:Silk,0.0114,0.6883,8.2351
+AF:srikalahasti penwork kalamkari + BAND:high,MAT:Silk + TECH:Painting,0.0114,0.8763,74.8361
+AF:srikalahasti penwork kalamkari,BAND:high + MAT:Silk + TECH:Painting,0.0114,0.6883,58.7781
+AF:srikalahasti penwork kalamkari + MAT:Bamboo + TECH:Painting,MAT:Cotton,0.0101,0.9094,1.7314
+AF:srikalahasti penwork kalamkari + MAT:Cotton + TECH:Painting,MAT:Bamboo,0.0101,0.7601,30.4091
+AF:srikalahasti penwork kalamkari + MAT:Bamboo + MAT:Cotton,TECH:Painting,0.0101,1.0,10.5842
+MAT:Bamboo + MAT:Cotton + TECH:Painting,AF:srikalahasti penwork kalamkari,0.0101,1.0,60.334
+AF:srikalahasti penwork kalamkari + TECH:Painting,MAT:Bamboo + MAT:Cotton,0.0101,0.6093,58.0209
+AF:srikalahasti penwork kalamkari + MAT:Bamboo,MAT:Cotton + TECH:Painting,0.0101,0.9094,53.1444
+AF:srikalahasti penwork kalamkari + MAT:Cotton,MAT:Bamboo + TECH:Painting,0.0101,0.7601,41.7216
+MAT:Bamboo + TECH:Painting,AF:srikalahasti penwork kalamkari + MAT:Cotton,0.0101,0.5543,41.7216
+MAT:Cotton + TECH:Painting,AF:srikalahasti penwork kalamkari + MAT:Bamboo,0.0101,0.5902,53.1444
+MAT:Bamboo + MAT:Cotton,AF:srikalahasti penwork kalamkari + TECH:Painting,0.0101,0.9617,58.0209
+AF:srikalahasti penwork kalamkari,MAT:Bamboo + MAT:Cotton + TECH:Painting,0.0101,0.6093,60.334
+AF:wood carving + BAND:low + MAT:Wood,TECH:WoodCraft,0.0115,1.0,24.6119
+AF:wood carving + BAND:low + TECH:WoodCraft,MAT:Wood,0.0115,0.9799,5.6845
+AF:wood carving + MAT:Wood + TECH:WoodCraft,BAND:low,0.0115,0.6393,1.8116
+BAND:low + MAT:Wood + TECH:WoodCraft,AF:wood carving,0.0115,0.6746,36.8902
+AF:wood carving + BAND:low,MAT:Wood + TECH:WoodCraft,0.0115,0.9799,29.8033
+AF:wood carving + MAT:Wood,BAND:low + TECH:WoodCraft,0.0115,0.6393,30.8799
+AF:wood carving + TECH:WoodCraft,BAND:low + MAT:Wood,0.0115,0.6275,9.3563
+BAND:low + TECH:WoodCraft,AF:wood carving + MAT:Wood,0.0115,0.5543,30.8799
+AF:wood carving,BAND:low + MAT:Wood + TECH:WoodCraft,0.0115,0.6275,36.8902
+MAT:Cotton + MAT:Silk + MAT:Wood,BAND:high,0.0119,0.826,2.5294
+MAT:Silk + MAT:Wood,BAND:high + MAT:Cotton,0.0119,0.5904,2.9509
+MAT:Cotton + MAT:Silk + MAT:Zari,BAND:high,0.0188,0.9287,2.8439
+BAND:high + MAT:Cotton + MAT:Zari,MAT:Silk,0.0188,0.5821,4.8805
+MAT:Silk + MAT:Zari,BAND:high + MAT:Cotton,0.0188,0.6015,3.0065
+MAT:Cotton + MAT:Silk + TECH:Printing,BAND:high,0.0154,0.7368,2.2561
+MAT:Cotton + MAT:Silk + TECH:Weaving,BAND:high,0.019,0.7775,2.3808
+MAT:Silk + TECH:Weaving,BAND:high + MAT:Cotton,0.019,0.5027,2.5125
+BAND:high + MAT:Cotton + MAT:Wood,TECH:Printing,0.0307,0.8574,4.1059
+BAND:high + MAT:Cotton + TECH:Printing,MAT:Wood,0.0307,0.5799,3.3642
+BAND:high + MAT:Wood,MAT:Cotton + TECH:Printing,0.0307,0.5788,3.3102
+MAT:Cotton + MAT:Zari + TECH:Weaving,BAND:high,0.021,0.7313,2.2395
+BAND:high + MAT:Zari + TECH:Weaving,MAT:Cotton,0.021,0.8151,1.5519
+BAND:high + MAT:Cotton + MAT:Zari,TECH:Weaving,0.021,0.6507,3.1027
+MAT:Zari + TECH:Weaving,BAND:high + MAT:Cotton,0.021,0.6204,3.101
+MAT:Cotton + MAT:Zari,BAND:high + TECH:Weaving,0.021,0.5036,3.6065
+BAND:high + MAT:Silk + MAT:Wood,TECH:Printing,0.0166,1.0,4.7887
+MAT:Silk + MAT:Wood + TECH:Printing,BAND:high,0.0166,0.8206,2.5129
+BAND:high + MAT:Silk + TECH:Printing,MAT:Wood,0.0166,0.6721,3.8988
+MAT:Silk + MAT:Wood,BAND:high + TECH:Printing,0.0166,0.8192,10.5293
+MAT:Silk + MAT:Zari + TECH:Weaving,BAND:high,0.0145,0.9495,2.9075
+BAND:high + MAT:Zari + TECH:Weaving,MAT:Silk,0.0145,0.5625,4.716
+BAND:low + MAT:Paper + TECH:PaperCraft,MAT:Cotton,0.0137,0.8589,1.6354
+BAND:low + MAT:Cotton + TECH:PaperCraft,MAT:Paper,0.0137,0.8662,15.7237
+BAND:low + MAT:Cotton + MAT:Paper,TECH:PaperCraft,0.0137,0.9976,25.006
+BAND:low + TECH:PaperCraft,MAT:Cotton + MAT:Paper,0.0137,0.7556,26.1549
+BAND:low + MAT:Paper,MAT:Cotton + TECH:PaperCraft,0.0137,0.6915,21.4251
+BAND:low + MAT:Cotton + MAT:Wood,TECH:Printing,0.0237,0.815,3.9029
+BAND:low + MAT:Wood + TECH:Printing,MAT:Cotton,0.0237,1.0,1.904
+BAND:mid + MAT:Cotton + TECH:PaperCraft,MAT:Paper,0.0149,0.9082,16.4847
+MAT:Cotton + MAT:Paper + TECH:PaperCraft,BAND:mid,0.0149,0.5211,1.6254
+BAND:mid + MAT:Cotton + MAT:Paper,TECH:PaperCraft,0.0149,0.9889,24.7888
+BAND:mid + TECH:PaperCraft,MAT:Cotton + MAT:Paper,0.0149,0.7008,24.259
+BAND:mid + MAT:Paper,MAT:Cotton + TECH:PaperCraft,0.0149,0.6742,20.8896
+MAT:Cotton + MAT:Paper,BAND:mid + TECH:PaperCraft,0.0149,0.5168,24.259
+BAND:mid + MAT:Cotton + MAT:Wood,TECH:Printing,0.0115,0.9971,4.7748
+BAND:mid + MAT:Wood + TECH:Printing,MAT:Cotton,0.0115,0.8618,1.6409
+MAT:Paper + TECH:PaperCraft + TECH:Printing,MAT:Cotton,0.0137,0.9976,1.8993
+MAT:Cotton + TECH:PaperCraft + TECH:Printing,MAT:Paper,0.0137,0.8344,15.1449
+MAT:Cotton + MAT:Paper + TECH:Printing,TECH:PaperCraft,0.0137,0.9927,24.8843
+TECH:PaperCraft + TECH:Printing,MAT:Cotton + MAT:Paper,0.0137,0.831,28.765
+MAT:Paper + TECH:Printing,MAT:Cotton + TECH:PaperCraft,0.0137,0.9903,30.6815
+MAT:Cotton + MAT:Silk + MAT:Wood,TECH:Printing,0.0145,1.0,4.7887
+MAT:Cotton + MAT:Silk + TECH:Printing,MAT:Wood,0.0145,0.6918,4.0131
+MAT:Silk + MAT:Wood,MAT:Cotton + TECH:Printing,0.0145,0.7148,4.0874
+MAT:Cotton + MAT:Silk + MAT:Zari,TECH:Weaving,0.0109,0.539,2.5698
+MAT:Cotton + MAT:Wood + TECH:Weaving,TECH:Printing,0.0118,0.7105,3.4025
+MAT:Cotton + TECH:Printing + TECH:Weaving,MAT:Wood,0.0118,0.6464,3.7497
+MAT:Wood + TECH:Weaving,MAT:Cotton + TECH:Printing,0.0118,0.5643,3.227

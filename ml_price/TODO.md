@@ -65,9 +65,9 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [ ] 2 Statistics and EDA (section 3 above)
 - [x] 3 Craft knowledge graph: 68 classes, 201 art forms, `.owl` for Protégé ([KG_REPORT](reports/knowledge_graph/KG_REPORT.md))
 - [x] 4 Rule-based reasoning: 5 SWRL rules + HermiT, 0 disagreements with pandas; 4 SPARQL questions; features → S7
-- [ ] 5 Market segmentation: k-Means, Hierarchical, DBSCAN; silhouette; PCA map
-- [ ] 6 Material combination rules: Apriori (support, confidence, lift)
-- [ ] 7 Underpricing detector: Isolation Forest / LOF
+- [x] 5 Market segmentation: K-Means k=17 (silhouette 0.164), Hierarchical, DBSCAN; PCA map ([report](reports/unsupervised/UNSUPERVISED_REPORT.md))
+- [x] 6 Apriori: 1,083 rules; high/low price-band rules; exposed tool-word material errors
+- [x] 7 Underpricing detector: out-of-fold expected price, 6.5% flagged, cross-checked with Isolation Forest
 - [ ] 8 Price regression: baselines → Linear, Polynomial, Tree, RF, Gradient Boosting, kNN
 - [ ] 9 Price range: quantile models (small code)
 - [ ] 10 Price class classifier: Logistic, SVM, Naive Bayes, kNN; confusion matrix, ROC
@@ -92,7 +92,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] S6 TF-IDF text features (S6b: Ridge R² 0.707)
 - [x] Split v3: near-duplicate families (second leak fixed)
 - [x] S7 knowledge-graph and rule features (RF 0.110 → 0.527 without text)
-- [ ] S8 cluster ID and material-combination features
+- [x] S8 cluster ID (Ridge R² 0.714, best so far)
 - [ ] S9 sentence embeddings
 - [ ] S10 LLM-extracted attributes
 - [ ] S11 image features

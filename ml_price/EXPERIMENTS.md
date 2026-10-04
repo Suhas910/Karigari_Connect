@@ -47,6 +47,8 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S6b | + TF-IDF of title + description | 7 | 0.156 | 0.515 | **0.707** | 0.602 | **730 (Ridge)** | **41.9** |
 | S7-only | S6a + 37 knowledge-graph features (no TF-IDF) | 43 | 0.156 | 0.321 | 0.434 | **0.527** | 975 (RF) | 68.6 |
 | S7 | S6b + 37 knowledge-graph features | 44 | 0.156 | 0.540 | **0.698** | 0.586 | 749 (Ridge) | 41.7 |
+| S8-only | S7-only + K-Means segment id | 44 | 0.156 | 0.334 | 0.463 | **0.522** | 964 (RF) | 64.0 |
+| **S8** | S7 + K-Means segment id | 45 | 0.156 | 0.561 | **0.714** | 0.588 | **735 (Ridge)** | **40.9** |
 
 The median baseline (one price for everything) scores R² −0.15 and MAE ₹1,487 on split v3.
 
@@ -95,7 +97,9 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S6a | 0.551 |
 | S6b | 0.767 |
 | S7-only | 0.612 |
-| **S7** | **0.780** |
+| S7 | 0.780 |
+| S8-only | 0.673 |
+| **S8** | **0.786** |
 
 ## Progress chart
 
@@ -121,6 +125,9 @@ The two tools agree to within 0.01 R². The small gaps are expected:
    (37 readable features such as handwoven silk, zari, skilled labour). With text, they're largely
    redundant for regression (Ridge 0.707 → 0.698) but improve the price-band classifier. Details:
    [KG_REPORT.md](reports/knowledge_graph/KG_REPORT.md).
+8. **S8, segment feature:** the K-Means segment (17 text segments, part 5) gives the best result so
+   far: Ridge R² **0.714**, MAE ₹735, MAPE 40.9%, band F1 0.786.
+   [UNSUPERVISED_REPORT.md](reports/unsupervised/UNSUPERVISED_REPORT.md).
 
 ## Stages that made scores worse
 

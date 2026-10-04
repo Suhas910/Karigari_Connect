@@ -1,0 +1,501 @@
+{
+ "svd_explained_variance": 0.542,
+ "kmeans_scan": [
+  {
+   "k": 2,
+   "inertia": 25479.2,
+   "silhouette": 0.0503
+  },
+  {
+   "k": 3,
+   "inertia": 24445.2,
+   "silhouette": 0.0546
+  },
+  {
+   "k": 4,
+   "inertia": 23721.2,
+   "silhouette": 0.0683
+  },
+  {
+   "k": 5,
+   "inertia": 23022.9,
+   "silhouette": 0.0818
+  },
+  {
+   "k": 6,
+   "inertia": 22514.2,
+   "silhouette": 0.0881
+  },
+  {
+   "k": 7,
+   "inertia": 21741.4,
+   "silhouette": 0.1012
+  },
+  {
+   "k": 8,
+   "inertia": 21269.8,
+   "silhouette": 0.1119
+  },
+  {
+   "k": 9,
+   "inertia": 20851.6,
+   "silhouette": 0.1196
+  },
+  {
+   "k": 10,
+   "inertia": 20236.4,
+   "silhouette": 0.1339
+  },
+  {
+   "k": 11,
+   "inertia": 19914.4,
+   "silhouette": 0.135
+  },
+  {
+   "k": 12,
+   "inertia": 19732.4,
+   "silhouette": 0.1364
+  },
+  {
+   "k": 13,
+   "inertia": 19316.4,
+   "silhouette": 0.1401
+  },
+  {
+   "k": 14,
+   "inertia": 19029.8,
+   "silhouette": 0.1496
+  },
+  {
+   "k": 15,
+   "inertia": 18831.9,
+   "silhouette": 0.1534
+  },
+  {
+   "k": 16,
+   "inertia": 18479.6,
+   "silhouette": 0.1525
+  },
+  {
+   "k": 17,
+   "inertia": 18241.5,
+   "silhouette": 0.1642
+  },
+  {
+   "k": 18,
+   "inertia": 18135.4,
+   "silhouette": 0.1515
+  },
+  {
+   "k": 19,
+   "inertia": 17794.9,
+   "silhouette": 0.1586
+  },
+  {
+   "k": 20,
+   "inertia": 17554.9,
+   "silhouette": 0.1618
+  }
+ ],
+ "kmeans": {
+  "k": 17,
+  "silhouette": 0.1642,
+  "intra_inter": [
+   0.69,
+   0.885
+  ]
+ },
+ "hierarchical": {
+  "k": 17,
+  "silhouette": 0.1461,
+  "intra_inter": [
+   0.661,
+   0.931
+  ]
+ },
+ "dbscan": [
+  {
+   "eps_percentile": 50,
+   "eps": 0.439,
+   "clusters": 128,
+   "noise_share": 0.439,
+   "silhouette_non_noise": 0.6414
+  },
+  {
+   "eps_percentile": 70,
+   "eps": 0.601,
+   "clusters": 97,
+   "noise_share": 0.235,
+   "silhouette_non_noise": 0.4124
+  },
+  {
+   "eps_percentile": 90,
+   "eps": 0.813,
+   "clusters": 33,
+   "noise_share": 0.052,
+   "silhouette_non_noise": 0.1318
+  }
+ ],
+ "nearest_neighbour_agreement": {
+  "euclidean_vs_cosine": 0.935,
+  "euclidean_vs_manhattan": 0.878,
+  "manhattan_vs_cosine": 0.812
+ },
+ "segments": [
+  {
+   "segment": 13,
+   "rows": 623,
+   "share": 0.021,
+   "median_price": 250.0,
+   "top_terms": [
+    "buttons",
+    "12",
+    "button",
+    "sewing",
+    "scrapbooking",
+    "rust",
+    "aluminum",
+    "crochet"
+   ],
+   "top_artforms": {
+    "fabart": 565,
+    "handmade": 56,
+    "seashell craft": 2
+   }
+  },
+  {
+   "segment": 9,
+   "rows": 1357,
+   "share": 0.046,
+   "median_price": 290.0,
+   "top_terms": [
+    "hair",
+    "band",
+    "rubber",
+    "scrunchie",
+    "clip",
+    "bow",
+    "handmade",
+    "ponytails"
+   ],
+   "top_artforms": {
+    "fabart": 766,
+    "handmade": 147,
+    "crochet work": 106
+   }
+  },
+  {
+   "segment": 4,
+   "rows": 1471,
+   "share": 0.049,
+   "median_price": 590.0,
+   "top_terms": [
+    "rakhi",
+    "purchasing",
+    "happiness",
+    "itokri",
+    "support",
+    "families",
+    "initiative",
+    "associated"
+   ],
+   "top_artforms": {
+    "meenakari work": 208,
+    "bead work": 196,
+    "fabart": 174
+   }
+  },
+  {
+   "segment": 11,
+   "rows": 2665,
+   "share": 0.089,
+   "median_price": 590.0,
+   "top_terms": [
+    "earrings",
+    "silver",
+    "german",
+    "necklace",
+    "fabart",
+    "set",
+    "oxidised",
+    "work"
+   ],
+   "top_artforms": {
+    "oxidised metal craft": 1369,
+    "fabart": 543,
+    "handmade": 201
+   }
+  },
+  {
+   "segment": 12,
+   "rows": 2024,
+   "share": 0.068,
+   "median_price": 590.0,
+   "top_terms": [
+    "beadwork",
+    "decor",
+    "hanging",
+    "handmade",
+    "toran",
+    "home",
+    "wall",
+    "festive"
+   ],
+   "top_artforms": {
+    "bead work": 522,
+    "handmade": 281,
+    "fabart": 238
+   }
+  },
+  {
+   "segment": 1,
+   "rows": 996,
+   "share": 0.033,
+   "median_price": 650.0,
+   "top_terms": [
+    "notebook",
+    "paper",
+    "cover",
+    "recycled",
+    "handmade",
+    "chemicals",
+    "attention",
+    "bookbinding"
+   ],
+   "top_artforms": {
+    "sanganeri block printing": 200,
+    "handmade stationery": 187,
+    "ajrakh block printing": 96
+   }
+  },
+  {
+   "segment": 7,
+   "rows": 3340,
+   "share": 0.112,
+   "median_price": 690.0,
+   "top_terms": [
+    "handcrafted",
+    "hand",
+    "table",
+    "wood",
+    "artisans",
+    "embroidery",
+    "set",
+    "crafted"
+   ],
+   "top_artforms": {
+    "handmade": 379,
+    "wood carving": 187,
+    "dokra craft": 179
+   }
+  },
+  {
+   "segment": 5,
+   "rows": 2273,
+   "share": 0.076,
+   "median_price": 790.0,
+   "top_terms": [
+    "bag",
+    "sling",
+    "pocket",
+    "quilted",
+    "cotton",
+    "essentials",
+    "handcrafted",
+    "zipper"
+   ],
+   "top_artforms": {
+    "patchwork": 280,
+    "kalamkari block printing": 187,
+    "handmade": 159
+   }
+  },
+  {
+   "segment": 8,
+   "rows": 252,
+   "share": 0.008,
+   "median_price": 790.0,
+   "top_terms": [
+    "lacquered",
+    "babool",
+    "wood",
+    "hanger",
+    "jura",
+    "vadha",
+    "selecting",
+    "lacquer"
+   ],
+   "top_artforms": {
+    "lacquer craft": 252
+   }
+  },
+  {
+   "segment": 10,
+   "rows": 496,
+   "share": 0.017,
+   "median_price": 850.0,
+   "top_terms": [
+    "handbag",
+    "quilted",
+    "zippered",
+    "foam",
+    "closure",
+    "lining",
+    "protection",
+    "spacious"
+   ],
+   "top_artforms": {
+    "kalamkari block printing": 66,
+    "bandhani tie dye": 64,
+    "handmade": 55
+   }
+  },
+  {
+   "segment": 6,
+   "rows": 2121,
+   "share": 0.071,
+   "median_price": 1100.0,
+   "top_terms": [
+    "handpainted",
+    "art",
+    "painting",
+    "wood",
+    "madhubani",
+    "colours",
+    "wooden",
+    "acrylic"
+   ],
+   "top_artforms": {
+    "madhubani folk art": 300,
+    "kerala mural art": 175,
+    "hand painted": 173
+   }
+  },
+  {
+   "segment": 16,
+   "rows": 2670,
+   "share": 0.09,
+   "median_price": 2450.0,
+   "top_terms": [
+    "silk",
+    "cotton",
+    "fabric",
+    "material",
+    "saree",
+    "dress",
+    "unstitched",
+    "hand"
+   ],
+   "top_artforms": {
+    "plain solid": 435,
+    "phulkari": 218,
+    "kalamkari screen printing": 216
+   }
+  },
+  {
+   "segment": 14,
+   "rows": 3044,
+   "share": 0.102,
+   "median_price": 2590.0,
+   "top_terms": [
+    "looking",
+    "perfection",
+    "flaws",
+    "happens",
+    "irregularity",
+    "pulls",
+    "carries",
+    "uneven"
+   ],
+   "top_artforms": {
+    "jacquard weaving": 531,
+    "pochampally ikat weaving": 510,
+    "mangalagiri weaving": 290
+   }
+  },
+  {
+   "segment": 3,
+   "rows": 1302,
+   "share": 0.044,
+   "median_price": 2800.0,
+   "top_terms": [
+    "kota",
+    "doria",
+    "sanganeri",
+    "block",
+    "print",
+    "hand",
+    "rajasthan",
+    "cotton"
+   ],
+   "top_artforms": {
+    "sanganeri block printing": 638,
+    "kota doria weaving": 184,
+    "lucknowi chikankari": 112
+   }
+  },
+  {
+   "segment": 0,
+   "rows": 2693,
+   "share": 0.09,
+   "median_price": 2890.0,
+   "top_terms": [
+    "block",
+    "natural",
+    "dyed",
+    "hand",
+    "print",
+    "defects",
+    "patterns",
+    "printed"
+   ],
+   "top_artforms": {
+    "ajrakh block printing": 601,
+    "bagru block printing": 568,
+    "bagh block printing": 452
+   }
+  },
+  {
+   "segment": 15,
+   "rows": 992,
+   "share": 0.033,
+   "median_price": 2990.0,
+   "top_terms": [
+    "tie",
+    "bandhani",
+    "kutch",
+    "dye",
+    "satin",
+    "dotted",
+    "cotton",
+    "points"
+   ],
+   "top_artforms": {
+    "bandhani tie dye": 881,
+    "shibori tie dye": 87,
+    "lehariya tie dye": 23
+   }
+  },
+  {
+   "segment": 2,
+   "rows": 1486,
+   "share": 0.05,
+   "median_price": 3850.0,
+   "top_terms": [
+    "wool",
+    "merino",
+    "winter",
+    "stole",
+    "handwoven",
+    "kumaun",
+    "looking",
+    "warmth"
+   ],
+   "top_artforms": {
+    "hand knitted": 305,
+    "plain solid": 265,
+    "uttarakhand weaving": 251
+   }
+  }
+ ]
+}

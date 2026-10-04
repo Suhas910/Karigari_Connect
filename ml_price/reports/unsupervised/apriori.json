@@ -1,0 +1,297 @@
+{
+ "baskets": 29805,
+ "distinct_items": 224,
+ "min_support": 0.01,
+ "frequent_itemsets": 647,
+ "rules_conf50_lift15": 1083,
+ "band_cut_points": [
+  590.0,
+  1850.0
+ ],
+ "cooccurrence": [
+  {
+   "antecedent": "AF:srikalahasti penwork kalamkari",
+   "consequent": "MAT:Bamboo",
+   "support": 0.011,
+   "confidence": 0.67,
+   "lift": 26.806
+  },
+  {
+   "antecedent": "AF:handmade stationery",
+   "consequent": "MAT:Paper",
+   "support": 0.029,
+   "confidence": 0.887,
+   "lift": 16.096
+  },
+  {
+   "antecedent": "AF:oxidised metal craft",
+   "consequent": "MAT:Silver",
+   "support": 0.047,
+   "confidence": 0.911,
+   "lift": 12.303
+  },
+  {
+   "antecedent": "AF:srikalahasti penwork kalamkari",
+   "consequent": "MAT:Silk",
+   "support": 0.011,
+   "confidence": 0.688,
+   "lift": 5.77
+  },
+  {
+   "antecedent": "AF:wood carving",
+   "consequent": "MAT:Wood",
+   "support": 0.018,
+   "confidence": 0.982,
+   "lift": 5.694
+  },
+  {
+   "antecedent": "AF:bagru block printing",
+   "consequent": "MAT:Wood",
+   "support": 0.02,
+   "confidence": 0.772,
+   "lift": 4.477
+  },
+  {
+   "antecedent": "AF:bagh block printing",
+   "consequent": "MAT:Wood",
+   "support": 0.01,
+   "confidence": 0.508,
+   "lift": 2.944
+  },
+  {
+   "antecedent": "AF:mangalagiri weaving",
+   "consequent": "MAT:Cotton",
+   "support": 0.01,
+   "confidence": 1.0,
+   "lift": 1.904
+  },
+  {
+   "antecedent": "AF:dharwad weaving",
+   "consequent": "MAT:Cotton",
+   "support": 0.012,
+   "confidence": 1.0,
+   "lift": 1.904
+  },
+  {
+   "antecedent": "AF:kalamkari screen printing",
+   "consequent": "MAT:Cotton",
+   "support": 0.011,
+   "confidence": 1.0,
+   "lift": 1.904
+  },
+  {
+   "antecedent": "AF:jacquard weaving",
+   "consequent": "MAT:Cotton",
+   "support": 0.027,
+   "confidence": 0.992,
+   "lift": 1.89
+  },
+  {
+   "antecedent": "AF:batik block printing",
+   "consequent": "MAT:Cotton",
+   "support": 0.023,
+   "confidence": 0.984,
+   "lift": 1.874
+  },
+  {
+   "antecedent": "AF:handmade stationery",
+   "consequent": "MAT:Cotton",
+   "support": 0.032,
+   "confidence": 0.973,
+   "lift": 1.852
+  },
+  {
+   "antecedent": "AF:kota doria weaving",
+   "consequent": "MAT:Cotton",
+   "support": 0.032,
+   "confidence": 0.972,
+   "lift": 1.851
+  },
+  {
+   "antecedent": "AF:kalamkari block printing",
+   "consequent": "MAT:Cotton",
+   "support": 0.027,
+   "confidence": 0.927,
+   "lift": 1.766
+  }
+ ],
+ "high_band": [
+  {
+   "antecedent": "MAT:Silk + TECH:Painting",
+   "consequent": "BAND:high",
+   "support": 0.012,
+   "confidence": 1.0,
+   "lift": 3.062
+  },
+  {
+   "antecedent": "AF:srikalahasti penwork kalamkari + MAT:Silk",
+   "consequent": "BAND:high",
+   "support": 0.011,
+   "confidence": 1.0,
+   "lift": 3.062
+  },
+  {
+   "antecedent": "AF:srikalahasti penwork kalamkari + MAT:Silk + TECH:Painting",
+   "consequent": "BAND:high",
+   "support": 0.011,
+   "confidence": 1.0,
+   "lift": 3.062
+  },
+  {
+   "antecedent": "MAT:Wool + TECH:Printing",
+   "consequent": "BAND:high",
+   "support": 0.014,
+   "confidence": 0.995,
+   "lift": 3.048
+  },
+  {
+   "antecedent": "MAT:Wool + TECH:Weaving",
+   "consequent": "BAND:high",
+   "support": 0.026,
+   "confidence": 0.995,
+   "lift": 3.047
+  },
+  {
+   "antecedent": "AF:handloom + MAT:Wool",
+   "consequent": "BAND:high",
+   "support": 0.026,
+   "confidence": 0.995,
+   "lift": 3.047
+  },
+  {
+   "antecedent": "AF:handloom + MAT:Wool + TECH:Weaving",
+   "consequent": "BAND:high",
+   "support": 0.026,
+   "confidence": 0.995,
+   "lift": 3.047
+  },
+  {
+   "antecedent": "AF:lucknowi chikankari",
+   "consequent": "BAND:high",
+   "support": 0.01,
+   "confidence": 0.994,
+   "lift": 3.043
+  },
+  {
+   "antecedent": "AF:lucknowi chikankari + TECH:Embroidery",
+   "consequent": "BAND:high",
+   "support": 0.01,
+   "confidence": 0.994,
+   "lift": 3.043
+  },
+  {
+   "antecedent": "MAT:Silk + MAT:Zari + TECH:Weaving",
+   "consequent": "BAND:high",
+   "support": 0.014,
+   "confidence": 0.949,
+   "lift": 2.907
+  },
+  {
+   "antecedent": "AF:handloom + MAT:Silk + MAT:Zari",
+   "consequent": "BAND:high",
+   "support": 0.012,
+   "confidence": 0.942,
+   "lift": 2.884
+  },
+  {
+   "antecedent": "MAT:Silk + MAT:Zari",
+   "consequent": "BAND:high",
+   "support": 0.029,
+   "confidence": 0.94,
+   "lift": 2.878
+  },
+  {
+   "antecedent": "MAT:Cotton + MAT:Silk + MAT:Zari",
+   "consequent": "BAND:high",
+   "support": 0.019,
+   "confidence": 0.929,
+   "lift": 2.844
+  },
+  {
+   "antecedent": "TECH:Embroidery + TECH:Weaving",
+   "consequent": "BAND:high",
+   "support": 0.011,
+   "confidence": 0.903,
+   "lift": 2.766
+  },
+  {
+   "antecedent": "AF:natural dyed + MAT:Silk + MAT:Wood",
+   "consequent": "BAND:high",
+   "support": 0.012,
+   "confidence": 0.891,
+   "lift": 2.727
+  }
+ ],
+ "low_band": [
+  {
+   "antecedent": "AF:fabart + MAT:Cotton",
+   "consequent": "BAND:low",
+   "support": 0.034,
+   "confidence": 0.923,
+   "lift": 2.616
+  },
+  {
+   "antecedent": "AF:fabart",
+   "consequent": "BAND:low",
+   "support": 0.084,
+   "confidence": 0.796,
+   "lift": 2.256
+  },
+  {
+   "antecedent": "TECH:NaturalFibreCraft",
+   "consequent": "BAND:low",
+   "support": 0.012,
+   "confidence": 0.649,
+   "lift": 1.839
+  },
+  {
+   "antecedent": "AF:bead work",
+   "consequent": "BAND:low",
+   "support": 0.031,
+   "confidence": 0.642,
+   "lift": 1.819
+  },
+  {
+   "antecedent": "AF:bead work + TECH:BeadWork",
+   "consequent": "BAND:low",
+   "support": 0.031,
+   "confidence": 0.642,
+   "lift": 1.819
+  },
+  {
+   "antecedent": "AF:wood carving",
+   "consequent": "BAND:low",
+   "support": 0.012,
+   "confidence": 0.64,
+   "lift": 1.815
+  },
+  {
+   "antecedent": "AF:wood carving + TECH:WoodCraft",
+   "consequent": "BAND:low",
+   "support": 0.012,
+   "confidence": 0.64,
+   "lift": 1.815
+  },
+  {
+   "antecedent": "AF:wood carving + MAT:Wood",
+   "consequent": "BAND:low",
+   "support": 0.011,
+   "confidence": 0.639,
+   "lift": 1.812
+  },
+  {
+   "antecedent": "AF:wood carving + MAT:Wood + TECH:WoodCraft",
+   "consequent": "BAND:low",
+   "support": 0.011,
+   "confidence": 0.639,
+   "lift": 1.812
+  },
+  {
+   "antecedent": "TECH:BeadWork",
+   "consequent": "BAND:low",
+   "support": 0.031,
+   "confidence": 0.633,
+   "lift": 1.795
+  }
+ ]
+}

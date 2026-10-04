@@ -226,6 +226,19 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   `.owl` file opens there directly.
 - **Report:** [KG_REPORT.md](reports/knowledge_graph/KG_REPORT.md)
 
+## 2026-10-04 — Parts 5–7: segmentation, Apriori, underpricing; stage S8
+
+- **Segmentation:** TF-IDF → SVD (100 dims) → K-Means. k = 17 chosen by silhouette (0.164),
+  compared with Hierarchical (0.146) and DBSCAN (3 eps settings). The segments are product types,
+  median ₹250 (buttons) to ₹3,850 (wool stoles). As a feature (S8): Ridge R² **0.714**, the best
+  so far.
+- **Apriori:** 1,083 rules. Wool + weaving, Lucknowi chikankari and silk + zari + weaving predict
+  the high band (lift about 3); fabart, bead work and wood carving predict the low band. It also
+  exposed false material keywords (bamboo pen, wooden printing blocks, "German silver").
+- **Underpricing detector:** out-of-fold expected price; 6.5% flagged under, 7.0% over.
+  Symmetric, so mostly model error; framed as a review queue, not a verdict.
+- **Report:** [UNSUPERVISED_REPORT.md](reports/unsupervised/UNSUPERVISED_REPORT.md)
+
 ## Pending
 
-- Parts 5–7: segmentation, Apriori, underpricing detector
+- Parts 9–16: quantile range, classifier comparison, similar-items search, LLM extraction, image features, SHAP, bias audit, advisor + demo
