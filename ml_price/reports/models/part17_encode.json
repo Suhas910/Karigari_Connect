@@ -1,0 +1,55 @@
+{
+ "model": "sentence-transformers/all-MiniLM-L6-v2",
+ "dims": 384,
+ "max_tokens": 256,
+ "word_pairs": [
+  {
+   "a": "dupatta",
+   "b": "stole",
+   "minilm_cosine": 0.23,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "saree",
+   "b": "sari",
+   "minilm_cosine": 0.733,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "keychain",
+   "b": "key ring",
+   "minilm_cosine": 0.622,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "earrings",
+   "b": "jhumka",
+   "minilm_cosine": 0.157,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "handwoven",
+   "b": "handloom",
+   "minilm_cosine": 0.633,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "silk saree",
+   "b": "cotton saree",
+   "minilm_cosine": 0.754,
+   "tfidf_cosine": 0.334
+  },
+  {
+   "a": "saree",
+   "b": "keychain",
+   "minilm_cosine": 0.115,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "necklace",
+   "b": "cushion cover",
+   "minilm_cosine": 0.175,
+   "tfidf_cosine": 0.0
+  }
+ ]
+}

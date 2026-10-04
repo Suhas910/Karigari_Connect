@@ -219,7 +219,7 @@ baselines, is in [EXPERIMENTS](../../EXPERIMENTS.md).
 
 Details: [PARTS_8_14_16](../models/PARTS_8_14_16_REPORT.md), [PARTS_9_11](../models/PARTS_9_11_REPORT.md).
 
-## 9. LLM, CNN, ablation and tuning (Parts 12, 13, 8b)
+## 9. LLM, CNN, transformer embeddings, RAG, ablation and tuning (Parts 12, 13, 17, 18, 8b)
 
 **Part 12, LLM attribute extraction (prompt engineering).** An 80-product gold set was built
 around the keyword traps that Apriori found.
@@ -254,6 +254,33 @@ around the keyword traps that Apriori found.
 - Tuning over 24 settings chose TF-IDF 20k terms and α = 1. 50k was worse, so the optimum isn't at
   the edge of the grid.
 - [PART8B](../models/PART8B_ABLATION_TUNING.md)
+
+**Part 17, transformer sentence embeddings (MiniLM, 6 attention layers, 384 numbers).**
+
+- Learned embeddings see meaning without shared words: saree ≈ sari 0.73, handwoven ≈ handloom
+  0.63, where TF-IDF scores 0. They know Indian craft terms poorly: earrings ≈ jhumka only 0.16.
+- For similar-item search the in-domain LSA vectors beat MiniLM (R² 0.613 vs 0.545).
+- Added to S12-img: CV R² +0.004 and MAE slightly worse, inside the noise band. **Not adopted**
+  (decided on CV); scored once as stage S12-img-st for the record.
+- [PART17](../models/PART17_SENTENCE_EMBEDDINGS.md)
+
+**Part 18, retrieval-augmented generation.** FAISS retrieves 10 similar training listings; Gemini
+estimates the price using only that evidence, cites the listings it relied on and labels the match
+quality. 40 test products, one per family:
+
+| Method | R² | Median error |
+|---|---|---|
+| LLM without retrieval | 0.34 | 41.7% |
+| **RAG** | **0.73** | **24.6%** |
+| Neighbour median, no LLM | 0.73 | 31.4% |
+| Ridge S12-img | 0.85 | 26.7% |
+
+- Retrieval more than doubles the LLM's R².
+- Citations are valid in 100% of answers, and every estimate lies inside the evidence's price span.
+- The model's own "good / partial / poor" label predicts its error (median 18% / 34% / 178%).
+- Its ranges are overconfident (52.5% coverage).
+- Added to the advisor as an optional explanation.
+- [PART18](../llm/PART18_RAG.md)
 
 ## 10. Explainability and ethics (Parts 14–15)
 
@@ -349,23 +376,18 @@ Checked against the official syllabus text. ✅ covered with evidence · ◐ tou
 | IV | Apriori; support, confidence, lift | ✅ | Part 6: 1,083 rules |
 | IV | Anomaly detection: concepts, need, approaches | ✅ | Step 2.9 (IQR, z-score, Isolation Forest) and Part 7 (model-residual detector) |
 | **V** | Neural networks, **CNNs for computer vision** | ✅ | Part 13: SqueezeNet embeddings of 37,282 photos (transfer learning), +0.016 test R² |
-| V | Transformers; attention; transformer architecture | ◐ | Gemini (a transformer LLM) is used in Part 12; its internals aren't built or analysed |
-| V | Word embeddings | ◐ | TF-IDF + truncated SVD (LSA) gives dense text vectors (Parts 5, 11). These are count-based, not learned word embeddings such as word2vec |
+| V | Transformers; attention; transformer architecture | ✅ | Part 17: MiniLM (6 self-attention layers) encodes all texts, with the mechanism explained; Gemini (transformer LLM) in Parts 12, 18 |
+| V | Word embeddings | ✅ | Part 17: learned embeddings vs TF-IDF on word pairs (saree ≈ sari 0.73 vs 0); count-based LSA vectors in Parts 5, 11 for contrast |
 | V | Large language models, **prompt engineering** | ✅ | Part 12: zero-shot vs engineered few-shot, F1 0.888 → 0.979 on a gold set |
-| V | Retrieval-augmented generation | ◐ | The retrieval half: FAISS returns similar listings as evidence (Parts 11, 16). No LLM generates an answer from them |
+| V | Retrieval-augmented generation | ✅ | Part 18: FAISS retrieval + grounded Gemini generation; R² 0.34 → 0.73 with retrieval; citation and grounding checks; optional in the advisor |
 | V | **Vector databases (FAISS / Chroma)** | ✅ | Part 11: FAISS `IndexFlatIP` over 29,805 listings |
 | V | Reinforcement learning (MDP, Q-learning, exploration) | ❌ | No sequential decisions or rewards in a one-shot pricing task |
 | V | Explainable AI | ✅ | Part 14: SHAP (exact linear check + tree explainer) |
 | V | Ethics, bias, responsible AI | ✅ | Part 15: family-level bias audit; fair-wage floor overrides the model |
 | — | Supporting work (not a named syllabus topic) | — | Part 2 statistics (Kruskal-Wallis, χ², correlation); leakage-aware splitting |
 
-**Gaps that could still be closed cheaply**, if needed:
-
-- **Word embeddings / transformers:** a sentence-transformer model for text features (one more
-  stage, like Part 13).
-- **Full RAG:** let Gemini write a short explanation from the retrieved similar listings.
-- **Bayesian network:** a small hand-built network (e.g. technique → material → price band) with
-  probabilities from the training data.
+**Remaining gap that could be closed cheaply**, if needed: a small hand-built **Bayesian network**
+(e.g. technique → material → price band) with probabilities from the training data.
 
 ## 13. Problems found and corrected
 
@@ -381,6 +403,7 @@ Recorded because each one changed a conclusion:
 | Raw quantile ranges overconfident | 58% coverage instead of 80% | Conformal calibration |
 | Progress chart unreadable since S9 | Linear's collapse flattened every line; Ridge missing | Chart redrawn with Ridge, RF, baseline and F1 |
 | Bias audit dominated by one product line | All "undervalued" crafts had a median test price of exactly ₹1,590 | Audit per product family; advisor caution needs ≥ 5 families |
+| PyTorch + FAISS crash (exit 139) | Part 17 died after encoding | The two OpenMP runtimes clash on macOS; encode and evaluate run as separate processes |
 | Tuning optimum at the grid edge (twice) | Best value = largest value tried | Grid widened (TF-IDF 50k, PCA 256); optimum confirmed inside |
 
 ## 14. Limitations
@@ -430,3 +453,4 @@ To reproduce any stage score: `PYTHONPATH=scripts .venv/bin/python scripts/evalu
 | Part reports | `reports/cleaning/`, `reports/eda/`, `reports/knowledge_graph/`, `reports/unsupervised/`, `reports/llm/`, `reports/models/` |
 | Tool exports | `tool_exports/openrefine/`, `tool_exports/orange/`, `tool_exports/protege/` |
 | Viva preparation | [VIVA_CHEATSHEET](VIVA_CHEATSHEET.md) |
+| Python environment | [requirements.txt](../../requirements.txt) (pinned versions) |

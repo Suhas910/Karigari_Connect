@@ -20,6 +20,7 @@ with st.form("listing"):
         hrs = st.number_input("Labour hours", min_value=0.0, value=40.0, step=1.0)
         state = st.text_input("State code (e.g. KA, TG, UP)", "TG")
         skill = st.selectbox("Self-declared skill", ["skilled", "semi_skilled", "unskilled", "highly_skilled"])
+    use_rag = st.checkbox("Also ask Gemini to explain the price from the similar listings (RAG, part 18; needs the API key in .env)")
     go = st.form_submit_button("Advise")
 
 if go:
@@ -49,4 +50,19 @@ if go:
         st.subheader("Evidence: 10 most similar listings")
         st.dataframe([{"similarity": s["similarity"], "price ₹": s["price"], "listing": s["title"]} for s in r["similar"]],
                      hide_index=True, use_container_width=True)
+    if use_rag:
+        st.subheader("RAG explanation (Gemini, grounded in the 10 listings above)")
+        try:
+            import rag
+            o = rag.estimate([dict(title=title, description=desc, neighbours=r["similar"])])[0]
+            if o:
+                st.write(f"**Estimate:** ₹{o['estimate']:,} (range ₹{o['low']:,} – ₹{o['high']:,}) · "
+                         f"**match quality:** {o['match_quality']} · **cited listings:** {', '.join(map(str, o['cited']))}")
+                st.write(o["reason"])
+                if o["match_quality"] != "good":
+                    st.warning("The similar listings are not a close match; on test data such RAG answers erred about twice as much.")
+            else:
+                st.info("Gemini returned no answer for this product.")
+        except Exception as e:                     # the key is never shown
+            st.info(f"RAG explanation unavailable ({type(e).__name__}).")
     st.caption("Market estimates reflect asking prices in one catalogue. The fair-wage floor always overrides the market range.")

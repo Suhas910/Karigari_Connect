@@ -54,6 +54,7 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S10-swap | S9 with keyword materials **replaced** by LLM materials, + title size features | 52 | 0.156 | — | 0.773 | 0.586 | 681 (Ridge) | 37.0 |
 | S12 | S10-swap **tuned** by grouped CV: TF-IDF 20,000 terms, min_df 2 (part 8b) | 52 | 0.156 | collapses ‡ | 0.790 | 0.564 | 646 (Ridge) | 35.9 |
 | **S12-img** | S12 + photo features: SqueezeNet CNN embeddings (Orange), 128 PCA components fitted on train (part 13) | 180 | 0.156 | collapses ‡ | **0.806** | 0.557 | **612 (Ridge)** | **34.2** |
+| S12-img-st | S12-img + MiniLM transformer sentence embeddings, 64 PCA components (part 17); **not adopted**, decided on CV | 244 | 0.156 | collapses ‡ | 0.804 | 0.548 | 619 (Ridge) | 34.7 |
 
 ‡ Plain Linear Regression collapses at S9. Several knowledge-graph columns are exact duplicates
 (`kg_zari` = `kg_mat_Zari`, `kg_tech_Jewellery` overlaps a label column), so the unregularised
@@ -116,6 +117,7 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S10-swap | 0.789 |
 | S12 | 0.811 |
 | **S12-img** | **0.821** |
+| S12-img-st (not adopted) | 0.824 |
 
 ## Progress chart
 
@@ -171,6 +173,9 @@ The two tools agree to within 0.01 R². The small gaps are expected:
    by grouped CV; 256 was worse). Photos alone: test R² 0.375. Added to S12: CV R² 0.754 → 0.780,
    test **Ridge R² 0.806, MAE ₹612, MAPE 34.2%, band F1 0.821**, the final best model. The photos
    add size and detail the text often leaves out. [PART13_IMAGES.md](reports/models/PART13_IMAGES.md)
+14. **S12-img-st, transformer sentence embeddings (part 17):** MiniLM vectors added CV R² +0.004 with
+   slightly worse MAE (noise), so they were not adopted before the test was scored. Test agreed:
+   R² 0.804 vs 0.806, MAE ₹619 vs ₹612. [PART17](reports/models/PART17_SENTENCE_EMBEDDINGS.md)
 
 ## Stages that made scores worse
 

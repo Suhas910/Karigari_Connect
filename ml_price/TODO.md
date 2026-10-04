@@ -107,6 +107,12 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] Advisor caution now needs ≥ 5 families of evidence (retrained)
 - [ ] Optional: retake the advisor screenshot (current one shows the old Pochampally caution)
 
+## 6c — Syllabus gap parts (requested 2026-10-04)
+
+- [x] 17 Transformer sentence embeddings (MiniLM): word-pair demo, retrieval vs LSA, stage S12-img-st (not adopted) ([report](reports/models/PART17_SENTENCE_EMBEDDINGS.md))
+- [x] 18 RAG: FAISS retrieval + grounded Gemini; R² 0.34 → 0.73 with retrieval; optional in the advisor ([report](reports/llm/PART18_RAG.md))
+- [ ] Optional: small Bayesian network (last cheap syllabus gap)
+
 ## 7 — Final report
 
 - [x] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations ([FINAL_REPORT](reports/final/FINAL_REPORT.md))

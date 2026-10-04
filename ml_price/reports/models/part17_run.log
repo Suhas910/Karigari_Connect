@@ -1,0 +1,49 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 14839.70it/s]
+embeddings (37257, 384) None
+         a             b  minilm_cosine  tfidf_cosine
+   dupatta         stole          0.230         0.000
+     saree          sari          0.733         0.000
+  keychain      key ring          0.622         0.000
+  earrings        jhumka          0.157         0.000
+ handwoven      handloom          0.633         0.000
+silk saree  cotton saree          0.754         0.334
+     saree      keychain          0.115         0.000
+  necklace cushion cover          0.175         0.000
+{
+ "LSA (TF-IDF + SVD 100, part 11)": {
+  "r2": 0.6128,
+  "mae": 825.4,
+  "mean_top10_similarity": 0.87
+ },
+ "MiniLM transformer (384)": {
+  "r2": 0.5445,
+  "mae": 903.3,
+  "mean_top10_similarity": 0.854
+ }
+}
+components 0 {'r2': 0.7795, 'mae': 622.5}
+components 32 {'r2': 0.7787, 'mae': 627.5}
+components 64 {'r2': 0.7832, 'mae': 628.2}
+components 128 {'r2': 0.7826, 'mae': 626.4}
+{
+ "cv_by_components": {
+  "0": {
+   "r2": 0.7795,
+   "mae": 622.5
+  },
+  "32": {
+   "r2": 0.7787,
+   "mae": 627.5
+  },
+  "64": {
+   "r2": 0.7832,
+   "mae": 628.2
+  },
+  "128": {
+   "r2": 0.7826,
+   "mae": 626.4
+  }
+ },
+ "chosen_components": 64
+}

@@ -64,6 +64,8 @@ STAGES["S12"] = dict(STAGES["S10-swap"], tfidf_max=20000, tfidf_min_df=2,
                      change="S10-swap tuned by grouped CV (part 8b): TF-IDF 20,000 terms, min_df 2; Ridge alpha 1 kept")
 STAGES["S12-img"] = dict(STAGES["S12"], img=True,
                          change="S12 + photo features: SqueezeNet CNN embeddings (Orange), PCA fitted on train (part 13)")
+STAGES["S12-img-st"] = dict(STAGES["S12-img"], st=True,
+                            change="S12-img + MiniLM transformer sentence embeddings, PCA on train (part 17; not adopted: CV gain within noise)")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
@@ -87,6 +89,11 @@ if cfg.get("img"):  # part 13: CNN photo embeddings, PCA fitted on training rows
     imgc = [f"img_pc{i + 1}" for i in range(k)]
     d = d.merge(pd.read_csv("data/features/image_pca.csv.gz", usecols=["image_file"] + imgc), on="image_file", how="left")
     cfg = dict(cfg, num=cfg["num"] + imgc)
+if cfg.get("st"):  # part 17: MiniLM sentence embeddings, PCA fitted on training rows; components chosen by grouped CV
+    k = json.load(open("reports/models/part17_sentence.json"))["s12img_plus_sentence_cv"]["chosen_components"]
+    stc = [f"st_pc{i + 1}" for i in range(k)]
+    d = d.merge(pd.read_csv("data/features/sentence_pca.csv.gz", usecols=["image_file"] + stc), on="image_file", how="left")
+    cfg = dict(cfg, num=cfg["num"] + stc)
 if cfg.get("seg"):
     d = d.merge(pd.read_csv("data/features/segment_features.csv"), on="image_file", how="left")
     d["segment"] = "seg" + d.segment.astype(str)

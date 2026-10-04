@@ -1,0 +1,93 @@
+{
+ "model": "sentence-transformers/all-MiniLM-L6-v2",
+ "dims": 384,
+ "max_tokens": 256,
+ "word_pairs": [
+  {
+   "a": "dupatta",
+   "b": "stole",
+   "minilm_cosine": 0.23,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "saree",
+   "b": "sari",
+   "minilm_cosine": 0.733,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "keychain",
+   "b": "key ring",
+   "minilm_cosine": 0.622,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "earrings",
+   "b": "jhumka",
+   "minilm_cosine": 0.157,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "handwoven",
+   "b": "handloom",
+   "minilm_cosine": 0.633,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "silk saree",
+   "b": "cotton saree",
+   "minilm_cosine": 0.754,
+   "tfidf_cosine": 0.334
+  },
+  {
+   "a": "saree",
+   "b": "keychain",
+   "minilm_cosine": 0.115,
+   "tfidf_cosine": 0.0
+  },
+  {
+   "a": "necklace",
+   "b": "cushion cover",
+   "minilm_cosine": 0.175,
+   "tfidf_cosine": 0.0
+  }
+ ],
+ "retrieval_10nn": {
+  "LSA (TF-IDF + SVD 100, part 11)": {
+   "r2": 0.6128,
+   "mae": 825.4,
+   "mean_top10_similarity": 0.87
+  },
+  "MiniLM transformer (384)": {
+   "r2": 0.5445,
+   "mae": 903.3,
+   "mean_top10_similarity": 0.854
+  }
+ },
+ "pca_explained_variance": {
+  "32": 0.652,
+  "64": 0.821,
+  "128": 0.941
+ },
+ "s12img_plus_sentence_cv": {
+  "cv_by_components": {
+   "0": {
+    "r2": 0.7795,
+    "mae": 622.5
+   },
+   "32": {
+    "r2": 0.7787,
+    "mae": 627.5
+   },
+   "64": {
+    "r2": 0.7832,
+    "mae": 628.2
+   },
+   "128": {
+    "r2": 0.7826,
+    "mae": 626.4
+   }
+  },
+  "chosen_components": 64
+ }
+}

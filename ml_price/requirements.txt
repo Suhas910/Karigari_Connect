@@ -1,0 +1,18 @@
+# ml_price Python environment (.venv, Python 3.14). Install: .venv/bin/python -m pip install -r requirements.txt
+faiss-cpu==1.15.1
+google-genai==2.28.0
+joblib==1.6.0
+matplotlib==3.11.2
+mlxtend==0.25.0
+numpy==2.5.3
+owlready2==0.51
+pandas==3.0.6
+pillow==12.3.0
+python-dotenv==1.2.4
+rdflib==7.6.0
+scikit-learn==1.9.1
+scipy==1.18.1
+sentence-transformers==6.1.0
+shap==0.52.0
+streamlit==1.65.0
+torch==2.14.1

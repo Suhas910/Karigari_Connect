@@ -388,6 +388,25 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   (retrieval only), FOL. Statistics/EDA is supporting work, not a named topic. Added the
   well-posed learning problem (T, P, E) to §1.
 
+## 2026-10-04 — Parts 17 (transformer embeddings) and 18 (RAG)
+
+- Installed sentence-transformers 6.1 + PyTorch 2.14 into `.venv`; pinned `requirements.txt`
+  added. Model all-MiniLM-L6-v2 downloaded from Hugging Face (about 90 MB).
+- **Part 17:** 37,257 texts encoded in 220 s (4 threads). The first run crashed (exit 139):
+  PyTorch and FAISS OpenMP runtimes clash on macOS; thread variables didn't help, so the script
+  runs `encode` and `evaluate` as separate processes. Word pairs: saree–sari 0.73 vs TF-IDF 0;
+  jhumka–earrings only 0.16. Retrieval: LSA 0.613 beats MiniLM 0.545. Added to S12-img: CV +0.004,
+  MAE worse, so **not adopted** (decided on CV). Stage S12-img-st test: R² 0.804, MAE ₹619.
+- **Part 18:** `app/rag.py` (retrieve → numbered evidence → grounded Gemini JSON). 40 test
+  products, one per family, 16 Flash-Lite requests: LLM alone R² 0.34 → RAG 0.73 (neighbour median
+  0.73, Ridge 0.85). Citations valid 100%; estimates inside the evidence span 100%; the
+  self-reported match label predicts error (good 18%, poor 178%); ranges overconfident (52.5%
+  coverage).
+- Advisor page: optional "explain with Gemini" checkbox; checked in the browser pane (saree:
+  cited listings 4–6, zero-width range, Pochampally caution gone after the part 15 revision). The
+  pane can't save screenshots to a file, so the old advisor screenshot is kept, with its note.
+- FINAL_REPORT §9 and §12 (transformers, word embeddings and RAG now ✅) and the viva sheet updated.
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet

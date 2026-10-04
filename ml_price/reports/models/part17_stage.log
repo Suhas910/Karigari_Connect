@@ -1,0 +1,9 @@
+/Users/utsavsr/Developer/Karigari_Connect/ml_price/scripts/evaluate_stage.py:104: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`
+  d["text"] = d.product_title + " " + d.product_description if cfg["text"] else ""
+     stage  train_rows  test_rows  features                            model            r2       mae     mape  seconds  f1_macro
+S12-img-st       29805       7452       244                  Median baseline -1.457000e-01    1487.4     73.9      0.0       NaN
+S12-img-st       29805       7452       244              Median per art form  1.556000e-01    1423.4    104.9      0.0       NaN
+S12-img-st       29805       7452       244                Linear Regression -4.408844e+10 7689399.2 127781.4    443.4       NaN
+S12-img-st       29805       7452       244                  Ridge (alpha=1)  8.036000e-01     618.9     34.7     10.9       NaN
+S12-img-st       29805       7452       244                    Random Forest  5.476000e-01     875.3     51.1    966.7       NaN
+S12-img-st       29805       7452       244 Logistic Regression (price band)           NaN       NaN      NaN      NaN    0.8237

@@ -1,0 +1,57 @@
+Direct use of automatic function calling (AFC) in Models.generate_content is not recommended. Instead, we recommend to use AFC in Chat.send_message. Similarly, direct use of AFC in Models.generate_content_stream is not recommended. Instead, we recommend to use AFC in Chat.send_message_stream.
+{
+ "retriever": "LSA",
+ "products": 40,
+ "model": "gemini-3.5-flash-lite",
+ "RAG (LLM + 10 retrieved listings)": {
+  "answered": 40,
+  "r2": 0.729,
+  "mae": 1210.5,
+  "median_ape": 24.6,
+  "range_coverage": 0.525,
+  "median_range_width_ratio": 0.32
+ },
+ "LLM without retrieval": {
+  "answered": 40,
+  "r2": 0.34,
+  "mae": 1762.2,
+  "median_ape": 41.7,
+  "range_coverage": 0.325,
+  "median_range_width_ratio": 0.71
+ },
+ "FAISS neighbour median (no LLM)": {
+  "answered": 40,
+  "r2": 0.728,
+  "mae": 1566.9,
+  "median_ape": 31.4
+ },
+ "Ridge S12-img (best model)": {
+  "answered": 40,
+  "r2": 0.845,
+  "mae": 1027.0,
+  "median_ape": 26.7
+ },
+ "grounding": {
+  "citations_valid": 1.0,
+  "estimate_inside_evidence_span": 1.0,
+  "match_quality_counts": {
+   "partial": 19,
+   "good": 19,
+   "poor": 2
+  }
+ },
+ "rag_error_by_match_quality": {
+  "good": {
+   "n": 19,
+   "median_ape": 17.6
+  },
+  "partial": {
+   "n": 19,
+   "median_ape": 33.6
+  },
+  "poor": {
+   "n": 2,
+   "median_ape": 178.4
+  }
+ }
+}

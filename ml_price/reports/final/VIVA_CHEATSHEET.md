@@ -28,6 +28,8 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 | Best classifier | Gradient Boosting F1 0.810, AUC 0.925 |
 | Price range | raw quantile 58% coverage → conformal 83% (target 80%) |
 | Bias (per family, final model) | cheapest families ×1.13, dearest ×0.89; kalamkari block printing ×0.74; overall ×1.017 across 510 families |
+| Transformer embeddings (Part 17) | saree ≈ sari 0.73 (TF-IDF 0); LSA beats MiniLM for retrieval 0.613 vs 0.545; +0.004 CV R² → not adopted |
+| RAG (Part 18, 40 products) | LLM alone R² 0.34 → with retrieval 0.73 (Ridge 0.85); citations valid 100% |
 | Bag artefact | 453 test rows = one "Jhola Bag" line at ₹1,590, which first made Pochampally / Kutch look undervalued |
 | EDA | skew 3.50 → 0.49 (log); Kruskal-Wallis ε² 0.45 (rows) / 0.35 (families) |
 
@@ -120,8 +122,24 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
   (Inception) uploads them.
 - **Why do photos help when text is already strong?** They show size and detail. Only 3,075 of
   37,257 titles state a size.
-- **Where is RAG?** Part 11 is the retrieval step: a FAISS vector index returns similar listings
-  with real prices, shown as evidence beside the prediction.
+- **Where is RAG?** Part 18. FAISS retrieves the 10 most similar training listings with real
+  prices; they go into the prompt as numbered evidence; Gemini estimates the price using only that
+  evidence and cites what it used. Without retrieval the same LLM scores R² 0.34; with it, 0.73.
+- **Does RAG beat your model?** No: Ridge R² 0.85 vs RAG 0.73 on the same 40 products. The typical
+  error is similar (25% vs 27%). RAG's value is an explanation a seller can check, not a better
+  number. Its ranges are overconfident (52% coverage).
+- **Can generation fix bad retrieval?** No. For Phulkari coasters the retriever found Phulkari
+  garments. The LLM labelled the match "poor" but still priced from them (₹8,000 vs ₹1,990 real).
+  Its own match label does predict its error (good 18%, poor 178%).
+- **What does attention do?** Each token's vector is updated with a weighted mix of all the other
+  tokens' vectors. The weights come from how relevant each token is (query · key), so "silk" after
+  "art" and "silk" after "pure" end up different.
+- **Word embeddings vs TF-IDF?** TF-IDF counts words, so "sari" and "saree" share nothing (cosine
+  0). Learned embeddings place words used alike close together (0.73). MiniLM still misses Indian
+  terms (jhumka ≈ earrings only 0.16).
+- **Why didn't the transformer embeddings improve the model?** TF-IDF, LLM attributes and photos
+  already carry the information. The CV gain was +0.004 (noise), so the decision was made on CV and
+  they weren't adopted. For retrieval, LSA fitted on this catalogue beat the general-English model.
 
 **XAI and ethics (Unit V)**
 
@@ -152,8 +170,8 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 ## If asked "what would you do next?"
 
 1. Put the final S12-img model into the advisor (needs Gemini + SqueezeNet at query time).
-2. Close the syllabus gaps cheaply: sentence-transformer embeddings (word embeddings /
-   transformers), a full RAG step (Gemini explains using the retrieved listings), a small Bayesian network.
+2. A small Bayesian network (technique → material → price band), the last cheap syllabus gap.
+   A domain-tuned embedding model (multilingual or fine-tuned on craft text) could fix the jhumka problem.
 3. Real sale prices and labour hours from Karigari Connect artisans, which no public dataset has.
 4. A stronger image-text model (e.g. CLIP) run locally.
 5. The Amazon Handmade dataset, to test whether the pipeline transfers.
@@ -164,7 +182,6 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 - The gold set and technique map were labelled by rules, not by a craft expert.
 - The advisor uses the part 8 model (0.748), not the final 0.806 (the bias audit was run on both).
 - Not covered from the syllabus: search, Wumpus world, backward chaining, resolution, Bayesian
-  networks, reinforcement learning; transformers, word embeddings and RAG only partly (see
-  FINAL_REPORT §12). Say why: no search space, no rewards, no sequential decisions in pricing.
+  networks, reinforcement learning (see FINAL_REPORT §12). Say why: no search space, no rewards, no sequential decisions in pricing.
 - A typical error is still a third of the price: a suggested range with evidence, not an
   automatic price.
