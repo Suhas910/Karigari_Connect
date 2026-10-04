@@ -61,7 +61,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 ## 5 — Project parts (all 16 approved)
 
-- [ ] 1 Data cleaning with audit trail (sections 1–2 above)
+- [x] 1 Data cleaning with audit trail (sections 1–2 above) ([CLEANING_REPORT](reports/cleaning/CLEANING_REPORT.md))
 - [ ] 2 Statistics and EDA (section 3 above)
 - [x] 3 Craft knowledge graph: 68 classes, 201 art forms, `.owl` for Protégé ([KG_REPORT](reports/knowledge_graph/KG_REPORT.md))
 - [x] 4 Rule-based reasoning: 5 SWRL rules + HermiT, 0 disagreements with pandas; 4 SPARQL questions; features → S7
