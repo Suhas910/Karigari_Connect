@@ -1,0 +1,297 @@
+{
+ "ridge_alpha": 3,
+ "shap_check_max_abs_diff_vs_library": 0.0,
+ "importance_by_group": {
+  "words (TF-IDF)": 2.7313,
+  "knowledge graph": 0.851,
+  "segment": 0.5043,
+  "art-form labels": 0.4041,
+  "lengths / counts": 0.2362,
+  "primary art form": 0.1867
+ },
+ "top25_features": [
+  [
+   "KG: n_techniques",
+   0.1223
+  ],
+  [
+   "word: saree",
+   0.1197
+  ],
+  [
+   "desc_len",
+   0.1079
+  ],
+  [
+   "title_len",
+   0.1068
+  ],
+  [
+   "KG: tech_Printing",
+   0.1022
+  ],
+  [
+   "segment: seg4",
+   0.0766
+  ],
+  [
+   "KG: mat_Silk",
+   0.0727
+  ],
+  [
+   "KG: tech_Weaving",
+   0.0719
+  ],
+  [
+   "label: handloom",
+   0.067
+  ],
+  [
+   "segment: seg9",
+   0.0614
+  ],
+  [
+   "segment: seg0",
+   0.053
+  ],
+  [
+   "label: oxidised metal craft",
+   0.052
+  ],
+  [
+   "KG: mat_Cotton",
+   0.0514
+  ],
+  [
+   "segment: seg14",
+   0.0505
+  ],
+  [
+   "KG: textile",
+   0.0458
+  ],
+  [
+   "segment: seg2",
+   0.0448
+  ],
+  [
+   "segment: seg11",
+   0.0427
+  ],
+  [
+   "segment: seg5",
+   0.0416
+  ],
+  [
+   "KG: tech_MetalCraft",
+   0.0405
+  ],
+  [
+   "label: natural dyed",
+   0.0399
+  ],
+  [
+   "word: set",
+   0.0391
+  ],
+  [
+   "KG: mat_Wool",
+   0.0381
+  ],
+  [
+   "segment: seg16",
+   0.0354
+  ],
+  [
+   "KG: tech_ResistDyeing",
+   0.0352
+  ],
+  [
+   "label: hand painted",
+   0.0338
+  ]
+ ],
+ "strongest_price_raising": [
+  [
+   "word: saree",
+   4.727
+  ],
+  [
+   "word: necklace",
+   1.694
+  ],
+  [
+   "word: frame",
+   1.316
+  ],
+  [
+   "word: set",
+   1.248
+  ],
+  [
+   "word: 3pc",
+   1.173
+  ],
+  [
+   "word: heavy",
+   1.066
+  ],
+  [
+   "word: mats",
+   1.054
+  ],
+  [
+   "word: ajrakh saree",
+   1.028
+  ],
+  [
+   "word: table runner",
+   1.009
+  ],
+  [
+   "word: painting",
+   0.986
+  ],
+  [
+   "word: runner",
+   0.97
+  ],
+  [
+   "word: material",
+   0.89
+  ],
+  [
+   "word: box",
+   0.855
+  ],
+  [
+   "word: kurta",
+   0.834
+  ],
+  [
+   "word: dress material",
+   0.823
+  ]
+ ],
+ "strongest_price_lowering": [
+  [
+   "word: keychain",
+   -1.971
+  ],
+  [
+   "word: nosepin",
+   -1.69
+  ],
+  [
+   "word: ring",
+   -1.159
+  ],
+  [
+   "word: fabric",
+   -1.095
+  ],
+  [
+   "word: earrings",
+   -1.064
+  ],
+  [
+   "word: kurtas",
+   -1.028
+  ],
+  [
+   "word: napkin",
+   -0.846
+  ],
+  [
+   "word: art silk",
+   -0.804
+  ],
+  [
+   "word: cotton fabric",
+   -0.79
+  ],
+  [
+   "word: dupattas kurtas",
+   -0.765
+  ],
+  [
+   "word: silk fabric",
+   -0.759
+  ],
+  [
+   "word: dyed cotton",
+   -0.739
+  ],
+  [
+   "word: dupattas",
+   -0.738
+  ],
+  [
+   "word: garments",
+   -0.726
+  ],
+  [
+   "word: handmade earrings",
+   -0.724
+  ]
+ ],
+ "examples": [
+  {
+   "product": "Multicolor - Reusable Bishnupur Handpainted Terracotta Rakhi 04",
+   "actual": 490,
+   "predicted": 334.0,
+   "baseline_price": 1115.0,
+   "reasons": [
+    "segment: seg4: \u221248%",
+    "label: hand painted: \u221224%",
+    "KG: mat_Clay: \u221223%",
+    "primary: hand painted: \u221218%",
+    "word: handpainted terracotta: \u22127%",
+    "word: bishnupur: \u22126%"
+   ]
+  },
+  {
+   "product": "Blue - Handcrafted Fabric Jhola Bag 37",
+   "actual": 1590,
+   "predicted": 795.0,
+   "baseline_price": 1115.0,
+   "reasons": [
+    "segment: seg5: +23%",
+    "title_len: \u221217%",
+    "KG: tech_Weaving: \u221216%",
+    "word: jhola bag: \u221212%",
+    "desc_len: \u221211%",
+    "word: inner: +12%"
+   ]
+  },
+  {
+   "product": "Pink - Sukriti Handmade Classic Notebook with Pencil (Small)",
+   "actual": 690,
+   "predicted": 497.0,
+   "baseline_price": 1115.0,
+   "reasons": [
+    "KG: tech_PaperCraft: \u221239%",
+    "KG: mat_Paper: +26%",
+    "KG: tech_Printing: \u221220%",
+    "KG: n_techniques: +21%",
+    "desc_len: \u221215%",
+    "word: fabric: \u221213%"
+   ]
+  },
+  {
+   "product": "Beige - Jacquard Embroidered Cotton 3pc Unstitched Dress Material 64",
+   "actual": 3290,
+   "predicted": 3022.0,
+   "baseline_price": 1115.0,
+   "reasons": [
+    "segment: seg14: +33%",
+    "KG: n_techniques: +21%",
+    "KG: tech_Weaving: \u221216%",
+    "word: 3pc: +15%",
+    "desc_len: +13%",
+    "label: embroidery: \u221210%"
+   ]
+  }
+ ],
+ "readable_gb_test_r2": 0.5204
+}

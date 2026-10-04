@@ -259,6 +259,22 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Change:** every script now uses `n_jobs=3` (first 4, lowered to 3 at the project owner's request). Results are unchanged (fixed random seeds); runs
   take somewhat longer.
 
+## 2026-10-04 — Parts 8, 14, 15, 16
+
+- **Part 8:** 8 regressors tuned with grouped CV. Ridge α=3 best (R² 0.748, MAE ₹692);
+  Gradient Boosting 0.675, KNN 0.633, RF 0.608, Polynomial 0.577 (vs Linear 0.347),
+  Decision Tree 0.413.
+- **Part 14:** SHAP for Ridge (matches `shap.LinearExplainer` exactly) and a readable gradient
+  boosting model; words carry the most influence, then KG features; per-product reasons.
+- **Part 15:** bias audit. Cheap items over-priced (×1.34), the ₹850–1,600 range under-priced
+  (D7 ×0.57); kalamkari, Kutch embroidery and Pochampally ikat predicted at 46–68% of real price.
+  Ethics: the model must never set the floor.
+- **Part 16:** advisor agent (PEAS) + Streamlit demo. Combines KG rules, Ridge 80% range,
+  FAISS evidence and the Karigari Connect wage floor (backend imported read-only), plus
+  cautions from parts 11 and 15. `kg_rules.py` extracted from `build_kg.py` (output verified
+  byte-identical).
+- **Report:** [PARTS_8_14_16_REPORT.md](reports/models/PARTS_8_14_16_REPORT.md)
+
 ## Pending
 
-- Part 8 completion (Polynomial, Tree, GBM, kNN regressors); parts 12–16: LLM extraction, image features, SHAP, bias audit, advisor + demo
+- Part 12 (LLM attribute extraction), part 13 (image features), final report

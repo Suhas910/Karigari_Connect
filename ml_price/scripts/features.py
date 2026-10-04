@@ -28,14 +28,15 @@ def load():
 
 NUM = ["artform_count", "title_len", "desc_len", "desc_repeat"]
 
-def sparse(tr, te, kgc):
+def sparse(tr, te, kgc, return_names=False):
     ct = ColumnTransformer([
         ("cat", OneHotEncoder(handle_unknown="ignore"), ["primary_artform", "segment"]),
         ("lab", CountVectorizer(tokenizer=lambda t: t.split(" | "), token_pattern=None, lowercase=False, binary=True), "artform_all"),
         ("txt", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), min_df=5, sublinear_tf=True, stop_words="english"), "text"),
         ("num", StandardScaler(), NUM + kgc),
     ])
-    return ct.fit_transform(tr).tocsr(), ct.transform(te).tocsr()
+    A, B = ct.fit_transform(tr).tocsr(), ct.transform(te).tocsr()
+    return (A, B, list(ct.get_feature_names_out())) if return_names else (A, B)
 
 def dense(tr, te, kgc, n_svd=100):
     tf = TfidfVectorizer(max_features=20000, min_df=5, sublinear_tf=True, stop_words="english")

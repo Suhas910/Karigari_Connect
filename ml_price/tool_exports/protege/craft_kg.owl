@@ -1754,10 +1754,10 @@
 
 <owl:NamedIndividual rdf:about="#p37">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_embroidery"/>
   <hasArtForm rdf:resource="#af_bead_work"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Candle - Handmade Felt &amp; Beadwork Christmas Ornament</rdfs:label>
@@ -1788,10 +1788,10 @@
 
 <owl:NamedIndividual rdf:about="#p425">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_embroidery"/>
   <hasArtForm rdf:resource="#af_bead_work"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Candy - Handmade Felt &amp; Beadwork Christmas Ornament</rdfs:label>
@@ -1856,8 +1856,8 @@
 
 <owl:NamedIndividual rdf:about="#p1550">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_phad_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_phad_folk_art"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Traditional Handpainted Phad Painting by Kalyan Joshi (5.5 x 5.5 in) 14</rdfs:label>
 </owl:NamedIndividual>
@@ -1871,19 +1871,19 @@
 
 <owl:NamedIndividual rdf:about="#p1639">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
-  <hasArtForm rdf:resource="#af_paintings_art_works"/>
+  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_art_work"/>
+  <hasArtForm rdf:resource="#af_paintings_art_works"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pattachitra Painting on Handmade Paper (8 x 13 in)</rdfs:label>
 </owl:NamedIndividual>
 
 <owl:NamedIndividual rdf:about="#p1739">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_patua_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_patua_folk_art"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Handpainted Patua Painting by Laltu Chitrakar (14 x 11 in)</rdfs:label>
 </owl:NamedIndividual>
@@ -1936,8 +1936,8 @@
 
 <owl:NamedIndividual rdf:about="#p2537">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_palm_leaves"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">खजुरी Handmade Multipurpose Date-Palm Leaves Decor Cup Plate</rdfs:label>
 </owl:NamedIndividual>
 
@@ -1959,8 +1959,8 @@
 <owl:NamedIndividual rdf:about="#p2741">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_bead_work"/>
-  <hasArtForm rdf:resource="#af_hand_painted"/>
   <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_hand_painted"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Flower - Traditional Hand Painted Beadwork Decor Rangoli 03</rdfs:label>
 </owl:NamedIndividual>
@@ -1983,8 +1983,8 @@
 
 <owl:NamedIndividual rdf:about="#p3003">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_patchwork"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multicolor - Embroidery Hoop Wall Decor (Medium) 05</rdfs:label>
@@ -2022,11 +2022,11 @@
 
 <owl:NamedIndividual rdf:about="#p3550">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_blue_art_pottery"/>
   <hasArtForm rdf:resource="#af_handmade"/>
-  <hasMaterial rdf:resource="#mat_Stone"/>
+  <hasArtForm rdf:resource="#af_blue_art_pottery"/>
   <hasMaterial rdf:resource="#mat_Glass"/>
   <hasMaterial rdf:resource="#mat_Clay"/>
+  <hasMaterial rdf:resource="#mat_Stone"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Original Blue Pottery Ceramic Vase (2 x 2 in)</rdfs:label>
 </owl:NamedIndividual>
 
@@ -2132,18 +2132,18 @@
 
 <owl:NamedIndividual rdf:about="#p4417">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_hand_painted"/>
-  <hasArtForm rdf:resource="#af_tikuli_art"/>
-  <hasArtForm rdf:resource="#af_wood_carving"/>
   <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_tikuli_art"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tikuli Art Handpainted Wooden Coaster (Set of 6)</rdfs:label>
 </owl:NamedIndividual>
 
 <owl:NamedIndividual rdf:about="#p4453">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_embroidery"/>
   <hasArtForm rdf:resource="#af_jacquard_weaving"/>
+  <hasArtForm rdf:resource="#af_embroidery"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -2153,8 +2153,8 @@
 <owl:NamedIndividual rdf:about="#p4490">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_udayagiri"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Beige - Udayagiri Wooden Fruit &amp; Salad Bowl</rdfs:label>
@@ -2170,17 +2170,17 @@
 
 <owl:NamedIndividual rdf:about="#p4535">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brown - Hand Carved Natural Neem Wooden Bowl (Big) (7 x 7 in)</rdfs:label>
 </owl:NamedIndividual>
 
 <owl:NamedIndividual rdf:about="#p4549">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasArtForm rdf:resource="#af_ajrakh_block_printing"/>
   <hasArtForm rdf:resource="#af_rajasthan_kantha_work"/>
-  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -2234,8 +2234,8 @@
 
 <owl:NamedIndividual rdf:about="#p4931">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_embroidery"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_embroidery"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -2252,8 +2252,8 @@
 
 <owl:NamedIndividual rdf:about="#p5161">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brown - Special Sheesham Wood Segmented Snacks Platter / Serving Tray</rdfs:label>
 </owl:NamedIndividual>
@@ -2474,8 +2474,8 @@
 <owl:NamedIndividual rdf:about="#p7185">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_oxidised_metal_craft"/>
-  <hasMaterial rdf:resource="#mat_Stone"/>
   <hasMaterial rdf:resource="#mat_Silver"/>
+  <hasMaterial rdf:resource="#mat_Stone"/>
   <rdf:type rdf:resource="#MetalProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Black - German Silver Plated Ear-Cuff Bugatti / Bugadi Earrings 10</rdfs:label>
 </owl:NamedIndividual>
@@ -2555,11 +2555,11 @@
 
 <owl:NamedIndividual rdf:about="#p8352">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_oxidised_metal_craft"/>
   <hasArtForm rdf:resource="#af_stone_work"/>
+  <hasArtForm rdf:resource="#af_oxidised_metal_craft"/>
   <hasArtForm rdf:resource="#af_fabart"/>
-  <hasMaterial rdf:resource="#mat_Stone"/>
   <hasMaterial rdf:resource="#mat_Silver"/>
+  <hasMaterial rdf:resource="#mat_Stone"/>
   <rdf:type rdf:resource="#MetalProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Green - Aarohi Stone Work Fabart Earrings</rdfs:label>
 </owl:NamedIndividual>
@@ -2628,9 +2628,9 @@
 <owl:NamedIndividual rdf:about="#p9150">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_oxidised_metal_craft"/>
-  <hasMaterial rdf:resource="#mat_Stone"/>
   <hasMaterial rdf:resource="#mat_Silver"/>
   <hasMaterial rdf:resource="#mat_Brass"/>
+  <hasMaterial rdf:resource="#mat_Stone"/>
   <rdf:type rdf:resource="#MetalProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Multicolor - Antique Silver Finish Oxidised Brass Base Stone Work Stud Earrings</rdfs:label>
 </owl:NamedIndividual>
@@ -2658,8 +2658,8 @@
 
 <owl:NamedIndividual rdf:about="#p9768">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_crochet_work"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Wool"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Handmade Crochet Hair Rubber Band/Scrunchie 11</rdfs:label>
@@ -2667,8 +2667,8 @@
 
 <owl:NamedIndividual rdf:about="#p10016">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_crochet_work"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Handmade Crochet Rubber Band 10</rdfs:label>
 </owl:NamedIndividual>
@@ -2682,8 +2682,8 @@
 
 <owl:NamedIndividual rdf:about="#p10144">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_crochet_work"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Wool"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Yellow - Handmade Crochet Hair Rubber Band/Scrunchie 39</rdfs:label>
@@ -2868,9 +2868,9 @@
 
 <owl:NamedIndividual rdf:about="#p12556">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade_jewellery"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_crochet_work"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_handmade_jewellery"/>
   <hasMaterial rdf:resource="#mat_Glass"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -2921,10 +2921,10 @@
 
 <owl:NamedIndividual rdf:about="#p13342">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_channapatna_toys"/>
-  <hasArtForm rdf:resource="#af_channapatna_toys_craft"/>
-  <hasArtForm rdf:resource="#af_wood_carving"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_channapatna_toys"/>
+  <hasArtForm rdf:resource="#af_wood_carving"/>
+  <hasArtForm rdf:resource="#af_channapatna_toys_craft"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Orange - Fish - Channapatna Handmade Wooden Keychain</rdfs:label>
 </owl:NamedIndividual>
@@ -2937,8 +2937,8 @@
 
 <owl:NamedIndividual rdf:about="#p13730">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lord Jagannath - Reusable Pattachitra Handpainted Rakhi with Potli 22</rdfs:label>
 </owl:NamedIndividual>
@@ -2967,8 +2967,8 @@
 
 <owl:NamedIndividual rdf:about="#p13880">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_bead_work"/>
   <hasArtForm rdf:resource="#af_thread_work"/>
+  <hasArtForm rdf:resource="#af_bead_work"/>
   <hasArtForm rdf:resource="#af_handmade"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -2992,8 +2992,8 @@
 
 <owl:NamedIndividual rdf:about="#p14008">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reusable Pattachitra Handpainted Wooden Rakhi 27</rdfs:label>
 </owl:NamedIndividual>
@@ -3043,8 +3043,8 @@
 
 <owl:NamedIndividual rdf:about="#p14392">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_dokra_craft"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Brass"/>
   <rdf:type rdf:resource="#MetalProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tribal Odisha Dokra Brass &amp; Threadwork Rakhi 09</rdfs:label>
@@ -3108,16 +3108,16 @@
 
 <owl:NamedIndividual rdf:about="#p15003">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reusable Pattachitra Handpainted Wooden Rakhi 68</rdfs:label>
 </owl:NamedIndividual>
 
 <owl:NamedIndividual rdf:about="#p15010">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
+  <hasArtForm rdf:resource="#af_pattachitra_folk_art"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reusable Pattachitra Handpainted Wooden Rakhi 61</rdfs:label>
 </owl:NamedIndividual>
@@ -3189,8 +3189,8 @@
 
 <owl:NamedIndividual rdf:about="#p15785">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_fabart"/>
   <hasArtForm rdf:resource="#af_bengal_craft"/>
+  <hasArtForm rdf:resource="#af_fabart"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Handcrafted Fabart Bangle by Asalkaar (Size - 2-8)</rdfs:label>
 </owl:NamedIndividual>
 
@@ -3203,8 +3203,8 @@
 
 <owl:NamedIndividual rdf:about="#p16009">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_fabart"/>
   <hasArtForm rdf:resource="#af_bengal_craft"/>
+  <hasArtForm rdf:resource="#af_fabart"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Handcrafted Fabart Bangle by Asalkaar (Size - 2-4)</rdfs:label>
 </owl:NamedIndividual>
 
@@ -3237,15 +3237,15 @@
 <owl:NamedIndividual rdf:about="#p16162">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_stone_work"/>
-  <hasMaterial rdf:resource="#mat_Stone"/>
   <hasMaterial rdf:resource="#mat_Glass"/>
+  <hasMaterial rdf:resource="#mat_Stone"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brown - Handcrafted Glass Stone Bracelet 06</rdfs:label>
 </owl:NamedIndividual>
 
 <owl:NamedIndividual rdf:about="#p16246">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_fabart"/>
   <hasArtForm rdf:resource="#af_bengal_craft"/>
+  <hasArtForm rdf:resource="#af_fabart"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brown - Handcrafted Fabart Bangle by Asalkaar (Size - 2-6)</rdfs:label>
 </owl:NamedIndividual>
 
@@ -3308,8 +3308,8 @@
 
 <owl:NamedIndividual rdf:about="#p17167">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Green - Handcrafted Quilted Handbag 05</rdfs:label>
@@ -3317,8 +3317,8 @@
 
 <owl:NamedIndividual rdf:about="#p17219">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_bandhani_tie_dye"/>
   <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_bandhani_tie_dye"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maroon - Handcrafted Quilted Handbag 27</rdfs:label>
@@ -3390,8 +3390,8 @@
 
 <owl:NamedIndividual rdf:about="#p17485">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_jacquard_weaving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3400,8 +3400,8 @@
 
 <owl:NamedIndividual rdf:about="#p17486">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_jacquard_weaving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3410,8 +3410,8 @@
 
 <owl:NamedIndividual rdf:about="#p17496">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_jacquard_weaving"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3551,8 +3551,8 @@
 
 <owl:NamedIndividual rdf:about="#p18965">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Handcrafted Printed Fabric Ring/Earring Box 53</rdfs:label>
@@ -3560,8 +3560,8 @@
 
 <owl:NamedIndividual rdf:about="#p19213">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pink - Handmade 4 Pockets Cotton Jewellery Bag 10</rdfs:label>
@@ -3569,8 +3569,8 @@
 
 <owl:NamedIndividual rdf:about="#p19234">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blue - Handmade Quilted Cotton Laptop Bag 11</rdfs:label>
@@ -3656,9 +3656,9 @@
 
 <owl:NamedIndividual rdf:about="#p20552">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_bengal_craft"/>
   <hasArtForm rdf:resource="#af_jute_weaving"/>
   <hasArtForm rdf:resource="#af_hand_block_printing"/>
-  <hasArtForm rdf:resource="#af_bengal_craft"/>
   <hasMaterial rdf:resource="#mat_Jute"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grey - Hand Block Printed Laminated Jute Shoulder Bag</rdfs:label>
@@ -3707,8 +3707,8 @@
 <owl:NamedIndividual rdf:about="#p21243">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_embroidery"/>
-  <hasArtForm rdf:resource="#af_hand_block_printing"/>
   <hasArtForm rdf:resource="#af_handmade"/>
+  <hasArtForm rdf:resource="#af_hand_block_printing"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3724,8 +3724,8 @@
 
 <owl:NamedIndividual rdf:about="#p21512">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -3755,8 +3755,8 @@
 
 <owl:NamedIndividual rdf:about="#p21770">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasArtForm rdf:resource="#af_natural_flower_art_work"/>
+  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasArtForm rdf:resource="#af_handmade"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Flower Art Work Special Visitor Notebook (9 x 6 in)</rdfs:label>
@@ -3773,8 +3773,8 @@
 
 <owl:NamedIndividual rdf:about="#p22059">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasMaterial rdf:resource="#mat_Paper"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -3783,8 +3783,8 @@
 
 <owl:NamedIndividual rdf:about="#p22156">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_handmade_stationery"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Red - Sanganeri Hand Block Print Cover Notebook (7 x 5) 41</rdfs:label>
@@ -3838,8 +3838,8 @@
 
 <owl:NamedIndividual rdf:about="#p22872">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_kutch_kala_organic_cotton_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3866,8 +3866,8 @@
 
 <owl:NamedIndividual rdf:about="#p23178">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_kutch_kala_organic_cotton_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -3918,10 +3918,10 @@
 
 <owl:NamedIndividual rdf:about="#p23700">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasArtForm rdf:resource="#af_hand_painted"/>
   <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
   <hasArtForm rdf:resource="#af_srikalahasti_penwork_kalamkari"/>
-  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
@@ -3983,8 +3983,8 @@
 
 <owl:NamedIndividual rdf:about="#p24260">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_handloom"/>
+  <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -3994,10 +3994,10 @@
 
 <owl:NamedIndividual rdf:about="#p24472">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_bijnor_weaving"/>
-  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4006,10 +4006,10 @@
 
 <owl:NamedIndividual rdf:about="#p24504">
   <rdf:type rdf:resource="#Product"/>
+  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_bijnor_weaving"/>
-  <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4044,8 +4044,8 @@
 
 <owl:NamedIndividual rdf:about="#p24898">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_batik_block_printing"/>
   <hasArtForm rdf:resource="#af_kutch_kala_organic_cotton_weaving"/>
+  <hasArtForm rdf:resource="#af_batik_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
@@ -4109,8 +4109,8 @@
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_mangalagiri_weaving"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4119,10 +4119,10 @@
 
 <owl:NamedIndividual rdf:about="#p26113">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_hand_painted"/>
-  <hasArtForm rdf:resource="#af_srikalahasti_penwork_kalamkari"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
+  <hasArtForm rdf:resource="#af_hand_painted"/>
   <hasArtForm rdf:resource="#af_handloom"/>
+  <hasArtForm rdf:resource="#af_srikalahasti_penwork_kalamkari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
@@ -4140,8 +4140,8 @@
 
 <owl:NamedIndividual rdf:about="#p26175">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
+  <hasArtForm rdf:resource="#af_shibori_tie_dye"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4178,8 +4178,8 @@
 
 <owl:NamedIndividual rdf:about="#p26386">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_banaras_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
+  <hasArtForm rdf:resource="#af_banaras_weaving"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -4191,8 +4191,8 @@
 <owl:NamedIndividual rdf:about="#p26461">
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_bandhani_tie_dye"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Purple - Zari Work Silk Tie-Dye Bandhani Fabric 42</rdfs:label>
@@ -4238,9 +4238,9 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_ajrakh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Green - Natural Dyed Dola Silk Hand Block Ajrakh Print Fabric 52</rdfs:label>
@@ -4251,9 +4251,9 @@
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_chanderi_weaving"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -4338,8 +4338,8 @@
 
 <owl:NamedIndividual rdf:about="#p27759">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_sambalpuri_ikat_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4348,8 +4348,8 @@
 
 <owl:NamedIndividual rdf:about="#p28028">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_bagh_block_printing"/>
   <hasArtForm rdf:resource="#af_handloom"/>
+  <hasArtForm rdf:resource="#af_bagh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Wool"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
@@ -4405,8 +4405,8 @@
 
 <owl:NamedIndividual rdf:about="#p28716">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_bhujodi_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Wool"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4511,10 +4511,10 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_bagh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Red - Bagh Hand Block Print Natural Dyed Chanderi Silk 3pc Unstitched Dress Material Suit Set 51</rdfs:label>
@@ -4524,8 +4524,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_dharwad_weaving"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4544,8 +4544,8 @@
 
 <owl:NamedIndividual rdf:about="#p30318">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_bagh_block_printing"/>
   <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
+  <hasArtForm rdf:resource="#af_bagh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
@@ -4723,9 +4723,9 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_pochampally_ikat_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -4737,9 +4737,9 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_pochampally_ikat_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -4771,8 +4771,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_ajrakh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ajrakh Hand Block Print Natural Dyed Cotton 2pc Unstitched Dress Material Kurta Set with Jewellery 14</rdfs:label>
@@ -4790,8 +4790,8 @@
 
 <owl:NamedIndividual rdf:about="#p33384">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_bengal_jamdani_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
@@ -4801,8 +4801,8 @@
 
 <owl:NamedIndividual rdf:about="#p33392">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_bengal_jamdani_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Linen"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -4859,8 +4859,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_chanderi_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -4870,8 +4870,8 @@
 
 <owl:NamedIndividual rdf:about="#p34757">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_bengal_jamdani_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Silver"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -4953,8 +4953,8 @@
 
 <owl:NamedIndividual rdf:about="#p35322">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_sambalpuri_ikat_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -5006,8 +5006,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_batik_block_printing"/>
   <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -5033,8 +5033,8 @@
 
 <owl:NamedIndividual rdf:about="#p35741">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_ajrakh_block_printing"/>
   <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
+  <hasArtForm rdf:resource="#af_ajrakh_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -5057,9 +5057,9 @@
   <hasArtForm rdf:resource="#af_maheshwari_weaving"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -5089,10 +5089,10 @@
 
 <owl:NamedIndividual rdf:about="#p36178">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_mangalagiri_weaving"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -5110,8 +5110,8 @@
 
 <owl:NamedIndividual rdf:about="#p36256">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
   <hasArtForm rdf:resource="#af_sanganeri_block_printing"/>
+  <hasArtForm rdf:resource="#af_kota_doria_weaving"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -5135,8 +5135,8 @@
   <hasArtForm rdf:resource="#af_bengal_weaving"/>
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_embroidery"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -5145,8 +5145,8 @@
 
 <owl:NamedIndividual rdf:about="#p36422">
   <rdf:type rdf:resource="#Product"/>
-  <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_bengal_jamdani_weaving"/>
+  <hasArtForm rdf:resource="#af_handloom"/>
   <hasMaterial rdf:resource="#mat_Silver"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <rdf:type rdf:resource="#TextileProduct"/>
@@ -5159,8 +5159,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_chanderi_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -5208,8 +5208,8 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_chanderi_weaving"/>
   <hasArtForm rdf:resource="#af_handloom"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Silk"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#HandwovenSilkProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
@@ -5222,8 +5222,8 @@
   <hasArtForm rdf:resource="#af_plain_solid"/>
   <hasArtForm rdf:resource="#af_handloom"/>
   <hasArtForm rdf:resource="#af_mangalagiri_weaving"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdf:type rdf:resource="#SkilledLabourProduct"/>
@@ -5234,9 +5234,9 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_pipad_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Green - Pipad Hand Block Print Natural Dyed Kota Doria Cotton Dupatta 22</rdfs:label>
@@ -5246,9 +5246,9 @@
   <rdf:type rdf:resource="#Product"/>
   <hasArtForm rdf:resource="#af_pipad_block_printing"/>
   <hasArtForm rdf:resource="#af_natural_dyed"/>
-  <hasMaterial rdf:resource="#mat_Zari"/>
   <hasMaterial rdf:resource="#mat_Cotton"/>
   <hasMaterial rdf:resource="#mat_Wood"/>
+  <hasMaterial rdf:resource="#mat_Zari"/>
   <rdf:type rdf:resource="#TextileProduct"/>
   <rdf:type rdf:resource="#ZariProduct"/>
   <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Green - Pipad Hand Block Print Natural Dyed Kota Doria Cotton Dupatta 07</rdfs:label>

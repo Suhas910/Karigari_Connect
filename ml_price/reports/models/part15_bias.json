@@ -1,0 +1,623 @@
+{
+ "overall": {
+  "rows": 7452,
+  "median_ratio": 0.953,
+  "mape": 37.5
+ },
+ "band": [
+  {
+   "band": "mid",
+   "rows": 3263,
+   "median_price": 950.0,
+   "median_ratio": 0.877,
+   "mape": 30.8,
+   "underpriced_30": 35.1
+  },
+  {
+   "band": "high (>\u20b91,850)",
+   "rows": 1895,
+   "median_price": 4190.0,
+   "median_ratio": 0.914,
+   "mape": 34.8,
+   "underpriced_30": 27.9
+  },
+  {
+   "band": "low (<\u20b9590)",
+   "rows": 2294,
+   "median_price": 450.0,
+   "median_ratio": 1.178,
+   "mape": 49.2,
+   "underpriced_30": 6.5
+  }
+ ],
+ "price_decile": [
+  {
+   "price_decile": "D7",
+   "rows": 952,
+   "median_price": 1590.0,
+   "median_ratio": 0.568,
+   "mape": 40.9,
+   "underpriced_30": 65.9
+  },
+  {
+   "price_decile": "D5",
+   "rows": 430,
+   "median_price": 850.0,
+   "median_ratio": 0.764,
+   "mape": 35.4,
+   "underpriced_30": 43.7
+  },
+  {
+   "price_decile": "D10",
+   "rows": 670,
+   "median_price": 7890.0,
+   "median_ratio": 0.845,
+   "mape": 26.6,
+   "underpriced_30": 28.2
+  },
+  {
+   "price_decile": "D6",
+   "rows": 719,
+   "median_price": 990.0,
+   "median_ratio": 0.901,
+   "mape": 24.9,
+   "underpriced_30": 28.0
+  },
+  {
+   "price_decile": "D8",
+   "rows": 544,
+   "median_price": 2450.0,
+   "median_ratio": 0.935,
+   "mape": 33.9,
+   "underpriced_30": 35.3
+  },
+  {
+   "price_decile": "D4",
+   "rows": 1055,
+   "median_price": 750.0,
+   "median_ratio": 0.942,
+   "mape": 23.0,
+   "underpriced_30": 7.0
+  },
+  {
+   "price_decile": "D2",
+   "rows": 1039,
+   "median_price": 450.0,
+   "median_ratio": 1.012,
+   "mape": 37.3,
+   "underpriced_30": 12.4
+  },
+  {
+   "price_decile": "D9",
+   "rows": 788,
+   "median_price": 3690.0,
+   "median_ratio": 1.027,
+   "mape": 43.1,
+   "underpriced_30": 25.8
+  },
+  {
+   "price_decile": "D3",
+   "rows": 482,
+   "median_price": 580.0,
+   "median_ratio": 1.302,
+   "mape": 55.0,
+   "underpriced_30": 4.4
+  },
+  {
+   "price_decile": "D1",
+   "rows": 773,
+   "median_price": 250.0,
+   "median_ratio": 1.336,
+   "mape": 61.8,
+   "underpriced_30": 0.0
+  }
+ ],
+ "technique_family": [
+  {
+   "technique_family": "printing",
+   "rows": 1733,
+   "median_price": 850.0,
+   "median_ratio": 0.873,
+   "mape": 30.1,
+   "underpriced_30": 36.9
+  },
+  {
+   "technique_family": "other / none",
+   "rows": 1779,
+   "median_price": 690.0,
+   "median_ratio": 0.956,
+   "mape": 33.3,
+   "underpriced_30": 16.5
+  },
+  {
+   "technique_family": "metal",
+   "rows": 579,
+   "median_price": 690.0,
+   "median_ratio": 0.965,
+   "mape": 35.4,
+   "underpriced_30": 12.4
+  },
+  {
+   "technique_family": "bead work",
+   "rows": 238,
+   "median_price": 650.0,
+   "median_ratio": 1.002,
+   "mape": 27.6,
+   "underpriced_30": 10.1
+  },
+  {
+   "technique_family": "painting",
+   "rows": 614,
+   "median_price": 1190.0,
+   "median_ratio": 1.028,
+   "mape": 59.8,
+   "underpriced_30": 34.9
+  },
+  {
+   "technique_family": "weaving",
+   "rows": 1484,
+   "median_price": 2850.0,
+   "median_ratio": 1.056,
+   "mape": 39.5,
+   "underpriced_30": 21.2
+  },
+  {
+   "technique_family": "embroidery",
+   "rows": 601,
+   "median_price": 1490.0,
+   "median_ratio": 1.074,
+   "mape": 46.2,
+   "underpriced_30": 28.3
+  },
+  {
+   "technique_family": "tie-dye",
+   "rows": 298,
+   "median_price": 1590.0,
+   "median_ratio": 1.093,
+   "mape": 35.8,
+   "underpriced_30": 26.8
+  },
+  {
+   "technique_family": "wood",
+   "rows": 126,
+   "median_price": 490.0,
+   "median_ratio": 1.708,
+   "mape": 57.5,
+   "underpriced_30": 12.7
+  }
+ ],
+ "label_type": [
+  {
+   "label_type": "generic label only",
+   "rows": 1432,
+   "median_price": 490.0,
+   "median_ratio": 0.906,
+   "mape": 30.0,
+   "underpriced_30": 16.1
+  },
+  {
+   "label_type": "specific craft label",
+   "rows": 6020,
+   "median_price": 1050.0,
+   "median_ratio": 0.967,
+   "mape": 39.3,
+   "underpriced_30": 26.5
+  }
+ ],
+ "skilled_rule": [
+  {
+   "skilled_rule": "not rated skilled",
+   "rows": 5353,
+   "median_price": 790.0,
+   "median_ratio": 0.929,
+   "mape": 35.9,
+   "underpriced_30": 25.0
+  },
+  {
+   "skilled_rule": "skilled technique (R5)",
+   "rows": 2099,
+   "median_price": 2190.0,
+   "median_ratio": 1.067,
+   "mape": 41.5,
+   "underpriced_30": 23.1
+  }
+ ],
+ "templated_text": [
+  {
+   "templated_text": "description shared by \u226510 listings",
+   "rows": 2637,
+   "median_price": 850.0,
+   "median_ratio": 0.914,
+   "mape": 35.3,
+   "underpriced_30": 25.9
+  },
+  {
+   "templated_text": "description shared by <10",
+   "rows": 4815,
+   "median_price": 950.0,
+   "median_ratio": 0.978,
+   "mape": 38.7,
+   "underpriced_30": 23.7
+  }
+ ],
+ "primary_artform": [
+  {
+   "primary_artform": "kalamkari screen printing",
+   "rows": 72,
+   "median_price": 1590.0,
+   "median_ratio": 0.461,
+   "mape": 48.9,
+   "underpriced_30": 95.8
+  },
+  {
+   "primary_artform": "kutch embroidery",
+   "rows": 69,
+   "median_price": 1650.0,
+   "median_ratio": 0.527,
+   "mape": 48.0,
+   "underpriced_30": 92.8
+  },
+  {
+   "primary_artform": "kalamkari block printing",
+   "rows": 216,
+   "median_price": 1590.0,
+   "median_ratio": 0.58,
+   "mape": 42.8,
+   "underpriced_30": 91.2
+  },
+  {
+   "primary_artform": "patchwork",
+   "rows": 145,
+   "median_price": 1050.0,
+   "median_ratio": 0.635,
+   "mape": 25.8,
+   "underpriced_30": 52.4
+  },
+  {
+   "primary_artform": "pochampally ikat weaving",
+   "rows": 222,
+   "median_price": 1590.0,
+   "median_ratio": 0.675,
+   "mape": 34.1,
+   "underpriced_30": 53.6
+  },
+  {
+   "primary_artform": "jacquard weaving",
+   "rows": 109,
+   "median_price": 1590.0,
+   "median_ratio": 0.738,
+   "mape": 35.2,
+   "underpriced_30": 45.0
+  },
+  {
+   "primary_artform": "bagh block printing",
+   "rows": 149,
+   "median_price": 1590.0,
+   "median_ratio": 0.797,
+   "mape": 33.7,
+   "underpriced_30": 38.9
+  },
+  {
+   "primary_artform": "mangalagiri weaving",
+   "rows": 75,
+   "median_price": 5890.0,
+   "median_ratio": 0.846,
+   "mape": 17.0,
+   "underpriced_30": 2.7
+  },
+  {
+   "primary_artform": "bagru block printing",
+   "rows": 110,
+   "median_price": 1590.0,
+   "median_ratio": 0.847,
+   "mape": 28.6,
+   "underpriced_30": 44.5
+  },
+  {
+   "primary_artform": "sanganeri block printing",
+   "rows": 321,
+   "median_price": 1100.0,
+   "median_ratio": 0.862,
+   "mape": 25.3,
+   "underpriced_30": 31.5
+  },
+  {
+   "primary_artform": "fabart",
+   "rows": 618,
+   "median_price": 490.0,
+   "median_ratio": 0.87,
+   "mape": 18.6,
+   "underpriced_30": 16.3
+  },
+  {
+   "primary_artform": "metal work",
+   "rows": 112,
+   "median_price": 850.0,
+   "median_ratio": 0.875,
+   "mape": 16.9,
+   "underpriced_30": 7.1
+  },
+  {
+   "primary_artform": "ajrakh block printing",
+   "rows": 712,
+   "median_price": 790.0,
+   "median_ratio": 0.919,
+   "mape": 26.2,
+   "underpriced_30": 10.7
+  },
+  {
+   "primary_artform": "bead work",
+   "rows": 214,
+   "median_price": 650.0,
+   "median_ratio": 0.951,
+   "mape": 23.5,
+   "underpriced_30": 12.6
+  },
+  {
+   "primary_artform": "oxidised metal craft",
+   "rows": 366,
+   "median_price": 490.0,
+   "median_ratio": 0.964,
+   "mape": 21.1,
+   "underpriced_30": 10.7
+  },
+  {
+   "primary_artform": "srikalahasti penwork kalamkari",
+   "rows": 124,
+   "median_price": 4290.0,
+   "median_ratio": 0.964,
+   "mape": 50.0,
+   "underpriced_30": 25.8
+  },
+  {
+   "primary_artform": "handmade",
+   "rows": 340,
+   "median_price": 290.0,
+   "median_ratio": 1.042,
+   "mape": 33.7,
+   "underpriced_30": 8.8
+  },
+  {
+   "primary_artform": "madhubani folk art",
+   "rows": 61,
+   "median_price": 4450.0,
+   "median_ratio": 1.054,
+   "mape": 25.5,
+   "underpriced_30": 27.9
+  },
+  {
+   "primary_artform": "dokra craft",
+   "rows": 63,
+   "median_price": 1090.0,
+   "median_ratio": 1.077,
+   "mape": 78.5,
+   "underpriced_30": 33.3
+  },
+  {
+   "primary_artform": "other",
+   "rows": 111,
+   "median_price": 990.0,
+   "median_ratio": 1.078,
+   "mape": 36.1,
+   "underpriced_30": 19.8
+  },
+  {
+   "primary_artform": "wood carving",
+   "rows": 121,
+   "median_price": 450.0,
+   "median_ratio": 1.118,
+   "mape": 56.2,
+   "underpriced_30": 5.8
+  },
+  {
+   "primary_artform": "batik block printing",
+   "rows": 175,
+   "median_price": 950.0,
+   "median_ratio": 1.119,
+   "mape": 20.3,
+   "underpriced_30": 21.7
+  },
+  {
+   "primary_artform": "plain solid",
+   "rows": 237,
+   "median_price": 520.0,
+   "median_ratio": 1.148,
+   "mape": 39.4,
+   "underpriced_30": 9.7
+  },
+  {
+   "primary_artform": "bandhani tie dye",
+   "rows": 300,
+   "median_price": 2990.0,
+   "median_ratio": 1.268,
+   "mape": 46.6,
+   "underpriced_30": 24.7
+  },
+  {
+   "primary_artform": "dharwad weaving",
+   "rows": 64,
+   "median_price": 2850.0,
+   "median_ratio": 1.302,
+   "mape": 30.5,
+   "underpriced_30": 1.6
+  },
+  {
+   "primary_artform": "hand knitted",
+   "rows": 179,
+   "median_price": 990.0,
+   "median_ratio": 1.32,
+   "mape": 35.2,
+   "underpriced_30": 2.2
+  },
+  {
+   "primary_artform": "crochet work",
+   "rows": 66,
+   "median_price": 190.0,
+   "median_ratio": 1.367,
+   "mape": 71.2,
+   "underpriced_30": 0.0
+  },
+  {
+   "primary_artform": "embroidery",
+   "rows": 62,
+   "median_price": 650.0,
+   "median_ratio": 1.427,
+   "mape": 36.0,
+   "underpriced_30": 6.5
+  },
+  {
+   "primary_artform": "bengal kantha work",
+   "rows": 61,
+   "median_price": 3190.0,
+   "median_ratio": 1.578,
+   "mape": 50.3,
+   "underpriced_30": 3.3
+  },
+  {
+   "primary_artform": "bengal craft",
+   "rows": 63,
+   "median_price": 290.0,
+   "median_ratio": 1.687,
+   "mape": 72.9,
+   "underpriced_30": 20.6
+  }
+ ],
+ "segment": [
+  {
+   "segment": "seg5",
+   "rows": 995,
+   "median_price": 1590.0,
+   "median_ratio": 0.574,
+   "mape": 40.6,
+   "underpriced_30": 74.1
+  },
+  {
+   "segment": "seg7",
+   "rows": 887,
+   "median_price": 750.0,
+   "median_ratio": 0.884,
+   "mape": 44.9,
+   "underpriced_30": 27.2
+  },
+  {
+   "segment": "seg3",
+   "rows": 228,
+   "median_price": 2890.0,
+   "median_ratio": 0.891,
+   "mape": 37.1,
+   "underpriced_30": 22.4
+  },
+  {
+   "segment": "seg13",
+   "rows": 6,
+   "median_price": 240.0,
+   "median_ratio": 0.91,
+   "mape": 48.8,
+   "underpriced_30": 0.0
+  },
+  {
+   "segment": "seg1",
+   "rows": 22,
+   "median_price": 690.0,
+   "median_ratio": 0.927,
+   "mape": 24.8,
+   "underpriced_30": 4.5
+  },
+  {
+   "segment": "seg4",
+   "rows": 511,
+   "median_price": 650.0,
+   "median_ratio": 0.96,
+   "mape": 26.4,
+   "underpriced_30": 20.4
+  },
+  {
+   "segment": "seg12",
+   "rows": 573,
+   "median_price": 950.0,
+   "median_ratio": 0.963,
+   "mape": 37.4,
+   "underpriced_30": 24.8
+  },
+  {
+   "segment": "seg11",
+   "rows": 474,
+   "median_price": 590.0,
+   "median_ratio": 0.978,
+   "mape": 30.7,
+   "underpriced_30": 14.3
+  },
+  {
+   "segment": "seg9",
+   "rows": 517,
+   "median_price": 290.0,
+   "median_ratio": 0.982,
+   "mape": 28.2,
+   "underpriced_30": 12.0
+  },
+  {
+   "segment": "seg14",
+   "rows": 547,
+   "median_price": 4690.0,
+   "median_ratio": 0.988,
+   "mape": 37.2,
+   "underpriced_30": 11.7
+  },
+  {
+   "segment": "seg10",
+   "rows": 9,
+   "median_price": 850.0,
+   "median_ratio": 0.999,
+   "mape": 4.9,
+   "underpriced_30": 0.0
+  },
+  {
+   "segment": "seg0",
+   "rows": 1105,
+   "median_price": 790.0,
+   "median_ratio": 1.01,
+   "mape": 25.8,
+   "underpriced_30": 9.8
+  },
+  {
+   "segment": "seg6",
+   "rows": 424,
+   "median_price": 1190.0,
+   "median_ratio": 1.063,
+   "mape": 65.5,
+   "underpriced_30": 29.7
+  },
+  {
+   "segment": "seg16",
+   "rows": 563,
+   "median_price": 3490.0,
+   "median_ratio": 1.215,
+   "mape": 41.2,
+   "underpriced_30": 15.3
+  },
+  {
+   "segment": "seg15",
+   "rows": 213,
+   "median_price": 2990.0,
+   "median_ratio": 1.278,
+   "mape": 33.2,
+   "underpriced_30": 1.9
+  },
+  {
+   "segment": "seg2",
+   "rows": 331,
+   "median_price": 1390.0,
+   "median_ratio": 1.284,
+   "mape": 46.6,
+   "underpriced_30": 9.1
+  },
+  {
+   "segment": "seg8",
+   "rows": 47,
+   "median_price": 490.0,
+   "median_ratio": 1.708,
+   "mape": 78.4,
+   "underpriced_30": 0.0
+  }
+ ]
+}

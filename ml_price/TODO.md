@@ -68,15 +68,15 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] 5 Market segmentation: K-Means k=17 (silhouette 0.164), Hierarchical, DBSCAN; PCA map ([report](reports/unsupervised/UNSUPERVISED_REPORT.md))
 - [x] 6 Apriori: 1,083 rules; high/low price-band rules; exposed tool-word material errors
 - [x] 7 Underpricing detector: out-of-fold expected price, 6.5% flagged, cross-checked with Isolation Forest
-- [ ] 8 Price regression: baselines, Linear, Ridge, RF done per stage — Polynomial, Tree, Gradient Boosting, kNN regression still to add
+- [x] 8 Regression comparison: 8 models, grouped-CV tuning; Ridge best (R² 0.748) [report](reports/models/PARTS_8_14_16_REPORT.md)
 - [x] 9 Price range: quantile GBM 58% → conformal 83% coverage; Ridge band 77% [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 10 Classifiers: 7 models, grouped-CV tuning; Gradient Boosting F1 0.810, AUC 0.925 [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 11 Similar-items: FAISS index; 10-NN median R² 0.613; similarity flags uncertainty [report](reports/models/PARTS_9_11_REPORT.md)
 - [ ] 12 LLM attribute extraction: prompt + accuracy on a hand-labelled sample
 - [ ] 13 Image features (stretch goal): CNN embeddings
-- [ ] 14 Explainability: SHAP, overall and per prediction
-- [ ] 15 Bias audit and ethics section
-- [ ] 16 Price advisor agent + demo: floor rule + model + similar items + underpricing flag (small code)
+- [x] 14 SHAP: Ridge (exact match with shap library) + tree beeswarm; per-product reasons [report](reports/models/PARTS_8_14_16_REPORT.md)
+- [x] 15 Bias audit: pull to the middle; kalamkari / Kutch / ikat undervalued; ethics section [report](reports/models/PARTS_8_14_16_REPORT.md)
+- [x] 16 Advisor agent + Streamlit demo: rules + Ridge range + FAISS evidence + app wage floor + cautions [report](reports/models/PARTS_8_14_16_REPORT.md)
 
 ## 6 — Experiment stages (scores logged in [EXPERIMENTS.md](EXPERIMENTS.md))
 
