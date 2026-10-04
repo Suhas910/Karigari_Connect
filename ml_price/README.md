@@ -7,6 +7,8 @@ the `ai-ml-price-extension` branch. It does **not** change the app's own pricing
 The work is done in visual tools (OpenRefine, Orange, Protégé). Everything those tools produce,
 plus every report, chart and data snapshot, is stored in this folder and committed.
 
+**Teammates:** start with [TEAM_GUIDE.md](TEAM_GUIDE.md) (what this is, how to run the demo, what it means for the app).
+
 **Read first:** [FINAL_REPORT](reports/final/FINAL_REPORT.md) (the whole project in one document) ·
 [VIVA_CHEATSHEET](reports/final/VIVA_CHEATSHEET.md) · [EXPERIMENTS](EXPERIMENTS.md) (scoreboard).
 Final model: Ridge on text + LLM + knowledge-graph + photo features, **R² 0.806, MAE ₹612** on

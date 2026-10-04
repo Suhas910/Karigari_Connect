@@ -4,8 +4,9 @@ data/raw/**/images/
 .ipynb_checkpoints/
 .DS_Store
 
-# Claude's local Python environment (recreate with: python3 -m venv .venv && .venv/bin/pip install owlready2 rdflib)
+# Local Python environment (recreate: python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt)
 .venv/
+__pycache__/
 
 # Local secrets (API keys) — never committed
 .env
