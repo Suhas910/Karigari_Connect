@@ -80,13 +80,15 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 ## 6 — Experiment stages (scores logged in [EXPERIMENTS.md](EXPERIMENTS.md))
 
-- [ ] Create the frozen test set (grouped by art form) → `data/splits/`
-- [ ] S0 raw, price parsed only
-- [ ] S1 duplicates removed
-- [ ] S2 missing values handled
+- [x] Frozen test set v2 → `data/splits/` (grouped by product family, stratified by primary art form)
+- [x] S0 raw, price parsed only
+- [x] S1 duplicates removed
+- [x] S2 missing values handled
 - [ ] S3 outliers handled (training data only)
-- [ ] S4 art forms consolidated
-- [ ] S5 log(price) target
+- [x] S4 art forms consolidated (scores fell; see EXPERIMENTS)
+- [x] S5 log(price) target
+- [ ] Recompute `desc_repeat` on training data only; confirm the S5b gain
+- [ ] Multi-hot features for all art-form labels (fixes the S4 drop)
 - [ ] S6 TF-IDF text features
 - [ ] S7 knowledge-graph and rule features
 - [ ] S8 cluster ID and material-combination features
@@ -96,7 +98,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [ ] S12 hyperparameter tuning
 - [ ] S13 quantile bands
 - [ ] Ablation: remove one feature group at a time
-- [ ] Progress chart → `figures/experiments_progress.png`
+- [x] Progress chart → `figures/experiments_progress.png` (updated each stage)
 
 ## 7 — Final report
 

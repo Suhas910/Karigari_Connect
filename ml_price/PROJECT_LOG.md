@@ -162,6 +162,21 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   of unseen art forms would make that feature useless at test time.
 - **Report:** [CLEANING_REPORT.md](reports/cleaning/CLEANING_REPORT.md)
 
+## 2026-10-04 — Frozen split + first scored stages (S0–S5b)
+
+- **Tool:** small scripts (explained in their headers), because Orange has no grouped-stratified
+  split or median baseline: `scripts/make_split.py`, `scripts/evaluate_stage.py`,
+  `scripts/plot_progress.py`. scikit-learn 1.9.1, matplotlib.
+- **Leakage found and fixed:** the v1 split (grouped by variant group) left 71% of test rows with a
+  description identical to a training row, which inflated R² to 0.788. The v2 split groups whole
+  product families (shared variant group *or* shared description): 0 shared descriptions. All
+  scores were re-run on v2; v1 scores are discarded.
+- **Results (v2, Random Forest):** S0 R² 0.455 → S4 0.384 (worse: label combinations lost) →
+  S5 0.277 (log target; MAPE improved) → S5b **0.616**, MAE ₹840.
+- **Full table and reasons:** [EXPERIMENTS.md](EXPERIMENTS.md)
+
 ## Pending
 
-- Frozen train/test split, then experiment stage S0
+- Recompute desc_repeat on train only; multi-hot art-form labels; S6 TF-IDF
+- Outlier handling (2.9) on training data
+- Orange cross-check of one stage (Test and Score on the saved train/test files)

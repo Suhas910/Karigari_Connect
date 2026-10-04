@@ -17,6 +17,7 @@ plus every report, chart and data snapshot, is stored in this folder and committ
 | [PROJECT_LOG.md](PROJECT_LOG.md) | Dated history of every action: what, which tool, why, and the outcome | Claude |
 | [EXPERIMENTS.md](EXPERIMENTS.md) | Score table after every stage, plus the progress chart | Claude, from tool exports |
 | [DATASETS.md](DATASETS.md) | Sources, licences, limits | Claude |
+| `scripts/` | The few small scripts used where no tool fits (split, scoring harness, chart) | Claude |
 | `guides/` | Click-by-click instructions for each phase, written before it starts | Claude |
 | `data/raw/` | Downloaded CSVs exactly as downloaded, plus `SHA256SUMS.txt` | You download; Claude adds checksums |
 | `data/stages/` | Snapshot after each cleaning stage: `S01_dedup.csv.gz` … | You export from OpenRefine |
