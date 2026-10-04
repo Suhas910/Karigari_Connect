@@ -6,3 +6,6 @@ data/raw/**/images/
 
 # Claude's local Python environment (recreate with: python3 -m venv .venv && .venv/bin/pip install owlready2 rdflib)
 .venv/
+
+# Local secrets (API keys) — never committed
+.env
