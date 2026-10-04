@@ -10,7 +10,8 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 > new products it scores about 0.6.
 > The final model is Ridge regression on log price, with TF-IDF text, LLM-extracted materials,
 > knowledge-graph rules and CNN photo features: R² 0.806, average error ₹612, up from 0.269 and
-> ₹1,506. The bias audit showed the model undervalues traditional crafts like kalamkari, so in
+> ₹1,506. The bias audit, done per product family, showed the model under-prices a few crafts
+> such as kalamkari block printing and pulls prices toward the middle, so in
 > the price advisor the fair-wage floor always overrides the model.
 
 ## Numbers to remember
@@ -26,7 +27,8 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 | Photos | alone R² 0.375; added +0.016 test R² (CV +0.026) |
 | Best classifier | Gradient Boosting F1 0.810, AUC 0.925 |
 | Price range | raw quantile 58% coverage → conformal 83% (target 80%) |
-| Bias | kalamkari ×0.46–0.58, Kutch ×0.53, Pochampally ×0.68 of real price |
+| Bias (per family, final model) | cheapest families ×1.13, dearest ×0.89; kalamkari block printing ×0.74; overall ×1.017 across 510 families |
+| Bag artefact | 453 test rows = one "Jhola Bag" line at ₹1,590, which first made Pochampally / Kutch look undervalued |
 | EDA | skew 3.50 → 0.49 (log); Kruskal-Wallis ε² 0.45 (rows) / 0.35 (families) |
 
 ## Likely questions
@@ -127,8 +129,14 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
   `shap.LinearExplainer` exactly.
 - **Which features matter most?** Words (2.73 mean |SHAP|) ≫ KG (0.85) > segment > labels.
   "Art silk" lowers price: the model learned imitation silk is cheaper.
-- **What bias did you find?** Pull toward the middle (cheap items over-priced ×1.34, ₹1,590 items
-  ×0.57), and traditional crafts undervalued (kalamkari, Kutch, Pochampally).
+- **What bias did you find?** Two things that hold up per product family. First, a pull toward the
+  middle: the cheapest fifth of families is predicted ×1.13 and the dearest ×0.89 (final model; the
+  part 8 model was ×1.31 / ×0.86). Second, a few crafts under-priced across several families:
+  kalamkari block printing ×0.74, hand painting, blue pottery, Bengal jamdani, Lucknowi chikankari.
+- **Didn't you first report Pochampally and Kutch as undervalued?** Yes, from a per-product audit.
+  All the "worst" crafts had a median test price of exactly ₹1,590, and 453 of those products were
+  one bag line sold in many prints. Per family, Pochampally is ×1.04 and Kutch ×1.10. It's the same
+  lesson as the split: near-copies aren't independent evidence.
 - **So is the model unfair?** It mirrors the market it learned from. That's why it may never set
   a floor: the app's fair-wage floor (official wage × hours + materials) always overrides it, and
   the advisor warns for the affected crafts.
@@ -144,7 +152,8 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 ## If asked "what would you do next?"
 
 1. Put the final S12-img model into the advisor (needs Gemini + SqueezeNet at query time).
-2. Re-run the bias audit on S12-img.
+2. Close the syllabus gaps cheaply: sentence-transformer embeddings (word embeddings /
+   transformers), a full RAG step (Gemini explains using the retrieved listings), a small Bayesian network.
 3. Real sale prices and labour hours from Karigari Connect artisans, which no public dataset has.
 4. A stronger image-text model (e.g. CLIP) run locally.
 5. The Amazon Handmade dataset, to test whether the pipeline transfers.
@@ -153,6 +162,9 @@ Short answers to likely questions. Every number matches [FINAL_REPORT](FINAL_REP
 
 - One retailer's asking prices, not sales.
 - The gold set and technique map were labelled by rules, not by a craft expert.
-- The advisor and bias audit use the part 8 model (0.748), not the final 0.806.
+- The advisor uses the part 8 model (0.748), not the final 0.806 (the bias audit was run on both).
+- Not covered from the syllabus: search, Wumpus world, backward chaining, resolution, Bayesian
+  networks, reinforcement learning; transformers, word embeddings and RAG only partly (see
+  FINAL_REPORT §12). Say why: no search space, no rewards, no sequential decisions in pricing.
 - A typical error is still a third of the price: a suggested range with evidence, not an
   automatic price.

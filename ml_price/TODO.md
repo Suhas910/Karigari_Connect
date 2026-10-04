@@ -101,9 +101,15 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] Ablation: remove one feature group at a time (text −0.34 CV R²; every other group < 0.01, kept all)
 - [x] Progress chart → `figures/experiments_progress.png` (updated each stage)
 
+## 6b — Bias audit revision
+
+- [x] Bias audit re-run on the final model (S12-img) and audited per product family: one bag line (453 test rows at ₹1,590) had driven the Pochampally / Kutch findings; kalamkari block printing and the pull toward the middle hold up ([revision](reports/models/PARTS_8_14_16_REPORT.md))
+- [x] Advisor caution now needs ≥ 5 families of evidence (retrained)
+- [ ] Optional: retake the advisor screenshot (current one shows the old Pochampally caution)
+
 ## 7 — Final report
 
 - [x] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations ([FINAL_REPORT](reports/final/FINAL_REPORT.md))
-- [x] Syllabus coverage table (Units I–V) (FINAL_REPORT §12)
+- [x] Syllabus coverage table (Units I–V), checked against the official syllabus text (FINAL_REPORT §12)
 - [x] Demo walkthrough (FINAL_REPORT §15) + [VIVA_CHEATSHEET](reports/final/VIVA_CHEATSHEET.md)
 - [ ] Convert to Word — only if asked at the very end

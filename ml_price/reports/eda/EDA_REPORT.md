@@ -1,6 +1,6 @@
 # Part 2 — Statistics and Exploratory Data Analysis
 
-**Syllabus:** Unit III, as mapped in PLAN.md (descriptive statistics, distributions, hypothesis testing, correlation).
+**Syllabus:** supporting analysis. Statistics isn't a named topic in the official syllabus; it underpins Units II–III (probability, model evaluation). See FINAL_REPORT §12.
 
 | | |
 |---|---|

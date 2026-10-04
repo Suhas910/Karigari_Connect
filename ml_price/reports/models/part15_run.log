@@ -1,0 +1,92 @@
+{"rows": 7452, "median_ratio": 0.953, "mape": 37.5}
+
+== band
+                rows  median_price  median_ratio  mape  underpriced_30
+band                                                                  
+mid             3263         950.0         0.877  30.8            35.1
+high (>₹1,850)  1895        4190.0         0.914  34.8            27.9
+low (<₹590)     2294         450.0         1.178  49.2             6.5
+
+== price_decile
+              rows  median_price  median_ratio  mape  underpriced_30
+price_decile                                                        
+D7             952        1590.0         0.568  40.9            65.9
+D5             430         850.0         0.764  35.4            43.7
+D10            670        7890.0         0.845  26.6            28.2
+D6             719         990.0         0.901  24.9            28.0
+D8             544        2450.0         0.935  33.9            35.3
+D4            1055         750.0         0.942  23.0             7.0
+D2            1039         450.0         1.012  37.3            12.4
+D9             788        3690.0         1.027  43.1            25.8
+D3             482         580.0         1.302  55.0             4.4
+D1             773         250.0         1.336  61.8             0.0
+
+== technique_family
+                  rows  median_price  median_ratio  mape  underpriced_30
+technique_family                                                        
+printing          1733         850.0         0.873  30.1            36.9
+other / none      1779         690.0         0.956  33.3            16.5
+metal              579         690.0         0.965  35.4            12.4
+bead work          238         650.0         1.002  27.6            10.1
+painting           614        1190.0         1.028  59.8            34.9
+weaving           1484        2850.0         1.056  39.5            21.2
+embroidery         601        1490.0         1.074  46.2            28.3
+tie-dye            298        1590.0         1.093  35.8            26.8
+wood               126         490.0         1.708  57.5            12.7
+
+== label_type
+                      rows  median_price  median_ratio  mape  underpriced_30
+label_type                                                                  
+generic label only    1432         490.0         0.906  30.0            16.1
+specific craft label  6020        1050.0         0.967  39.3            26.5
+
+== skilled_rule
+                        rows  median_price  median_ratio  mape  underpriced_30
+skilled_rule                                                                  
+not rated skilled       5353         790.0         0.929  35.9            25.0
+skilled technique (R5)  2099        2190.0         1.067  41.5            23.1
+
+== templated_text
+                                    rows  median_price  median_ratio  mape  underpriced_30
+templated_text                                                                            
+description shared by ≥10 listings  2637         850.0         0.914  35.3            25.9
+description shared by <10           4815         950.0         0.978  38.7            23.7
+
+== primary_artform (>=60)
+                           rows  median_price  median_ratio  mape  underpriced_30
+primary_artform                                                                  
+kalamkari screen printing    72        1590.0         0.461  48.9            95.8
+kutch embroidery             69        1650.0         0.527  48.0            92.8
+kalamkari block printing    216        1590.0         0.580  42.8            91.2
+patchwork                   145        1050.0         0.635  25.8            52.4
+pochampally ikat weaving    222        1590.0         0.675  34.1            53.6
+jacquard weaving            109        1590.0         0.738  35.2            45.0
+bagh block printing         149        1590.0         0.797  33.7            38.9
+mangalagiri weaving          75        5890.0         0.846  17.0             2.7
+                    rows  median_price  median_ratio  mape  underpriced_30
+primary_artform                                                           
+hand knitted         179         990.0         1.320  35.2             2.2
+crochet work          66         190.0         1.367  71.2             0.0
+embroidery            62         650.0         1.427  36.0             6.5
+bengal kantha work    61        3190.0         1.578  50.3             3.3
+bengal craft          63         290.0         1.687  72.9            20.6
+
+== family level (one row per family; art forms with >= 5 test families)
+{'families': 510, 'median_ratio': 1.005} {'family': 1431, 'rows': 629, 'share_of_test': 0.084}
+                          families  test_rows  median_ratio
+primary_artform                                            
+hand painted                     6         56         0.611
+kalamkari block printing         8        256         0.620
+blue art pottery                 5         25         0.636
+screen printing                  5         14         0.760
+banaras weaving                  6         27         0.767
+bengal jamdani weaving           6         54         0.788
+lucknowi chikankari              8         54         0.802
+bengal kantha work               6        100         0.817
+                    families  test_rows  median_ratio
+primary_artform                                      
+bandhani tie dye          14        734         1.232
+wood carving              17        135         1.273
+kashida embroidery         5         41         1.280
+madhubani folk art         6         61         1.308
+jacquard weaving           5         61         1.317

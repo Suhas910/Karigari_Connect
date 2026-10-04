@@ -370,6 +370,24 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   so the project owner should check the unit mapping against the official syllabus.
 - EDA unit label aligned to PLAN.md (Unit III).
 
+## 2026-10-04 — Bias audit revised; syllabus table checked against the real syllabus
+
+- Bias audit re-run on S12-img (`part15_bias.py final`; test R² reproduced 0.8062).
+- **Found:** every "most under-priced" art form had a median test price of exactly ₹1,590. 453 of
+  524 test products at ₹1,590 are one family, "Handcrafted Fabric Jhola Bag", in hundreds of prints
+  labelled kalamkari, Pochampally, bandhani and others.
+- **Fix:** family-level audit (one row per family, ≥ 5 families per art form), on both models.
+  Pochampally ×1.04 and Kutch ×1.10 per family (no craft-wide bias); kalamkari screen printing has
+  only 2 families. Kalamkari block printing ×0.74 holds. Pull toward the middle holds and shrinks
+  in the final model (cheapest fifth ×1.31 → ×1.13). Overall ×1.017 across 510 families.
+- Advisor retrained to use the family-level table; checked on a Pochampally saree (no caution) and
+  a kalamkari block-print dupatta (caution, 8 families). The demo screenshot predates this.
+- **Syllabus:** the project owner pasted the full official syllabus. FINAL_REPORT §12 rebuilt
+  topic by topic (✅ / ◐ / ❌). Newly marked as not covered: backward chaining, resolution,
+  Bayesian networks, reinforcement learning. Partial: transformers, word embeddings, RAG
+  (retrieval only), FOL. Statistics/EDA is supporting work, not a named topic. Added the
+  well-posed learning problem (T, P, E) to §1.
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet

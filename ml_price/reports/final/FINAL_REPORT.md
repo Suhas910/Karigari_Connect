@@ -40,9 +40,13 @@ training**:
 3. **Better inputs beat cleverer models.** An LLM reading descriptions (prompt-engineered, F1 0.98
    vs 0.76 for keywords) and a pretrained CNN reading photos each improved the model more than
    any change of algorithm.
-4. **The model learns what the market charges, not what the work is worth.** Kalamkari, Kutch
-   embroidery and Pochampally ikat are predicted at 46–68% of their real price. So the advisor
-   treats the model as evidence and lets the Karigari Connect fair-wage floor override it.
+4. **The model learns what the market charges, not what the work is worth.** It pulls prices
+   toward the middle, and a few crafts (hand painting, blue pottery, kalamkari block printing,
+   Bengal jamdani, Lucknowi chikankari) are under-priced across several product families. So the
+   advisor treats the model as evidence and lets the Karigari Connect fair-wage floor override it.
+5. **Count product families, not rows.** One bag sold in 453 prints first made Pochampally ikat and
+   Kutch embroidery look undervalued. Auditing per family removed that artefact, just as grouping
+   by family fixed the test split.
 
 ---
 
@@ -55,6 +59,12 @@ training**:
 | Columns | `product_title`, `product_description`, `price`, `image_paths`, `artform` (1–6 labels) |
 | Integrity | SHA-256 checksums for all raw files and photos (`data/raw/*SHA256SUMS.txt`) |
 | Limits | Asking prices, not sale prices · one retailer · currency inferred as INR · **no labour hours or material costs** |
+
+**As a well-posed learning problem** (Mitchell): **Task** T = predict a listing's price (and its
+price band) from text, labels and photo; **Performance** P = R², MAE, MAPE and band F1 on unseen
+product families; **Experience** E = 29,805 priced training listings. It is supervised learning
+(regression + classification), with unsupervised parts (segmentation, rules, anomalies) and a
+knowledge-based layer around it.
 
 Details: [data card](../00_data_card.md), [raw audit](../cleaning/step_00_raw_audit.md).
 
@@ -256,12 +266,21 @@ around the keyword traps that Apriori found.
   nosepin, fabric, **art silk** (imitation silk).
 - A per-product explanation is given as % effects on the price.
 
-**Bias audit (Part 15)**, on the part 8 Ridge:
+**Bias audit (Part 15)**, on the part 8 Ridge and on the final S12-img model. Ratio = predicted ÷
+actual price, 1.0 = fair.
 
-- **Pull toward the middle:** the cheapest decile is predicted ×1.34; the ₹1,590 decile ×0.57.
-- **Specific traditional crafts are undervalued:** kalamkari screen printing ×0.46, Kutch
-  embroidery ×0.53, kalamkari block printing ×0.58, Pochampally ikat ×0.68. Over 90% of kalamkari
-  and Kutch items are under-priced by more than 30%.
+- **First version (per product):** kalamkari screen printing ×0.46, Kutch embroidery ×0.53,
+  Pochampally ikat ×0.68 looked systematically undervalued.
+- **Revision (per product family):** every one of those art forms had a median test price of
+  exactly ₹1,590. 453 of the 524 test products at ₹1,590 are **one product line**, "Handcrafted
+  Fabric Jhola Bag", in hundreds of prints labelled with different crafts. Counted once per family:
+  - Pochampally ikat ×1.04 (25 families) and Kutch embroidery ×1.10: **no craft-wide bias**
+  - kalamkari screen printing: only 2 families, one of them the bag; no conclusion possible
+  - **kalamkari block printing ×0.74** (final model) holds up, with hand painting ×0.73, blue
+    pottery ×0.74, Bengal jamdani ×0.80 and Lucknowi chikankari ×0.83
+- **Pull toward the middle, confirmed per family:** cheapest fifth of families ×1.31 (part 8) →
+  **×1.13 (final)**; dearest fifth ×0.86 → ×0.89. Across all 510 test families the final model's
+  median ratio is 1.017, so the bias is at the price extremes and in a few crafts, not general.
 - **Ethical position:** a model trained on market prices repeats the market's undervaluation, so
   it **may never set the floor.** The advisor applies the app's fair-wage floor and warns when an
   art form is one the audit found under-priced.
@@ -291,36 +310,62 @@ around the keyword traps that Apriori found.
 - Market range ₹13,840 – ₹40,430; floor ₹6,558 (40 h × ₹88.94/h skilled, Telangana + ₹3,000
   materials).
 - Verdict: **below the fair-wage floor**.
-- Cautions: few similar products; Pochampally ikat is under-priced by the model.
+- Cautions: few similar products. (The screenshot below also shows "Pochampally ikat is
+  under-priced". That caution came from the per-product audit and was removed by the
+  family-level revision: the advisor now warns only for crafts with at least 5 families of
+  evidence, e.g. kalamkari block printing.)
 
 ![advisor](../../figures/P16_advisor_demo.jpg)
 
 ## 12. Syllabus coverage
 
-| Unit | Topic | Where | Evidence |
+Checked against the official syllabus text. ✅ covered with evidence · ◐ touched, not developed ·
+❌ not covered (reason given).
+
+| Unit | Syllabus topic | | Where / evidence |
 |---|---|---|---|
-| I | Intelligent agents, rationality, environments, agent structure | Part 16 | PEAS table; knowledge-based + learned agent; Streamlit demo |
-| I | Problem solving by search | — | **Out of scope:** pricing has no search space or goal state to explore. Stated, not forced |
-| II | Knowledge representation: ontology, RDF triples, class hierarchy | Part 3 | `craft_kg.owl`, 3,964 triples |
-| II | Rule-based inference, forward chaining | Part 4 | 5 SWRL rules + HermiT; chained inference (axiom → R5) |
-| II | Question answering over knowledge | Part 4 | 4 SPARQL queries with `subClassOf*` paths |
-| II / III | Bayes' theorem, Naive Bayes | Part 10 | Multinomial NB (F1 0.703) and why its independence assumption over-predicts "high" |
-| III | Descriptive statistics, distributions, hypothesis tests, correlation | Part 2 | Skewness, Q-Q, Levene, ANOVA, Kruskal-Wallis, Mann-Whitney, χ², Pearson / Spearman |
-| III | Regression: linear, polynomial, regularised, trees, ensembles, KNN | Parts 8, 8b | 8 regressors; Ridge vs Linear collapse; ensembles vs a single tree |
-| III | Classification and metrics: accuracy, precision, recall, F1, ROC-AUC, confusion matrix | Part 10 | 7 classifiers |
-| III | Cross-validation, hyperparameter tuning, overfitting, leakage | Parts 8, 8b, split v1–v3 | GroupKFold; grid edge check; three split versions |
-| III | Uncertainty / prediction intervals | Part 9 | Quantile GBM, conformal calibration |
-| IV | Distance measures | Part 5 | Euclidean vs cosine vs Manhattan agreement |
-| IV | K-Means, Hierarchical, DBSCAN, silhouette | Part 5 | 3 algorithms compared |
-| IV | PCA / dimensionality reduction | Parts 5, 13 | PCA map; SVD for text; PCA on CNN embeddings |
-| IV | Association rules (Apriori) | Part 6 | 1,083 rules; support, confidence, lift |
-| IV | Anomaly detection | Steps 2.9, Part 7 | IQR, z-score, Isolation Forest; residual-based detector |
-| V | CNNs, transfer learning | Part 13 | SqueezeNet embeddings → +0.016 test R² |
-| V | Embeddings, vector databases, retrieval (RAG retrieval step) | Parts 11, 16 | FAISS index; evidence shown in the advisor |
-| V | LLMs and prompt engineering | Part 12 | Zero-shot vs engineered few-shot prompt, F1 0.888 → 0.979 |
-| V | Explainable AI | Part 14 | SHAP (linear exact + tree) |
-| V | Ethics, bias, responsible AI | Part 15 | Group audit; floor-overrides-model policy |
-| — | Not covered | — | Wumpus world, resolution proofs, reinforcement learning: no environment or reward to apply them to |
+| **I** | What is AI; intelligent agents, environments, rationality, agent structure | ✅ | Part 16: PEAS table; knowledge-based + learned agent |
+| I | Problem solving by search (uninformed, informed, heuristics) | ❌ | Pricing has no state space or goal to search. Hyperparameter grid search is exhaustive search over settings, but isn't claimed as this topic |
+| I | Logical agents, knowledge-based agents | ✅ | The advisor's knowledge layer (KG rules, wage-floor tables) decides cautions and the floor |
+| I | Wumpus world; propositional logic reasoning patterns | ❌ | Not applicable to the task |
+| I | First-order logic, knowledge engineering in FOL | ◐ | SWRL rules are first-order Horn clauses over variables (`?p ?a ?t`); building the ontology is knowledge engineering (Parts 3–4) |
+| **II** | Knowledge graphs, ontologies, RDF triples, entities and relationships | ✅ | Part 3: 68 classes, 201 art forms, 3,964 triples (`craft_kg.owl`) |
+| II | Ontology reasoning, rule-based inference, semantic relationships | ✅ | Part 4: HermiT + 5 SWRL rules; class axiom inheritance; 0 disagreements with pandas |
+| II | Applications in question answering and intelligent agents | ✅ | 4 SPARQL questions; KG rules inside the advisor agent |
+| II | Inference in FOL: unification and lifting, **forward chaining** | ✅ / ◐ | Forward chaining: axiom → inherited skill → R5 fires. Unification happens inside the reasoner when rule variables bind to individuals (not implemented by hand) |
+| II | Backward chaining, resolution | ❌ | Not used: the reasoner materialises all facts forward |
+| II | Uncertainty, conditional probability, Bayes' theorem, **Naive Bayes** | ✅ | Part 10: Multinomial NB (F1 0.703) and why its independence assumption over-counts correlated words; Part 9 prediction intervals as quantified uncertainty |
+| II | Bayesian networks | ❌ | Not built |
+| II | Intro to ML: terminology, key tasks, **well-posed learning problems**, types of ML | ✅ | §1 (T, P, E); supervised (Parts 8–10), unsupervised (5–7), knowledge-based (3–4) |
+| **III** | Classification: Logistic Regression, SVM, Naive Bayes, KNN | ✅ | Part 10: all four, plus trees and ensembles |
+| III | Regression: Linear, Polynomial | ✅ | Part 8: Linear 0.347 vs Polynomial 0.577 on the same inputs; Ridge (regularised) 0.748 |
+| III | Decision Trees, Random Forest, Gradient Boosting | ✅ | Parts 8 and 10: tree 0.413 → RF 0.608 → GB 0.675 (regression) |
+| III | Cross-validation, hyperparameter tuning | ✅ | GroupKFold everywhere; Parts 8, 8b (grid-edge check), 10, 13 |
+| III | Accuracy, precision, recall, F1, ROC-AUC, confusion matrix, R² | ✅ | Part 10 table and confusion matrices; R² / MAE / MAPE in every stage |
+| **IV** | Unsupervised learning: need, characteristics, vs supervised | ✅ | Part 5 groups products from text alone, with no target; Part 6 mines rules with no chosen target (price band is just one more item in the basket); contrast with Parts 8–10 |
+| IV | Euclidean, Manhattan, cosine; intra- and inter-cluster distance | ✅ | Part 5: metric agreement table; intra 0.690 vs inter-centroid 0.885 |
+| IV | K-Means, Hierarchical, DBSCAN | ✅ | Part 5: all three compared (silhouette, noise share) |
+| IV | Principal Component Analysis | ✅ | Part 5 map; Part 13 PCA on CNN embeddings (fitted on train) |
+| IV | Apriori; support, confidence, lift | ✅ | Part 6: 1,083 rules |
+| IV | Anomaly detection: concepts, need, approaches | ✅ | Step 2.9 (IQR, z-score, Isolation Forest) and Part 7 (model-residual detector) |
+| **V** | Neural networks, **CNNs for computer vision** | ✅ | Part 13: SqueezeNet embeddings of 37,282 photos (transfer learning), +0.016 test R² |
+| V | Transformers; attention; transformer architecture | ◐ | Gemini (a transformer LLM) is used in Part 12; its internals aren't built or analysed |
+| V | Word embeddings | ◐ | TF-IDF + truncated SVD (LSA) gives dense text vectors (Parts 5, 11). These are count-based, not learned word embeddings such as word2vec |
+| V | Large language models, **prompt engineering** | ✅ | Part 12: zero-shot vs engineered few-shot, F1 0.888 → 0.979 on a gold set |
+| V | Retrieval-augmented generation | ◐ | The retrieval half: FAISS returns similar listings as evidence (Parts 11, 16). No LLM generates an answer from them |
+| V | **Vector databases (FAISS / Chroma)** | ✅ | Part 11: FAISS `IndexFlatIP` over 29,805 listings |
+| V | Reinforcement learning (MDP, Q-learning, exploration) | ❌ | No sequential decisions or rewards in a one-shot pricing task |
+| V | Explainable AI | ✅ | Part 14: SHAP (exact linear check + tree explainer) |
+| V | Ethics, bias, responsible AI | ✅ | Part 15: family-level bias audit; fair-wage floor overrides the model |
+| — | Supporting work (not a named syllabus topic) | — | Part 2 statistics (Kruskal-Wallis, χ², correlation); leakage-aware splitting |
+
+**Gaps that could still be closed cheaply**, if needed:
+
+- **Word embeddings / transformers:** a sentence-transformer model for text features (one more
+  stage, like Part 13).
+- **Full RAG:** let Gemini write a short explanation from the retrieved similar listings.
+- **Bayesian network:** a small hand-built network (e.g. technique → material → price band) with
+  probabilities from the training data.
 
 ## 13. Problems found and corrected
 
@@ -335,6 +380,7 @@ Recorded because each one changed a conclusion:
 | Linear Regression collapse | R² −7.5 × 10⁸ after scaling | Explained (duplicate KG columns, no penalty); Ridge used |
 | Raw quantile ranges overconfident | 58% coverage instead of 80% | Conformal calibration |
 | Progress chart unreadable since S9 | Linear's collapse flattened every line; Ridge missing | Chart redrawn with Ridge, RF, baseline and F1 |
+| Bias audit dominated by one product line | All "undervalued" crafts had a median test price of exactly ₹1,590 | Audit per product family; advisor caution needs ≥ 5 families |
 | Tuning optimum at the grid edge (twice) | Best value = largest value tried | Grid widened (TF-IDF 50k, PCA 256); optimum confirmed inside |
 
 ## 14. Limitations
@@ -345,8 +391,10 @@ Recorded because each one changed a conclusion:
   user supplies them.
 - **Labels and gold set by Claude, not a domain expert.** The 80-product LLM gold set and the
   technique map were labelled against written rules.
-- **The bias audit and the advisor use the part 8 Ridge (R² 0.748), not S12-img.** Using
-  S12-img live would need a Gemini call and a SqueezeNet run per query.
+- **The advisor uses the part 8 Ridge (R² 0.748), not S12-img.** Using S12-img live would need a
+  Gemini call and a SqueezeNet run per query. The bias audit was run on both models.
+- **Few families per craft.** Family-level bias results rest on 5–25 families per art form, so
+  they are indications, not proofs.
 - **A typical error is still about one third of the price** (MAPE 34%). Good enough for a
   suggested range with evidence, not for an automatic price.
 

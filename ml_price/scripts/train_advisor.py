@@ -56,8 +56,10 @@ seg_X = normalize(seg_svd.fit_transform(seg_tf.fit_transform(tr.text)))
 km = KMeans(17, n_init=10, random_state=42).fit(seg_X)
 assert (("seg" + pd.Series(km.labels_).astype(str)).values == tr.segment.values).mean() > 0.99
 
-bias = json.load(open("reports/models/part15_bias.json"))["primary_artform"]
-bias = {r["primary_artform"]: r["median_ratio"] for r in bias}
+# Family-level audit (one row per product family, >= 5 test families per art form): a product line listed
+# in hundreds of colours would otherwise decide an art form's result on its own (part 15 revision).
+bias = json.load(open("reports/models/part15_bias.json"))["primary_artform_family_level"]
+bias = {r["primary_artform"]: (r["median_ratio"], r["families"]) for r in bias}
 
 joblib.dump(dict(model=model, band=band.tolist(), cols=COLS, kgc=kgc, retr_tf=tf, retr_svd=svd,
                  seg=(seg_tf, seg_svd, km), low_sim=low_sim, bias=bias,

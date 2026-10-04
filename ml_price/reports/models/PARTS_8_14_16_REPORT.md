@@ -145,7 +145,7 @@ test R² 0.520, explained with `shap.TreeExplainer`:
 1. **Pull toward the middle.** The cheapest items are over-priced (D1 ×1.34). Items in the
    ₹850–1,600 range are under-priced (D7 ×0.57; two thirds predicted at under 70% of their real
    price). A regression model trained on a skewed market drifts toward typical prices.
-2. **Specific traditional crafts are undervalued.** Kalamkari, Kutch embroidery and Pochampally
+2. *(Superseded by the revision below: mostly one product family.)* **Specific traditional crafts are undervalued.** Kalamkari, Kutch embroidery and Pochampally
    ikat are predicted at 46–68% of their real price, and over 90% of kalamkari and Kutch items
    are under-priced by more than 30%. These are the products a fair-pricing tool exists to
    protect.
@@ -166,6 +166,63 @@ test R² 0.520, explained with `shap.TreeExplainer`:
 - **Data limits that can cause bias:** asking prices from one retailer; generic labels on 6,434
   rows; no costs or labour hours; no region. None of these can be fixed by modelling. They need
   better data.
+
+### Revision (2026-10-04): audit by product family, and on the final model
+
+**Why.** Re-running the audit on the final model (S12-img) showed that every "most under-priced"
+art form had a median test price of exactly ₹1,590. **453 of the 524 test products at ₹1,590 are
+one product line, "Handcrafted Fabric Jhola Bag"**, sold in hundreds of prints labelled kalamkari,
+Pochampally, bandhani and others. The model prices that bag at about ₹800. Counting it hundreds of
+times made several crafts look systematically undervalued. This is the same problem as split
+leakage and the EDA tests: rows from one family are not independent evidence.
+
+**Fix.** A family-level table was added to `scripts/part15_bias.py`: one row per product family
+(its median ratio), art forms with at least 5 test families. Run on both models: `part15_bias.json`
+(part 8 Ridge) and `part15_bias_final.json` (S12-img). Per-product ratios are in `part15_rows*.csv`.
+
+**The named crafts, rechecked**
+
+| Art form | Test rows | Families | Ratio by product (part 8 → final) | Ratio by family (part 8 → final) | Verdict |
+|---|---|---|---|---|---|
+| kalamkari screen printing | 72 | 2 | 0.46 → 0.46 | 0.54 → 0.63 | 65 of 72 rows are the bag; says nothing about the craft |
+| Kutch embroidery | 69 | 5 | 0.53 → 0.48 | 1.21 → 1.10 | One large family is under-priced; the craft as a whole isn't |
+| Pochampally ikat | 222 | 25 | 0.67 → 0.69 | 1.10 → 1.04 | **No craft-wide bias** |
+| **kalamkari block printing** | 216 | 8–11 | 0.58 → 0.65 | **0.61 → 0.74** | **Holds up across families** |
+
+**Art forms under-priced at family level** (≥ 5 families, ratio < 0.85)
+
+- Part 8 Ridge: hand painted 0.61, kalamkari block printing 0.62, blue art pottery 0.64, screen
+  printing 0.76, Banaras weaving 0.77, Bengal jamdani 0.79, Lucknowi chikankari 0.80, Bengal kantha
+  0.82, Srikalahasti kalamkari 0.84.
+- Final S12-img: hand painted 0.73, blue art pottery 0.74, **kalamkari block printing 0.75**, Bengal
+  jamdani 0.80, Lucknowi chikankari 0.83.
+
+**Pull toward the middle: confirmed at family level, and smaller in the final model**
+
+| Families by price (fifths) | Cheapest | 2 | 3 | 4 | Dearest |
+|---|---|---|---|---|---|
+| Part 8 Ridge | 1.31 | 1.01 | 0.94 | 0.95 | 0.86 |
+| **Final S12-img** | **1.13** | 1.03 | 1.00 | 0.95 | **0.89** |
+
+Overall, across 510 test families, the final model's median ratio is **1.017** (no general bias).
+The deep dip at ₹1,590 (decile D7, ×0.58) is about half the bag family. Without it, D7 is ×0.86.
+
+**Corrected findings**
+
+1. **Pull toward the middle is real**: cheap families over-priced, expensive ones under-priced. The
+   final model reduces it (cheapest ×1.31 → ×1.13).
+2. **Undervaluation is concentrated, not general.** A handful of crafts are under-priced across
+   several families: hand painting, blue pottery, **kalamkari block printing**, Bengal jamdani,
+   Lucknowi chikankari. The earlier claims about Pochampally ikat and Kutch embroidery as crafts
+   don't hold. They came from one or two large product families.
+3. **Lesson:** a bias audit has the same independence problem as a test split. Audit per family,
+   or one popular product line decides the result.
+
+**Effect on the advisor (Part 16).** `train_advisor.py` now reads the family-level table, so the
+"under-priced craft" caution needs at least 5 families of evidence. Checked: a Pochampally saree no
+longer gets the caution, and a kalamkari block-print dupatta does ("62% of the real price across 8
+product families"). The demo screenshot below predates this change and still shows the old
+Pochampally caution.
 
 ---
 

@@ -619,5 +619,226 @@
    "mape": 78.4,
    "underpriced_30": 0.0
   }
+ ],
+ "largest_test_family": {
+  "family": 1431,
+  "rows": 629,
+  "share_of_test": 0.084
+ },
+ "families_overall": {
+  "families": 510,
+  "median_ratio": 1.005
+ },
+ "primary_artform_family_level": [
+  {
+   "primary_artform": "hand painted",
+   "families": 6,
+   "test_rows": 56,
+   "median_ratio": 0.611
+  },
+  {
+   "primary_artform": "kalamkari block printing",
+   "families": 8,
+   "test_rows": 256,
+   "median_ratio": 0.62
+  },
+  {
+   "primary_artform": "blue art pottery",
+   "families": 5,
+   "test_rows": 25,
+   "median_ratio": 0.636
+  },
+  {
+   "primary_artform": "screen printing",
+   "families": 5,
+   "test_rows": 14,
+   "median_ratio": 0.76
+  },
+  {
+   "primary_artform": "banaras weaving",
+   "families": 6,
+   "test_rows": 27,
+   "median_ratio": 0.767
+  },
+  {
+   "primary_artform": "bengal jamdani weaving",
+   "families": 6,
+   "test_rows": 54,
+   "median_ratio": 0.788
+  },
+  {
+   "primary_artform": "lucknowi chikankari",
+   "families": 8,
+   "test_rows": 54,
+   "median_ratio": 0.802
+  },
+  {
+   "primary_artform": "bengal kantha work",
+   "families": 6,
+   "test_rows": 100,
+   "median_ratio": 0.817
+  },
+  {
+   "primary_artform": "srikalahasti penwork kalamkari",
+   "families": 8,
+   "test_rows": 124,
+   "median_ratio": 0.838
+  },
+  {
+   "primary_artform": "jaipur printing",
+   "families": 5,
+   "test_rows": 8,
+   "median_ratio": 0.857
+  },
+  {
+   "primary_artform": "kutch leather craft",
+   "families": 5,
+   "test_rows": 14,
+   "median_ratio": 0.86
+  },
+  {
+   "primary_artform": "fabart",
+   "families": 23,
+   "test_rows": 598,
+   "median_ratio": 0.889
+  },
+  {
+   "primary_artform": "sambalpuri ikat weaving",
+   "families": 8,
+   "test_rows": 41,
+   "median_ratio": 0.925
+  },
+  {
+   "primary_artform": "embroidery",
+   "families": 6,
+   "test_rows": 29,
+   "median_ratio": 0.957
+  },
+  {
+   "primary_artform": "bagru block printing",
+   "families": 8,
+   "test_rows": 58,
+   "median_ratio": 0.963
+  },
+  {
+   "primary_artform": "chanderi weaving",
+   "families": 9,
+   "test_rows": 54,
+   "median_ratio": 0.964
+  },
+  {
+   "primary_artform": "handmade",
+   "families": 28,
+   "test_rows": 377,
+   "median_ratio": 0.966
+  },
+  {
+   "primary_artform": "oxidised metal craft",
+   "families": 24,
+   "test_rows": 269,
+   "median_ratio": 0.973
+  },
+  {
+   "primary_artform": "sanganeri block printing",
+   "families": 20,
+   "test_rows": 242,
+   "median_ratio": 0.987
+  },
+  {
+   "primary_artform": "bead work",
+   "families": 16,
+   "test_rows": 439,
+   "median_ratio": 1.0
+  },
+  {
+   "primary_artform": "patchwork",
+   "families": 6,
+   "test_rows": 148,
+   "median_ratio": 1.0
+  },
+  {
+   "primary_artform": "shibori tie dye",
+   "families": 10,
+   "test_rows": 44,
+   "median_ratio": 1.006
+  },
+  {
+   "primary_artform": "batik block printing",
+   "families": 11,
+   "test_rows": 185,
+   "median_ratio": 1.029
+  },
+  {
+   "primary_artform": "lehariya tie dye",
+   "families": 5,
+   "test_rows": 35,
+   "median_ratio": 1.061
+  },
+  {
+   "primary_artform": "pochampally ikat weaving",
+   "families": 17,
+   "test_rows": 134,
+   "median_ratio": 1.104
+  },
+  {
+   "primary_artform": "mangalagiri weaving",
+   "families": 8,
+   "test_rows": 75,
+   "median_ratio": 1.112
+  },
+  {
+   "primary_artform": "plain solid",
+   "families": 22,
+   "test_rows": 199,
+   "median_ratio": 1.144
+  },
+  {
+   "primary_artform": "other",
+   "families": 24,
+   "test_rows": 109,
+   "median_ratio": 1.172
+  },
+  {
+   "primary_artform": "bagh block printing",
+   "families": 9,
+   "test_rows": 87,
+   "median_ratio": 1.205
+  },
+  {
+   "primary_artform": "kutch embroidery",
+   "families": 5,
+   "test_rows": 69,
+   "median_ratio": 1.213
+  },
+  {
+   "primary_artform": "bandhani tie dye",
+   "families": 14,
+   "test_rows": 734,
+   "median_ratio": 1.232
+  },
+  {
+   "primary_artform": "wood carving",
+   "families": 17,
+   "test_rows": 135,
+   "median_ratio": 1.273
+  },
+  {
+   "primary_artform": "kashida embroidery",
+   "families": 5,
+   "test_rows": 41,
+   "median_ratio": 1.28
+  },
+  {
+   "primary_artform": "madhubani folk art",
+   "families": 6,
+   "test_rows": 61,
+   "median_ratio": 1.308
+  },
+  {
+   "primary_artform": "jacquard weaving",
+   "families": 5,
+   "test_rows": 61,
+   "median_ratio": 1.317
+  }
  ]
 }

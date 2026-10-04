@@ -1,6 +1,7 @@
 """Part 15 — bias audit (Unit V: responsible AI, bias).
 
-Model: Ridge (alpha=3, S9 features), the tuned best model from part 8. Test set only.
+Model: Ridge (alpha=3, S9 features), the tuned model from part 8 (default), or with argument
+"final" the S12-img model (text + LLM + KG + photos; R2 0.806). Test set only. Outputs get suffix _final.
 For each group: rows, median ratio predicted/actual (1.0 = unbiased; <1 = model prices the group too low),
 MAPE, share of products under-priced by more than 30%.
 Groups: price band, primary art form (>= 60 test rows), segment, technique family, label specificity,
@@ -12,9 +13,29 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import Ridge
 from features import load, sparse
 
+import sys
+FINAL = len(sys.argv) > 1 and sys.argv[1] == "final"   # "final" = the S12-img model; default = part 8 Ridge
+SUF = "_final" if FINAL else ""
 tr, te, kgc = load()
-Str, Ste = sparse(tr, te, kgc)
-pred = np.exp(Ridge(alpha=3).fit(Str, np.log(tr.price.values)).predict(Ste))
+if not FINAL:
+    Str, Ste = sparse(tr, te, kgc)
+    pred = np.exp(Ridge(alpha=3).fit(Str, np.log(tr.price.values)).predict(Ste))
+else:
+    # S12-img: part 8b's feature builder (code above its "# --- ablation" line) + 128 photo PCA components,
+    # TF-IDF 20k terms / min_df 2, Ridge alpha 1. Same model as evaluate_stage.py S12-img.
+    from sklearn.pipeline import Pipeline
+    ns = {}; exec(open("scripts/part8b_ablation_tuning.py").read().split("# --- ablation")[0], ns)
+    k = json.load(open("reports/models/part13_images.json"))["s12_plus_images_cv"]["chosen_components"]
+    imgc = [f"img_pc{i + 1}" for i in range(k)]
+    base = ns["d"].merge(pd.read_csv("data/features/image_pca.csv.gz", usecols=["image_file"] + imgc), on="image_file")
+    ns["GROUPS"]["image (SqueezeNet PCA)"] = ("num", imgc)
+    btr, bte = base[base.split == "train"], base[base.split == "test"]
+    m = Pipeline([("pre", ns["make_pre"](list(ns["GROUPS"]), max_features=20000, min_df=2)), ("ridge", Ridge(alpha=1.0))])
+    m.fit(btr, np.log(btr.price.values))
+    pmap = dict(zip(bte.image_file, np.exp(m.predict(bte))))
+    pred = te.image_file.map(pmap).values
+    from sklearn.metrics import r2_score
+    print("final model test R2 (should be 0.806):", round(r2_score(te.price, pred), 4))
 te = te.assign(pred=pred, ratio=pred / te.price.values, ape=np.abs(pred - te.price.values) / te.price.values)
 cuts = tr.price.quantile([1 / 3, 2 / 3]).values
 te["band"] = pd.cut(te.price, [0, cuts[0], cuts[1], 1e9], labels=["low (<₹590)", "mid", "high (>₹1,850)"]).astype(str)
@@ -40,7 +61,21 @@ out = {"overall": dict(rows=len(te), median_ratio=round(float(te.ratio.median())
 for col, mr in [("band", 1), ("price_decile", 1), ("technique_family", 1), ("label_type", 1), ("skilled_rule", 1),
                 ("templated_text", 1), ("primary_artform", 60), ("segment", 1)]:
     out[col] = table(col, mr).reset_index().to_dict("records")
-json.dump(out, open("reports/models/part15_bias.json", "w"), indent=1, default=float)
+# Family-level audit: one row per product family (median ratio of its test rows), so a product line listed
+# in hundreds of colours counts once. Added after finding that one bag family (453 test rows at ₹1,590,
+# labelled kalamkari, Pochampally, bandhani, ...) drove most of the art-form results.
+fam = te.groupby("family").agg(primary_artform=("primary_artform", lambda s: s.mode().iloc[0]),
+                               ratio=("ratio", "median"), rows=("price", "size"))
+fa = fam.groupby("primary_artform").agg(families=("ratio", "size"), test_rows=("rows", "sum"),
+                                        median_ratio=("ratio", "median"))
+fa = fa[fa.families >= 5].round(3).sort_values("median_ratio")
+largest = te.family.value_counts()
+out["largest_test_family"] = dict(family=int(largest.index[0]), rows=int(largest.iloc[0]),
+                                  share_of_test=round(float(largest.iloc[0] / len(te)), 3))
+out["families_overall"] = dict(families=len(fam), median_ratio=round(float(fam.ratio.median()), 3))
+out["primary_artform_family_level"] = fa.reset_index().to_dict("records")
+json.dump(out, open(f"reports/models/part15_bias{SUF}.json", "w"), indent=1, default=float)
+te[["image_file", "family", "primary_artform", "price", "pred", "ratio"]].round(3).to_csv(f"reports/models/part15_rows{SUF}.csv", index=False)
 
 d = table("price_decile").reindex([f"D{i}" for i in range(1, 11)])
 fig, ax = plt.subplots(1, 2, figsize=(12, 4))
@@ -50,8 +85,11 @@ ax[0].set_xlabel("D1 = cheapest 10% … D10 = most expensive 10%")
 a = table("primary_artform", 60).iloc[list(range(6)) + list(range(-6, 0))]
 ax[1].barh(a.index, a.median_ratio, color=["tab:red" if r < 1 else "tab:blue" for r in a.median_ratio])
 ax[1].axvline(1, color="k", lw=.8); ax[1].set_title("Most under- and over-priced art forms (≥60 test rows)")
-plt.tight_layout(); plt.savefig("figures/P15_bias.png", dpi=130)
+plt.tight_layout(); plt.savefig(f"figures/P15_bias{SUF}.png", dpi=130)
 print(json.dumps(out["overall"]))
 for col in ["band", "price_decile", "technique_family", "label_type", "skilled_rule", "templated_text"]:
     print("\n==", col); print(table(col).to_string())
 print("\n== primary_artform (>=60)"); t = table("primary_artform", 60); print(t.head(8).to_string()); print(t.tail(5).to_string())
+print("\n== family level (one row per family; art forms with >= 5 test families)")
+print(out["families_overall"], out["largest_test_family"])
+print(fa.head(8).to_string()); print(fa.tail(5).to_string())

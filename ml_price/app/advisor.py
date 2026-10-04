@@ -57,9 +57,10 @@ def advise(title, description, labels, listed_price=None, material_cost=None, la
     if sims[0].mean() < A["low_sim"]:
         cautions.append(f"Few similar products in the data (mean similarity {sims[0].mean():.2f} < {A['low_sim']:.2f}); "
                         "errors are about 1.5× larger for products like this.")
-    if primary in A["bias"] and A["bias"][primary] < 0.85:
-        cautions.append(f"The model under-prices '{primary}' on test data (median {A['bias'][primary]:.0%} of the real price). "
-                        "Treat the range as a lower bound.")
+    if primary in A["bias"] and A["bias"][primary][0] < 0.85:
+        ratio, nfam = A["bias"][primary]
+        cautions.append(f"The model under-prices '{primary}' on test data (median {ratio:.0%} of the real price "
+                        f"across {nfam} product families). Treat the range as a lower bound.")
     # --- fair-wage floor from the Karigari Connect app (read-only), never guessed
     floor = None
     if material_cost is not None and labour_hours and state_code:
