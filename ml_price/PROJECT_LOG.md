@@ -303,6 +303,15 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Options put to the project owner:** Flash-Lite model (separate quota, re-validate on gold
   first), bigger batches (~7 days), paid tier (owner's decision), or stop.
 
+## 2026-10-04 — S10 done with Flash-Lite
+
+- The project owner chose option A. `gemini-3.5-flash-lite` re-validated on gold (F1 0.941, exact
+  0.875; 2 requests), then extracted all 12,875 unique descriptions in about 30 min with 0
+  failures. The 160 earlier rows came from gemini-3.5-flash.
+- Title regex added size / set size per product.
+- **S10:** Ridge 0.768. **S10-swap** (LLM materials replace keyword materials): **R² 0.773,
+  MAE ₹681, band F1 0.789**, the best so far.
+
 ## Pending
 
-- S10 decision (LLM attributes for all unique descriptions); part 13 (image features) likely skipped; final report + viva sheet
+- Part 13 (image features) likely skipped; final report + viva sheet

@@ -49,7 +49,9 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S7 | S6b + 37 knowledge-graph features | 44 | 0.156 | 0.540 | **0.698** | 0.586 | 749 (Ridge) | 41.7 |
 | S8-only | S7-only + K-Means segment id | 44 | 0.156 | 0.334 | 0.463 | **0.522** | 964 (RF) | 64.0 |
 | S8 | S7 + K-Means segment id | 45 | 0.156 | 0.561 | 0.714 | 0.588 | 735 (Ridge) | 40.9 |
-| **S9** | S8 + numeric features standardised | 45 | 0.156 | **−7.5 × 10⁸** ‡ | **0.752** | 0.588 | **691 (Ridge)** | **37.3** |
+| S9 | S8 + numeric features standardised | 45 | 0.156 | −7.5 × 10⁸ ‡ | 0.752 | 0.588 | 691 (Ridge) | 37.3 |
+| S10 | S9 + LLM materials / handloom + title size and set size | 69 | 0.156 | — | 0.768 | 0.590 | 684 (Ridge) | 37.0 |
+| **S10-swap** | S9 with keyword materials **replaced** by LLM materials, + title size features | 52 | 0.156 | — | **0.773** | 0.586 | **681 (Ridge)** | **37.0** |
 
 ‡ Plain Linear Regression collapses at S9. Several knowledge-graph columns are exact duplicates
 (`kg_zari` = `kg_mat_Zari`, `kg_tech_Jewellery` overlaps a label column), so the unregularised
@@ -106,8 +108,10 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S7-only | 0.612 |
 | S7 | 0.780 |
 | S8-only | 0.673 |
-| **S8** | **0.786** |
+| S8 | 0.786 |
 | S9 | 0.770 |
+| S10 | 0.783 |
+| **S10-swap** | **0.789** |
 
 ## Progress chart
 
@@ -139,6 +143,12 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 9. **S9, feature scaling:** standardising the numeric columns lets Ridge's single penalty treat them
    evenly with the TF-IDF columns. **Best regression result: Ridge R² 0.752, MAE ₹691,
    MAPE 37.3%.** Found while building part 9, where the shared feature code already scaled.
+10. **S10, LLM attributes (part 12):** Gemini Flash-Lite read all 12,875 unique descriptions with
+   the engineered prompt (validated on the gold set: F1 0.941); size and set size came from each
+   title. Adding them on top of the keyword materials: Ridge 0.768. **Replacing** the keyword
+   materials with the LLM ones: **0.773, MAE ₹681, band F1 0.789**, the best results in the
+   project. The keyword errors (bamboo pen, wooden blocks, German silver) were noise, and
+   removing them helps more than adding beside them.
 
 ## Stages that made scores worse
 

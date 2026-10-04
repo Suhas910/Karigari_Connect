@@ -94,7 +94,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] S7 knowledge-graph and rule features (RF 0.110 → 0.527 without text)
 - [x] S8 cluster ID (Ridge R² 0.714, best so far)
 - [ ] S9 sentence embeddings
-- [ ] S10 LLM-extracted attributes for all products (needs ~320 API requests on unique descriptions; decision pending)
+- [x] S10 LLM attributes for all products (Flash-Lite, 12,875 descriptions): S10-swap Ridge R² 0.773 (best)
 - [ ] S11 image features
 - [ ] S12 hyperparameter tuning
 - [x] S13 quantile bands (part 9)

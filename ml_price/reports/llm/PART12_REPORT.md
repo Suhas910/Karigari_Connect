@@ -93,13 +93,46 @@ Side-by-side answers for all 80: `reports/llm/part12_gold_side_by_side.csv`.
 5. **Reliability:** the API returned temporary server errors on 9 requests. The script backed
    off and retried each one. All 80 products were answered in both runs (no missing ids).
 
-## Not done: LLM features for every product (stage S10)
+## Full extraction and stage S10 (done)
 
-Extracting attributes for all 37,257 products would take about 1,860 requests of 20 products.
-At 12 requests per minute that is **2.6 hours**, before any daily request limit. So:
+**First attempt (gemini-3.5-flash):** stopped after 160 descriptions. The free tier allows
+**20 requests per day per model** for that model (HTTP 429, `GenerateRequestsPerDayPerProjectPerModel-FreeTier`
+= 20), on top of the per-minute limit.
 
-- The comparison above is the evaluated deliverable for part 12.
-- A full run could instead use the **12,884 unique descriptions** (most products share one) in
-  batches of 40, about 320 requests or roughly 27 minutes, if the daily quota allows. Its
-  attributes (corrected materials, set size, size text) would then become stage S10.
-  **Decision pending.**
+**Switch to `gemini-3.5-flash-lite`** (separate quota), re-validated first on the gold set with
+the same engineered prompt, in 2 requests of 40:
+
+| Model (engineered prompt) | Precision | Recall | F1 | Exact match |
+|---|---|---|---|---|
+| gemini-3.5-flash | 0.979 | 0.979 | 0.979 | 0.950 |
+| gemini-3.5-flash-lite | 0.967 | 0.916 | 0.941 | 0.875 |
+| keywords | 0.638 | 0.926 | 0.755 | 0.425 |
+
+Flash-Lite mostly *misses* materials (8) rather than inventing wrong ones (3). Good enough to
+use, and far better than keywords.
+
+**Run**
+
+| | |
+|---|---|
+| Descriptions processed | **12,875** unique (all 37,257 products) |
+| Requests | 40 descriptions each |
+| Time | about 30 minutes |
+| Failed requests | 0 |
+| Model per row | 160 by gemini-3.5-flash, the rest by Flash-Lite (recorded in `reports/llm/llm_attributes_unique.jsonl`) |
+
+**Size from titles:** products sharing a description differ in size ("Floating Candle (Big)" vs
+"(Small)"), so size and set size come from each product's own title (`scripts/llm_features.py`).
+3,075 titles state a size; 6,898 products are sets.
+
+**Effect on price prediction (frozen test set)**
+
+| Stage | Ridge R² | MAE (₹) | MAPE (%) | Band F1 |
+|---|---|---|---|---|
+| S9 (keyword materials) | 0.752 | 691 | 37.3 | 0.770 |
+| S10 (keyword + LLM materials, + size) | 0.768 | 684 | 37.0 | 0.783 |
+| **S10-swap (LLM materials replace keywords, + size)** | **0.773** | **681** | **37.0** | **0.789** |
+
+**Replacing beats adding.** With both sets present, the model still sees the keyword errors.
+Removing the keyword materials removes the noise. Part 12 therefore gives the best model in the
+project.

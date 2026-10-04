@@ -57,6 +57,9 @@ STAGES["S6c-iso"] = dict(S6B, drop="iso", change="S6b, training rows flagged by 
 STAGES["S8"] = dict(STAGES["S7"], seg=True, change="S7 + K-Means segment id (17 text segments, fitted on train)")
 STAGES["S8-only"] = dict(STAGES["S7-only"], seg=True, change="S7-only + K-Means segment id (no TF-IDF)")
 STAGES["S9"] = dict(STAGES["S8"], scale=True, change="S8 + numeric features standardised (mean 0, sd 1) before the models")
+STAGES["S10"] = dict(STAGES["S9"], llm=True, change="S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles")
+STAGES["S10-swap"] = dict(STAGES["S9"], llm=True, drop_kw_mat=True,
+                          change="S9 with keyword materials replaced by LLM materials, + title size features")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
@@ -69,6 +72,12 @@ if cfg.get("kg"):  # rule-derived features from scripts/build_kg.py (no prices i
     d = d.merge(kg, on="image_file", how="left")
     d[kgc] = d[kgc].astype(float)
     cfg = dict(cfg, num=cfg["num"] + kgc)
+if cfg.get("llm"):  # part 12 LLM attributes + title regex size features (scripts/llm_features.py)
+    lf = pd.read_csv("data/features/llm_features.csv")
+    d = d.merge(lf, on="image_file", how="left")
+    newc = [c for c in lf.columns if c not in ("image_file", "llm_found")]
+    num = [c for c in cfg["num"] if not (cfg.get("drop_kw_mat") and c.startswith("kg_mat_"))]
+    cfg = dict(cfg, num=num + newc)
 if cfg.get("seg"):
     d = d.merge(pd.read_csv("data/features/segment_features.csv"), on="image_file", how="left")
     d["segment"] = "seg" + d.segment.astype(str)

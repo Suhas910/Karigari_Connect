@@ -89,3 +89,15 @@ S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7
 S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Ridge (alpha=1),0.7515,690.9,37.3,3.9,
 S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Random Forest,0.5883,849.9,51.0,128.4,
 S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Logistic Regression (price band),,,,,0.7702
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Median baseline,-0.1457,1487.4,73.9,0.0,
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Median per art form,0.1556,1423.4,104.9,0.0,
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Linear Regression,-64770.8189,42348.5,6277.4,70.2,
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Ridge (alpha=1),0.7676,683.5,37.0,4.9,
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Random Forest,0.5895,860.1,47.4,190.7,
+S10,S9 + LLM-extracted materials/handloom (part 12) + size and set size from titles,29805,7452,69,Logistic Regression (price band),,,,,0.783
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Median baseline,-0.1457,1487.4,73.9,0.0,
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Median per art form,0.1556,1423.4,104.9,0.0,
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Linear Regression,-4553136.257,168871.3,33462.1,62.3,
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Ridge (alpha=1),0.7729,680.9,37.0,4.1,
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Random Forest,0.5858,860.4,47.6,180.1,
+S10-swap,"S9 with keyword materials replaced by LLM materials, + title size features",29805,7452,52,Logistic Regression (price band),,,,,0.7885

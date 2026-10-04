@@ -10,14 +10,14 @@ The API key is read from .env and never printed or logged.
 
 Usage: python scripts/part12_llm_extract.py gold        -> run both prompts on the gold sample, score them
 """
-import sys, json, time, pathlib
+import os, sys, json, time, pathlib
 import pandas as pd
 from dotenv import dotenv_values
 from google import genai
 from google.genai import types
 
 ENV = dotenv_values(pathlib.Path(__file__).resolve().parents[1] / ".env")
-MODEL = ENV.get("GEMINI_MODEL") or "gemini-3.5-flash"
+MODEL = os.environ.get("MODEL_OVERRIDE") or ENV.get("GEMINI_MODEL") or "gemini-3.5-flash"   # MODEL_OVERRIDE: one-off runs
 client = genai.Client(api_key=ENV["GEMINI_API_KEY"])
 VOCAB = ["Silk", "Cotton", "Wool", "Linen", "Jute", "Zari", "Brass", "Copper", "Silver", "Iron", "Wood",
          "Bamboo", "Clay", "Stone", "Paper", "Leather", "Glass"]
@@ -114,6 +114,17 @@ if __name__ == "__main__" and sys.argv[1] == "gold":
         side[k] = [" ".join(sorted(set(raw[k].get(i, {}).get("materials", [])))) for i in g.gid]
     side.to_csv("reports/llm/part12_gold_side_by_side.csv", index=False)
 
+if __name__ == "__main__" and sys.argv[1] == "gold-v2":
+    # Re-validate the engineered prompt on the gold set with another model, in 2 requests of 40.
+    import re
+    g = pd.read_csv("reports/llm/gold_sample.csv", keep_default_na=False)
+    gold = [set(s.split()) for s in g.gold_materials]
+    out = run(PROMPT_V2, g, batch=40)
+    pred = [set(out.get(i, {}).get("materials", [])) & set(VOCAB) for i in g.gid]
+    res = score(pred, gold, g.group); res["model"] = MODEL; res["missing_ids"] = [int(i) for i in g.gid if i not in out]
+    print(json.dumps(res), flush=True)
+    json.dump(res, open(f"reports/llm/part12_gold_scores_{MODEL}.json", "w"), indent=1)
+
 if __name__ == "__main__" and sys.argv[1] == "all":
     # Every unique description (train + test). No prices are sent, so this is label-free feature
     # extraction, like fitting a text vectoriser. Engineered prompt (v2), 40 products per request,
@@ -122,7 +133,7 @@ if __name__ == "__main__" and sys.argv[1] == "all":
     d = pd.read_csv("data/final/handicraft_clean.csv.gz", keep_default_na=False)
     u = d.drop_duplicates("product_description")[["product_title", "product_description"]].reset_index(drop=True)
     u.insert(0, "gid", range(len(u)))
-    out_path = pathlib.Path("reports/llm/llm_attributes_unique.jsonl")
+    out_path = pathlib.Path("reports/llm/llm_attributes_unique.jsonl")   # one file; each line records its model
     done = set()
     if out_path.exists():
         done = {json.loads(l)["id"] for l in out_path.open()}
@@ -150,6 +161,7 @@ if __name__ == "__main__" and sys.argv[1] == "all":
             ids = set(chunk.gid)
             for r in res:
                 if r.get("id") in ids:
+                    r["model"] = MODEL
                     f.write(json.dumps(r) + "\n")
             f.flush()
             n = len(done) + i + len(chunk)
