@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scheme version="2.0" title="" description="">
+	<nodes>
+		<node id="0" name="Import Images" qualified_name="orangecontrib.imageanalytics.widgets.owimageimport.OWImportImages" project_name="Orange3-ImageAnalytics" version="" title="Import Images" position="(150, 150)" />
+		<node id="1" name="Image Embedding" qualified_name="orangecontrib.imageanalytics.widgets.owimageembedding.OWImageEmbedding" project_name="Orange3-ImageAnalytics" version="" title="Image Embedding" position="(300, 150)" />
+		<node id="2" name="Save Data" qualified_name="Orange.widgets.data.owsave.OWSave" project_name="Orange3" version="" title="Save Data" position="(450, 150)" />
+	</nodes>
+	<links>
+		<link id="0" source_node_id="0" sink_node_id="1" source_channel="Data" sink_channel="Images" enabled="true" source_channel_id="data" sink_channel_id="images" />
+		<link id="1" source_node_id="1" sink_node_id="2" source_channel="Embeddings" sink_channel="Data" enabled="true" source_channel_id="embeddings" sink_channel_id="data" />
+	</links>
+	<annotations />
+	<thumbnail />
+	<node_properties>
+		<properties node_id="0" format="pickle">gASVYwEAAAAAAAB9lCiMEmNvbnRyb2xBcmVhVmlzaWJsZZSIjAxyZWNlbnRfcGF0aHOUXZSMHm9y
+YW5nZXdpZGdldC51dGlscy5maWxlZGlhbG9nc5SMClJlY2VudFBhdGiUk5QpgZR9lCiMB2Fic3Bh
+dGiUjE0vVXNlcnMvdXRzYXZzci9EZXZlbG9wZXIvS2FyaWdhcmlfQ29ubmVjdC9tbF9wcmljZS9k
+YXRhL3Jhdy9oYW5kaWNyYWZ0L2ltYWdlc5SMBnByZWZpeJROjAdyZWxwYXRolE6MBXRpdGxllIwA
+lIwFc2hlZXSUaA6MC2ZpbGVfZm9ybWF0lE51YmGME3NhdmVkV2lkZ2V0R2VvbWV0cnmUQ0IB2dDL
+AAMAAAAAAfoAAAFTAAADkQAAAhsAAAH6AAABbwAAA5EAAAIbAAAAAAAAAAAFoAAAAfoAAAFvAAAD
+kQAAAhuUjAtfX3ZlcnNpb25fX5RLAXUu
+</properties>
+		<properties node_id="1" format="literal">{'_auto_apply': False, 'cb_embedder_current_id': 1, 'cb_image_attr_current_id': 0, 'controlAreaVisible': True, 'savedWidgetGeometry': b'\x01\xd9\xd0\xcb\x00\x03\x00\x00\x00\x00\x02#\x00\x00\x011\x00\x00\x03Y\x00\x00\x02]\x00\x00\x02#\x00\x00\x01M\x00\x00\x03Y\x00\x00\x02]\x00\x00\x00\x00\x00\x00\x00\x00\x05\xa0\x00\x00\x02#\x00\x00\x01M\x00\x00\x03Y\x00\x00\x02]', '__version__': 1}</properties>
+		<properties node_id="2" format="literal">{'add_type_annotations': False, 'auto_save': True, 'controlAreaVisible': True, 'filter': 'Tab-separated values (*.tab)', 'savedWidgetGeometry': b'\x01\xd9\xd0\xcb\x00\x03\x00\x00\x00\x00\x02H\x00\x00\x01f\x00\x00\x03\xec\x00\x00\x02\x08\x00\x00\x02H\x00\x00\x01\x82\x00\x00\x03\xec\x00\x00\x02\x08\x00\x00\x00\x00\x00\x00\x00\x00\x05\xa0\x00\x00\x02H\x00\x00\x01\x82\x00\x00\x03\xec\x00\x00\x02\x08', 'stored_name': 'image_embeddings_squeezenet.tab', 'stored_path': '/Users/utsavsr/Developer/Karigari_Connect/ml_price/data/features', '__version__': 3}</properties>
+	</node_properties>
+	<session_state>
+		<window_groups />
+	</session_state>
+</scheme>

@@ -343,6 +343,23 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - Advisor (part 16) left on the part 8 model; retraining on S12 needs a Gemini call per query.
 - **Report:** [PART8B_ABLATION_TUNING.md](reports/models/PART8B_ABLATION_TUNING.md)
 
+## 2026-10-04 — Part 13: image features (S12-img)
+
+- The project owner downloaded the Kaggle images (1.1 GB) into `data/raw/handicraft/images/`
+  (git-ignored). Checks: 37,257/37,257 products have a photo, 25 extra photos unused, 0 unreadable.
+  Checksums → `data/raw/IMAGES_SHA256SUMS.txt`.
+- **Orange (computer use by Claude):** Import Images → Image Embedding → Save Data. The embedder
+  was switched from the default Inception v3, which uploads images to Orange's server, to
+  **SqueezeNet (local)** before connecting the data. 37,282 photos in about 35 min, 0 skipped.
+  Workflow saved to `tool_exports/orange/P13_image_embedding.ows`.
+- PCA fitted on training photos only; raw 306 MB file git-ignored, 256-component file committed.
+- Photos alone (Ridge): CV R² 0.386 (256 comp.), test 0.375. Added to S12: 128 components chosen
+  by grouped CV (widened to 256 to check the edge; 128 kept). CV R² 0.754 → 0.780.
+- **S12-img:** Ridge **R² 0.806, MAE ₹612, MAPE 34.2%, band F1 0.821**, the final best model.
+- Earlier advice to skip this part was revised: the real obstacle was only that the images weren't
+  downloaded, and this part is the project's only CNN (Unit V).
+- **Report:** [PART13_IMAGES.md](reports/models/PART13_IMAGES.md)
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet

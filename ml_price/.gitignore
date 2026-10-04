@@ -9,3 +9,6 @@ data/raw/**/images/
 
 # Local secrets (API keys) — never committed
 .env
+
+# Part 13: raw Orange image embeddings (~300 MB); the PCA-reduced file is committed instead
+data/features/image_embeddings_squeezenet.tab

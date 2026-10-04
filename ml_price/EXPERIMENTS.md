@@ -52,7 +52,8 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S9 | S8 + numeric features standardised | 45 | 0.156 | −7.5 × 10⁸ ‡ | 0.752 | 0.588 | 691 (Ridge) | 37.3 |
 | S10 | S9 + LLM materials / handloom + title size and set size | 69 | 0.156 | — | 0.768 | 0.590 | 684 (Ridge) | 37.0 |
 | S10-swap | S9 with keyword materials **replaced** by LLM materials, + title size features | 52 | 0.156 | — | 0.773 | 0.586 | 681 (Ridge) | 37.0 |
-| **S12** | S10-swap **tuned** by grouped CV: TF-IDF 20,000 terms, min_df 2 (part 8b) | 52 | 0.156 | collapses ‡ | **0.790** | 0.564 | **646 (Ridge)** | **35.9** |
+| S12 | S10-swap **tuned** by grouped CV: TF-IDF 20,000 terms, min_df 2 (part 8b) | 52 | 0.156 | collapses ‡ | 0.790 | 0.564 | 646 (Ridge) | 35.9 |
+| **S12-img** | S12 + photo features: SqueezeNet CNN embeddings (Orange), 128 PCA components fitted on train (part 13) | 180 | 0.156 | collapses ‡ | **0.806** | 0.557 | **612 (Ridge)** | **34.2** |
 
 ‡ Plain Linear Regression collapses at S9. Several knowledge-graph columns are exact duplicates
 (`kg_zari` = `kg_mat_Zari`, `kg_tech_Jewellery` overlaps a label column), so the unregularised
@@ -113,7 +114,8 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S9 | 0.770 |
 | S10 | 0.783 |
 | S10-swap | 0.789 |
-| **S12** | **0.811** |
+| S12 | 0.811 |
+| **S12-img** | **0.821** |
 
 ## Progress chart
 
@@ -164,6 +166,11 @@ The two tools agree to within 0.01 R². The small gaps are expected:
    Scored once on test: **Ridge R² 0.790, MAE ₹646, MAPE 35.9%, band F1 0.811**, the final best
    model. Random Forest fell slightly (0.586 → 0.564): a forest can't use 20,000 sparse word columns
    well.
+13. **S12-img, photos (part 13):** Orange embedded all 37,282 photos with SqueezeNet (a CNN
+   pretrained on ImageNet, run locally); PCA fitted on training photos kept 128 components (chosen
+   by grouped CV; 256 was worse). Photos alone: test R² 0.375. Added to S12: CV R² 0.754 → 0.780,
+   test **Ridge R² 0.806, MAE ₹612, MAPE 34.2%, band F1 0.821**, the final best model. The photos
+   add size and detail the text often leaves out. [PART13_IMAGES.md](reports/models/PART13_IMAGES.md)
 
 ## Stages that made scores worse
 

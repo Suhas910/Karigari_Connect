@@ -73,7 +73,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] 10 Classifiers: 7 models, grouped-CV tuning; Gradient Boosting F1 0.810, AUC 0.925 [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 11 Similar-items: FAISS index; 10-NN median R² 0.613; similarity flags uncertainty [report](reports/models/PARTS_9_11_REPORT.md)
 - [x] 12 LLM extraction: 80-product gold set; keywords F1 0.755 → zero-shot 0.888 → engineered prompt 0.979 ([report](reports/llm/PART12_REPORT.md))
-- [ ] 13 Image features (stretch goal): CNN embeddings
+- [x] 13 Image features: SqueezeNet CNN embeddings in Orange (local), PCA on train; photos alone R² 0.375; S12-img **R² 0.806, MAE ₹612** ([report](reports/models/PART13_IMAGES.md))
 - [x] 14 SHAP: Ridge (exact match with shap library) + tree beeswarm; per-product reasons [report](reports/models/PARTS_8_14_16_REPORT.md)
 - [x] 15 Bias audit: pull to the middle; kalamkari / Kutch / ikat undervalued; ethics section [report](reports/models/PARTS_8_14_16_REPORT.md)
 - [x] 16 Advisor agent + Streamlit demo: rules + Ridge range + FAISS evidence + app wage floor + cautions [report](reports/models/PARTS_8_14_16_REPORT.md)
@@ -95,7 +95,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] S8 cluster ID (Ridge R² 0.714, best so far)
 - [ ] Sentence embeddings (optional; TF-IDF + LLM attributes cover the text). Note: stage "S9" in EXPERIMENTS is feature scaling
 - [x] S10 LLM attributes for all products (Flash-Lite, 12,875 descriptions): S10-swap Ridge R² 0.773 (best)
-- [ ] S11 image features
+- [x] Image features → run as stage **S12-img** on top of the tuned S12: Ridge R² 0.806, MAE ₹612, band F1 0.821 (final best)
 - [x] S12 hyperparameter tuning: TF-IDF 20k terms, min_df 2, α 1 → **Ridge R² 0.790, MAE ₹646, band F1 0.811 (final best)** ([report](reports/models/PART8B_ABLATION_TUNING.md))
 - [x] S13 quantile bands (part 9)
 - [x] Ablation: remove one feature group at a time (text −0.34 CV R²; every other group < 0.01, kept all)
