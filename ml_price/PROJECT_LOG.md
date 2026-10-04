@@ -144,6 +144,24 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   Finder.
 - **Report:** [step_00 §8](reports/cleaning/step_00_raw_audit.md#8-cross-check-in-the-tools-2026-10-04)
 
+## 2026-10-04 — Cleaning S01–S05 done in OpenRefine
+
+- **Decisions:** D1–D3 as recommended (approved by the project owner).
+- **How:** Claude sent 14 operations to the OpenRefine project through its API; OpenRefine
+  applied and recorded them. A snapshot and the history were exported after every stage. The
+  recipe is replayable from `tool_exports/openrefine/cleaning_operations_replayable.json`.
+- **Result:** 37,273 → 37,257 rows (16 with no art form removed); 5 → 16 columns. Price
+  statistics essentially unchanged (mean +₹0.35, median unchanged).
+- **Found while cleaning:** 3 spelling variants of art-form labels merged (`shibori tye dye`, a
+  zero-width space in `bhil folk art`, `tangaliyan`); 3 look-alike pairs kept apart because they
+  are different crafts.
+- **Check:** `primary_artform` re-derived independently in pandas → 0 mismatches.
+- **Plan refinement:** the frozen test set will be **grouped by `variant_group`** (no variant
+  leakage) and **stratified by `primary_artform`** (every art form in both sets), instead of
+  holding out whole art forms. Reason: the art form is one of the main features, and a test set
+  of unseen art forms would make that feature useless at test time.
+- **Report:** [CLEANING_REPORT.md](reports/cleaning/CLEANING_REPORT.md)
+
 ## Pending
 
-- Decisions D1–D3
+- Frozen train/test split, then experiment stage S0

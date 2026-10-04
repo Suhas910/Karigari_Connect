@@ -25,24 +25,24 @@ Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS
 - [x] Check the encoding and the price format (UTF-8; price already a whole number)
 - [x] Report: `reports/cleaning/step_00_raw_audit.md`
 - [x] Cross-check in OpenRefine + Orange ([guide 01](guides/01_raw_audit.md)): 5/5 match, screenshots in step_00 §8
-- [ ] Decide D1 (primary art form), D2 (design variants), D3 (blank art forms) — see step_00 §7
+- [x] Decide D1 (primary art form), D2 (design variants), D3 (blank art forms): recommendations approved 2026-10-04
 
 ## 2 — Cleaning and processing
 
 See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods and reasons.
 
-- [ ] 2.1 Combine the 3 CSVs, adding a `source_file` column
-- [ ] 2.2 Fix column names and types (parse price to a number)
-- [ ] 2.3 Remove exact duplicates
-- [ ] 2.4 Handle near-duplicates and product variants
-- [ ] 2.5 Handle missing values (decided per column)
-- [ ] 2.6 Handle invalid values (price ≤ 0, wrong currency)
-- [ ] 2.7 Clean text (HTML, whitespace, broken characters)
-- [ ] 2.8 Consolidate art-form names; merge rare ones into `other`
-- [ ] 2.9 Outliers: compare IQR, z-score and Isolation Forest, then decide per group
-- [ ] 2.10 Derived features: log price, text lengths, materials, set size, has-image
-- [ ] Final cleaned dataset → `data/final/`
-- [ ] Combined report: `reports/cleaning/CLEANING_REPORT.md`
+- [x] 2.1 Combine the 3 CSVs (OpenRefine `File` column)
+- [x] 2.2 Price → number; `image_file` extracted (S01)
+- [x] 2.3 Exact duplicates: 0 found
+- [x] 2.4 Variants: `variant_group` IDs, all rows kept (S03)
+- [x] 2.5 Missing: 16 blank art-form rows removed (S02)
+- [x] 2.6 Invalid values: none (min price 50)
+- [x] 2.7 Text: checked clean; nothing to change
+- [x] 2.8 Art forms: 3 spelling merges, `primary_artform`, 65 rare → `other` (S04)
+- [ ] 2.9 Outliers: compare IQR, z-score and Isolation Forest — **after the split, training data only**
+- [x] 2.10 Derived: log_price, title_len, desc_len, desc_repeat (S05). Materials / set size → later feature stages
+- [x] Final cleaned dataset → `data/final/handicraft_clean.csv.gz`
+- [x] Combined report: [CLEANING_REPORT](reports/cleaning/CLEANING_REPORT.md)
 
 ## 3 — Exploratory analysis
 
