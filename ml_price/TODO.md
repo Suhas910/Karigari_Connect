@@ -63,8 +63,8 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 - [ ] 1 Data cleaning with audit trail (sections 1–2 above)
 - [ ] 2 Statistics and EDA (section 3 above)
-- [ ] 3 Craft knowledge graph: RDF triples in Protégé
-- [ ] 4 Rule-based reasoning: SWRL rules + HermiT reasoner; inferred facts used as features
+- [x] 3 Craft knowledge graph: 68 classes, 201 art forms, `.owl` for Protégé ([KG_REPORT](reports/knowledge_graph/KG_REPORT.md))
+- [x] 4 Rule-based reasoning: 5 SWRL rules + HermiT, 0 disagreements with pandas; 4 SPARQL questions; features → S7
 - [ ] 5 Market segmentation: k-Means, Hierarchical, DBSCAN; silhouette; PCA map
 - [ ] 6 Material combination rules: Apriori (support, confidence, lift)
 - [ ] 7 Underpricing detector: Isolation Forest / LOF
@@ -91,7 +91,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] Multi-hot features for all art-form labels (S6a)
 - [x] S6 TF-IDF text features (S6b: Ridge R² 0.707)
 - [x] Split v3: near-duplicate families (second leak fixed)
-- [ ] S7 knowledge-graph and rule features
+- [x] S7 knowledge-graph and rule features (RF 0.110 → 0.527 without text)
 - [ ] S8 cluster ID and material-combination features
 - [ ] S9 sentence embeddings
 - [ ] S10 LLM-extracted attributes

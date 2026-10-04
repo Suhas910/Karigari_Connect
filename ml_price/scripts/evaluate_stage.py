@@ -42,14 +42,16 @@ STAGES = {
     "S5b": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"],
                 num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
                 change="+ title/description length and description-repeat count"),
-    "S6a": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"], multi=["artform_all"],
+    "S6a": dict(data="data/stages/S06_zwsp_fix.csv.gz", cat=["primary_artform"], multi=["artform_all"],
                 num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
                 change="+ all art-form labels as multi-hot features"),
-    "S6b": dict(data="data/stages/S05_derived.csv.gz", cat=["primary_artform"], multi=["artform_all"],
+    "S6b": dict(data="data/stages/S06_zwsp_fix.csv.gz", cat=["primary_artform"], multi=["artform_all"],
                 text=True, num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
                 change="+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)"),
 }
 S6B = STAGES["S6b"]
+STAGES["S7"] = dict(S6B, kg=True, change="S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)")
+STAGES["S7-only"] = dict(STAGES["S6a"], kg=True, change="S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)")
 STAGES["S6c-z"] = dict(S6B, drop="z", change="S6b, training rows flagged by z-score > 3 on log price removed")
 STAGES["S6c-iso"] = dict(S6B, drop="iso", change="S6b, training rows flagged by Isolation Forest (1%) removed")
 cfg = STAGES[STAGE]
@@ -58,6 +60,12 @@ d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) e
 for c in cfg["num"]:
     d[c] = pd.to_numeric(d[c])
 tr, te = d[d.split == "train"], d[d.split == "test"]
+if cfg.get("kg"):  # rule-derived features from scripts/build_kg.py (no prices involved)
+    kg = pd.read_csv("data/features/kg_features.csv")
+    kgc = [c for c in kg.columns if c != "image_file"]
+    d = d.merge(kg, on="image_file", how="left")
+    d[kgc] = d[kgc].astype(float)
+    cfg = dict(cfg, num=cfg["num"] + kgc)
 if cfg.get("drop"):  # outlier handling: training rows only, the test set is never touched
     flags = pd.read_csv("data/splits/train_outlier_flags.csv").set_index("image_file")[cfg["drop"]]
     d = d[~(d.image_file.map(flags).fillna(False).astype(bool) & (d.split == "train"))]

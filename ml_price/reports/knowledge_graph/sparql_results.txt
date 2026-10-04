@@ -1,0 +1,189 @@
+Triples in craft_kg.owl (incl. inferred): 3964
+
+Q1 Which art forms use any textile technique (any depth of the class tree)? -> 94 results
+  SPARQL: SELECT ?label ?cls WHERE { ?a kg:usesTechnique ?t . ?t rdf:type ?cls . ?cls rdfs:subClassOf* kg:TextileTechnique . ?a rdfs:label ?label } ORDER BY ?label
+    ajrakh block printing | BlockPrinting
+    akola block printing | BlockPrinting
+    andhra kantha work | Embroidery
+    bagh block printing | BlockPrinting
+    bagru block printing | BlockPrinting
+    banaras weaving | Weaving
+    bandhani tie dye | TieDye
+    banjara embroidery | Embroidery
+    baragaon weaving | Weaving
+    barmer applique | Applique
+    batik block printing | BlockPrinting
+    begampur weaving | Weaving
+    bengal block printing | BlockPrinting
+    bengal jamdani weaving | JamdaniWeaving
+    bengal kantha work | Embroidery
+    bengal weaving | Weaving
+    bhagalpuri weaving | Weaving
+    bhujodi weaving | Weaving
+    bijnor weaving | Weaving
+    bindaas block printing | BlockPrinting
+    bodo weaving | Weaving
+    central asian ikat | IkatWeaving
+    challapalli weaving | Weaving
+    chanderi weaving | Weaving
+    chettinad weaving | Weaving
+    chirala kupaddam | Weaving
+    crewel embroidery | Embroidery
+    crochet work | YarnCraft
+    dhakai jamdani weaving | JamdaniWeaving
+    dharwad weaving | Weaving
+    digital printing | DigitalPrinting
+    dobby weaving | Weaving
+    embroidery | Embroidery
+    felt craft | YarnCraft
+    gota work | Embroidery
+    hand block printing | BlockPrinting
+    hand braided | YarnCraft
+    hand knitted | YarnCraft
+    handloom | Weaving
+    ilkal weaving | Weaving
+    jacquard weaving | Weaving
+    jahota block printing | BlockPrinting
+    jaipur printing | ScreenPrinting
+    kalamkari block printing | BlockPrinting
+    kalamkari screen printing | ScreenPrinting
+    kanchipuram weaving | Weaving
+    kantha work | Embroidery
+    kashida embroidery | Embroidery
+    kasuti embroidery | Embroidery
+    khambadiya patchwork | Applique
+    khun weaving | Weaving
+    kota doria weaving | Weaving
+    kutch block printing | BlockPrinting
+    kutch embroidery | Embroidery
+    kutch kala organic cotton weaving | Weaving
+    kutch tagai work | Embroidery
+    kutch weaving | Weaving
+    lehariya tie dye | TieDye
+    lucknowi chikankari | Embroidery
+    macrame craft | YarnCraft
+    maheshwari weaving | Weaving
+    mangalagiri weaving | Weaving
+    maniabandha ikat weaving | IkatWeaving
+    manipuri weaving | Weaving
+    mashru weaving | Weaving
+    modal silk weaves | Weaving
+    nandana block printing | BlockPrinting
+    narayanpet weaving | Weaving
+    natural dyed | NaturalDyeing
+    paithani weaving | Weaving
+    patchwork | Applique
+    patti kaam applique | Applique
+    patwa thread work | Embroidery
+    phulkari | Embroidery
+    pintuck | Embroidery
+    pipad block printing | BlockPrinting
+    pipli applique | Applique
+    pochampally ikat weaving | IkatWeaving
+    quilted applique | Applique
+    rajasthan kantha work | Embroidery
+    running stitch | Embroidery
+    sambalpuri ikat weaving | IkatWeaving
+    sanganeri block printing | BlockPrinting
+    screen printing | ScreenPrinting
+    sewing stitching | Embroidery
+    shibori tie dye | TieDye
+    srikakulam jamdani weaving | JamdaniWeaving
+    tangaliya weaving | Weaving
+    thread work | Embroidery
+    tie dye crafts | TieDye
+    tribal hand embroidery | Embroidery
+    uttarakhand kantha work | Embroidery
+    uttarakhand weaving | Weaving
+    venkatagiri weaving | Weaving
+
+Q2 Which art forms need skilled labour (skill inherited down the technique tree)? -> 60 results
+  SPARQL: SELECT DISTINCT ?label WHERE { ?a kg:usesTechnique ?t . ?t kg:requiresSkill kg:skilled . ?a rdfs:label ?label } ORDER BY ?label
+    andhra kantha work
+    banaras weaving
+    banjara embroidery
+    baragaon weaving
+    begampur weaving
+    bengal jamdani weaving
+    bengal kantha work
+    bengal weaving
+    bhagalpuri weaving
+    bhujodi weaving
+    bijnor weaving
+    bodo weaving
+    central asian ikat
+    challapalli weaving
+    chanderi weaving
+    chettinad weaving
+    chirala kupaddam
+    crewel embroidery
+    dhakai jamdani weaving
+    dharwad weaving
+    dobby weaving
+    embroidery
+    gota work
+    handloom
+    ilkal weaving
+    jacquard weaving
+    kanchipuram weaving
+    kantha work
+    kashida embroidery
+    kasuti embroidery
+    khun weaving
+    kota doria weaving
+    kutch embroidery
+    kutch kala organic cotton weaving
+    kutch tagai work
+    kutch weaving
+    lucknowi chikankari
+    maheshwari weaving
+    mangalagiri weaving
+    maniabandha ikat weaving
+    manipuri weaving
+    mashru weaving
+    modal silk weaves
+    narayanpet weaving
+    paithani weaving
+    patwa thread work
+    phulkari
+    pintuck
+    pochampally ikat weaving
+    rajasthan kantha work
+    running stitch
+    sambalpuri ikat weaving
+    sewing stitching
+    srikakulam jamdani weaving
+    tangaliya weaving
+    thread work
+    tribal hand embroidery
+    uttarakhand kantha work
+    uttarakhand weaving
+    venkatagiri weaving
+
+Q3 Which sample products did the reasoner infer to be handwoven silk? -> 17 results
+  SPARQL: SELECT ?label WHERE { ?p rdf:type kg:HandwovenSilkProduct . ?p rdfs:label ?label } ORDER BY ?label
+    Beige - Handloom Maheshwari Silk Saree with Ghicha Pallu Resham Border 08
+    Beige - Handpainted Pure Handloom Chanderi Silk Pen Kalamkari Fabric of Srikalahasti 04
+    Black - Desi Tussar Silk Handpainted Srikalahasti Pen Kalamkari Fabric in Natural Dyed Pure Handloom 10
+    Black - Pure Handwoven Silk Cotton Brocade Banarasi Fabric 01
+    Blue - Pochampally Ikat Handloom Sico 2pc Unstitched Dress Material Kurta Set 21
+    Green - Pure Handloom Zari Stripes Katan Silk Chanderi Saree 10
+    Jacquard Woven Cotton 2pc Unstitched Dress Material Kurta Set with Jewellery 15
+    Maroon - Bagh Hand Block Printed Chanderi Silk Handloom Fabric
+    Maroon - Bagh Hand Block Printed Chanderi Silk Handloom Fabric
+    Maroon - Pochampally Ikat Handloom Sico 2pc Unstitched Dress Material Kurta Set 17
+    Modal Silk Elastic Handmade Rubber Band/Scrunchie 22
+    Pink - Srikalahasti Pen Work Natural Dyed Handpainted Kalamkari Kota Doria Silk Fabric 06
+    Red - Kota Doria Cotton Block Print Sanganeri Saree 07
+    White - Handwoven Phulia Jamdani Muslin Silk 2pc Unstitched Dress Material Kurta Set 16
+    White - Traditional Chanderi Silk Handloom Zari Buti Dupatta with Tassels 24
+    Yellow - Handloom Full Tissue Gold Zari Double Tone Chanderi Silk Fabric 17
+    Yellow - Traditional Tissue Zari Handloom Buti Katan Chanderi Silk Saree 06
+
+Q4 How many sample products fall in each inferred class? -> 5 results
+  SPARQL: SELECT ?cls (COUNT(?p) AS ?n) WHERE { ?p rdf:type ?cls . FILTER(?cls IN (kg:TextileProduct, kg:HandwovenSilkProduct, kg:ZariProduct, kg:MetalProduct, kg:SkilledLabourProduct)) } GROUP BY ?cls ORDER BY DESC(?n)
+    TextileProduct | 219
+    SkilledLabourProduct | 103
+    MetalProduct | 50
+    ZariProduct | 19
+    HandwovenSilkProduct | 17

@@ -208,6 +208,24 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - Files: `tool_exports/orange/S4_crosscheck_test_and_score.ows`, `data/splits/orange/`, two
   figures. Details in [EXPERIMENTS.md](EXPERIMENTS.md).
 
+## 2026-10-04 — Cleaning fix S06; knowledge graph (parts 3–4); stage S7
+
+- **Fix:** the `\u200b` label merge in S04 had silently failed (the data holds the literal text,
+  not the character). Corrected with OpenRefine operations; split verified identical; S6 stages
+  re-scored (changes ≤ 0.011 R²). Documented in CLEANING_REPORT §S06.
+- **Knowledge graph:** `scripts/build_kg.py` builds `craft_kg.owl`:
+  - 201 art forms linked to a technique tree of 68 classes
+  - materials taken from the listing text
+  - skill levels from the app's technique-floor table, as class axioms
+  - 5 SWRL rules, run by HermiT on 400 sampled products: 0 disagreements with the pandas
+    version applied to all rows
+  - 4 SPARQL questions answered
+- **S7:** without text, KG features lift Random Forest R² 0.110 → 0.527; with text, Ridge 0.698
+  (vs 0.707) and band F1 0.780 (vs 0.767).
+- **Protégé:** access was declined this session, so there are no Protégé screenshots. The
+  `.owl` file opens there directly.
+- **Report:** [KG_REPORT.md](reports/knowledge_graph/KG_REPORT.md)
+
 ## Pending
 
-- Parts 3–7: knowledge graph (Protégé), segmentation, Apriori, underpricing detector
+- Parts 5–7: segmentation, Apriori, underpricing detector

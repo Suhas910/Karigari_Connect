@@ -43,18 +43,24 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S4 | Primary art form + label count | 2 | 0.156 | 0.197 | 0.208 | **0.288** | 1,476 (RF) | 143.2 |
 | S5 | log(price) target | 2 | 0.156 | 0.196 | 0.213 | **0.270** | 1,304 (RF) | 94.3 |
 | S5b | + title/description length, description-repeat | 5 | 0.156 | **0.303** | 0.292 | 0.175 | 1,266 (Ridge) | 83.5 |
-| S6a | + all art-form labels (multi-hot) | 6 | 0.156 | 0.338 | **0.373** | 0.099 | 1,242 (Ridge) | 83.4 |
-| S6b | + TF-IDF of title + description | 7 | 0.156 | 0.518 | **0.707** | 0.603 | **730 (Ridge)** | **42.0** |
+| S6a | + all art-form labels (multi-hot) | 6 | 0.156 | 0.339 | **0.373** | 0.110 | 1,242 (Ridge) | 83.4 |
+| S6b | + TF-IDF of title + description | 7 | 0.156 | 0.515 | **0.707** | 0.602 | **730 (Ridge)** | **41.9** |
+| S7-only | S6a + 37 knowledge-graph features (no TF-IDF) | 43 | 0.156 | 0.321 | 0.434 | **0.527** | 975 (RF) | 68.6 |
+| S7 | S6b + 37 knowledge-graph features | 44 | 0.156 | 0.540 | **0.698** | 0.586 | 749 (Ridge) | 41.7 |
 
-The median baseline (one price for everything) scores R² −0.19 and MAE ₹1,741 throughout.
+The median baseline (one price for everything) scores R² −0.15 and MAE ₹1,487 on split v3.
+
+**Re-run note (2026-10-04):** S6a onward were re-scored after a cleaning fix (stage S06: a
+literal `\u200b` text in one label). The split assignment was verified identical, and scores
+moved by at most 0.011 R².
 
 ### Outlier handling (step 2.9, training rows only)
 
 | Stage | Change | Ridge R² | Ridge MAE (₹) | Band F1 |
 |---|---|---|---|---|
-| S6b | All training rows | **0.707** | **730** | 0.762 |
-| S6c-z | − 12 z-score rows | 0.705 | 731 | 0.774 |
-| S6c-iso | − 293 Isolation Forest rows | 0.700 | 735 | 0.768 |
+| S6b | All training rows | **0.707** | **730** | 0.767 |
+| S6c-z | − 12 z-score rows | 0.705 | 731 | 0.748 |
+| S6c-iso | − 293 Isolation Forest rows | 0.691 | 741 | 0.778 |
 
 Decision: keep all rows ([step_09 report](reports/cleaning/step_09_outliers.md)).
 
@@ -86,8 +92,10 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S0–S2 | 0.534 |
 | S4–S5 | 0.478 |
 | S5b | 0.501 |
-| S6a | 0.539 |
-| **S6b** | **0.762** |
+| S6a | 0.551 |
+| S6b | 0.767 |
+| S7-only | 0.612 |
+| **S7** | **0.780** |
 
 ## Progress chart
 
@@ -108,7 +116,11 @@ The two tools agree to within 0.01 R². The small gaps are expected:
    type, size, craft names) take Ridge from 0.373 to **0.707** and MAE to **₹730**, against
    ₹1,506 at S0. Ridge beats plain Linear Regression here (0.707 vs 0.518), because with
    thousands of word features the unregularised model over-fits; Ridge's penalty prevents that.
-6. **Price bands:** F1 0.534 → **0.762**, following the same pattern.
+6. **Price bands:** F1 0.534 → 0.767 (S6b) → **0.780** (S7).
+7. **S7, knowledge-graph features:** without text, they lift Random Forest from 0.110 to **0.527**
+   (37 readable features such as handwoven silk, zari, skilled labour). With text, they're largely
+   redundant for regression (Ridge 0.707 → 0.698) but improve the price-band classifier. Details:
+   [KG_REPORT.md](reports/knowledge_graph/KG_REPORT.md).
 
 ## Stages that made scores worse
 

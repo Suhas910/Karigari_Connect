@@ -1,0 +1,378 @@
+{
+  "entries": [
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "price",
+        "expression": "grel:value.toNumber()",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column price using expression grel:value.toNumber()"
+      },
+      "description": "Text transform on 37,273 cells in column price: grel:value.toNumber()"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "image_paths",
+        "expression": "grel:value.replace(/[\\[\\]']/, '').replace('images/', '')",
+        "onError": "set-to-blank",
+        "newColumnName": "image_file",
+        "columnInsertIndex": 6,
+        "description": "Create column image_file at index 6 based on column image_paths using expression grel:value.replace(/[\\[\\]']/, '').replace('images/', '')"
+      },
+      "description": "Create new column image_file based on column image_paths by filling 37,273 rows with grel:value.replace(/[\\[\\]']/, '').replace('images/', '')"
+    },
+    {
+      "operation": {
+        "op": "core/row-removal",
+        "engineConfig": {
+          "facets": [
+            {
+              "type": "list",
+              "name": "artform",
+              "expression": "isBlank(value)",
+              "columnName": "artform",
+              "invert": false,
+              "omitBlank": false,
+              "omitError": false,
+              "selection": [
+                {
+                  "v": {
+                    "v": true,
+                    "l": "true"
+                  }
+                }
+              ],
+              "selectBlank": false,
+              "selectError": false
+            }
+          ],
+          "mode": "row-based"
+        },
+        "description": "Remove rows"
+      },
+      "description": "Remove 16 rows"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "product_title",
+        "expression": "grel:value.fingerprint() + ' | ' + cells['price'].value.toString()",
+        "onError": "set-to-blank",
+        "newColumnName": "variant_group",
+        "columnInsertIndex": 7,
+        "description": "Create column variant_group at index 7 based on column product_title using expression grel:value.fingerprint() + ' | ' + cells['price'].value.toString()"
+      },
+      "description": "Create new column variant_group based on column product_title by filling 37,257 rows with grel:value.fingerprint() + ' | ' + cells['price'].value.toString()"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "variant_group",
+        "expression": "grel:facetCount(value, 'value', 'variant_group')",
+        "onError": "set-to-blank",
+        "newColumnName": "variant_group_size",
+        "columnInsertIndex": 8,
+        "description": "Create column variant_group_size at index 8 based on column variant_group using expression grel:facetCount(value, 'value', 'variant_group')"
+      },
+      "description": "Create new column variant_group_size based on column variant_group by filling 37,257 rows with grel:facetCount(value, 'value', 'variant_group')"
+    },
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "artform",
+        "expression": "grel:value.replace(/\\u200b/, '').replace('shibori tye dye', 'shibori tie dye').replace('tangaliyan weaving', 'tangaliya weaving')",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column artform using expression grel:value.replace(/\\u200b/, '').replace('shibori tye dye', 'shibori tie dye').replace('tangaliyan weaving', 'tangaliya weaving')"
+      },
+      "description": "Text transform on 353 cells in column artform: grel:value.replace(/\\u200b/, '').replace('shibori tye dye', 'shibori tie dye').replace('tangaliyan weaving', 'tangaliya weaving')"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "artform",
+        "expression": "grel:join(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), ' | ')",
+        "onError": "set-to-blank",
+        "newColumnName": "artform_all",
+        "columnInsertIndex": 9,
+        "description": "Create column artform_all at index 9 based on column artform using expression grel:join(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), ' | ')"
+      },
+      "description": "Create new column artform_all based on column artform by filling 37,257 rows with grel:join(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), ' | ')"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "artform",
+        "expression": "grel:length(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()))",
+        "onError": "set-to-blank",
+        "newColumnName": "artform_count",
+        "columnInsertIndex": 10,
+        "description": "Create column artform_count at index 10 based on column artform using expression grel:length(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()))"
+      },
+      "description": "Create new column artform_count based on column artform by filling 37,257 rows with grel:length(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()))"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "artform",
+        "expression": "grel:with(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), L, with(filter(L, x, not(inArray(['handmade','natural dyed','plain solid','handloom','hand painted','upcycled','fabart'], x))), F, if(length(F) > 0, F[0], L[0])))",
+        "onError": "set-to-blank",
+        "newColumnName": "primary_artform",
+        "columnInsertIndex": 11,
+        "description": "Create column primary_artform at index 11 based on column artform using expression grel:with(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), L, with(filter(L, x, not(inArray(['handmade','natural dyed','plain solid','handloom','hand painted','upcycled','fabart'], x))), F, if(length(F) > 0, F[0], L[0])))"
+      },
+      "description": "Create new column primary_artform based on column artform by filling 37,257 rows with grel:with(forEach(value.replace(/[\\[\\]']/, '').split(', '), v, v.trim()), L, with(filter(L, x, not(inArray(['handmade','natural dyed','plain solid','handloom','hand painted','upcycled','fabart'], x))), F, if(length(F) > 0, F[0], L[0])))"
+    },
+    {
+      "operation": {
+        "op": "core/mass-edit",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "primary_artform",
+        "expression": "value",
+        "edits": [
+          {
+            "from": [
+              "sanjhi art",
+              "paper mache craft",
+              "uttarakhand kantha work",
+              "udayagiri",
+              "kutch tagai work",
+              "neemuch bead work",
+              "gota work",
+              "sabai grass weaving",
+              "paddy",
+              "bell craft",
+              "marudhara",
+              "leather craft",
+              "tuma craft",
+              "godna folk art",
+              "quilted applique",
+              "bengal coir craft",
+              "tangaliya weaving",
+              "kalighat folk art",
+              "tibet craft",
+              "jahota block printing",
+              "venkatagiri weaving",
+              "palm leaves",
+              "rogan art",
+              "mysore folk art",
+              "coconut craft",
+              "filigree",
+              "kutch block printing",
+              "raffia weaving",
+              "nandana block printing",
+              "basohli folk art",
+              "handmade jewellery",
+              "kantha work",
+              "paper quilling",
+              "chirala kupaddam",
+              "bhil folk art",
+              "kutch",
+              "maniabandha ikat weaving",
+              "baragaon weaving",
+              "copper bell craft",
+              "natural stone",
+              "molded brass jewelry",
+              "sitalpati",
+              "kasuti embroidery",
+              "felt craft",
+              "coir craft",
+              "coconut shell craft",
+              "warli folk art",
+              "dobby weaving",
+              "chhattisgarh craft",
+              "silver inlay",
+              "bengal block printing",
+              "narayanpet weaving",
+              "mata ni pachedi folk art",
+              "patti kaam applique",
+              "terracotta",
+              "golden grass craft",
+              "tarkashi work",
+              "sewing stitching",
+              "bodo weaving",
+              "dhakai jamdani weaving",
+              "lac",
+              "wire craft",
+              "banaras",
+              "natural dyed",
+              "challapalli weaving"
+            ],
+            "fromBlank": false,
+            "fromError": false,
+            "to": "other"
+          }
+        ],
+        "description": "Mass edit cells in column primary_artform"
+      },
+      "description": "Mass edit 551 cells in column primary_artform"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "price",
+        "expression": "grel:value.ln()",
+        "onError": "set-to-blank",
+        "newColumnName": "log_price",
+        "columnInsertIndex": 12,
+        "description": "Create column log_price at index 12 based on column price using expression grel:value.ln()"
+      },
+      "description": "Create new column log_price based on column price by filling 37,257 rows with grel:value.ln()"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "product_title",
+        "expression": "grel:length(value)",
+        "onError": "set-to-blank",
+        "newColumnName": "title_len",
+        "columnInsertIndex": 13,
+        "description": "Create column title_len at index 13 based on column product_title using expression grel:length(value)"
+      },
+      "description": "Create new column title_len based on column product_title by filling 37,257 rows with grel:length(value)"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "product_description",
+        "expression": "grel:length(value)",
+        "onError": "set-to-blank",
+        "newColumnName": "desc_len",
+        "columnInsertIndex": 14,
+        "description": "Create column desc_len at index 14 based on column product_description using expression grel:length(value)"
+      },
+      "description": "Create new column desc_len based on column product_description by filling 37,257 rows with grel:length(value)"
+    },
+    {
+      "operation": {
+        "op": "core/column-addition",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "baseColumnName": "product_description",
+        "expression": "grel:facetCount(value, 'value', 'product_description')",
+        "onError": "set-to-blank",
+        "newColumnName": "desc_repeat",
+        "columnInsertIndex": 15,
+        "description": "Create column desc_repeat at index 15 based on column product_description using expression grel:facetCount(value, 'value', 'product_description')"
+      },
+      "description": "Create new column desc_repeat based on column product_description by filling 37,257 rows with grel:facetCount(value, 'value', 'product_description')"
+    },
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "artform",
+        "expression": "grel:value.replace(\"\u200b\", \"\")",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column artform using expression grel:value.replace(\"\u200b\", \"\")"
+      },
+      "description": "Text transform on 0 cells in column artform: grel:value.replace(\"\u200b\", \"\")"
+    },
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "artform_all",
+        "expression": "grel:value.replace(\"\u200b\", \"\")",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column artform_all using expression grel:value.replace(\"\u200b\", \"\")"
+      },
+      "description": "Text transform on 0 cells in column artform_all: grel:value.replace(\"\u200b\", \"\")"
+    },
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "artform",
+        "expression": "grel:value.replace(\"\\\\u200b\", \"\")",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column artform using expression grel:value.replace(\"\\\\u200b\", \"\")"
+      },
+      "description": "Text transform on 8 cells in column artform: grel:value.replace(\"\\\\u200b\", \"\")"
+    },
+    {
+      "operation": {
+        "op": "core/text-transform",
+        "engineConfig": {
+          "facets": [],
+          "mode": "row-based"
+        },
+        "columnName": "artform_all",
+        "expression": "grel:value.replace(\"\\\\u200b\", \"\")",
+        "onError": "keep-original",
+        "repeat": false,
+        "repeatCount": 10,
+        "description": "Text transform on cells in column artform_all using expression grel:value.replace(\"\\\\u200b\", \"\")"
+      },
+      "description": "Text transform on 8 cells in column artform_all: grel:value.replace(\"\\\\u200b\", \"\")"
+    }
+  ]
+}

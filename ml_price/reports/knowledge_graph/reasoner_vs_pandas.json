@@ -1,0 +1,27 @@
+{
+ "TextileProduct": {
+  "reasoner": 219,
+  "pandas": 219,
+  "disagree": 0
+ },
+ "HandwovenSilkProduct": {
+  "reasoner": 17,
+  "pandas": 17,
+  "disagree": 0
+ },
+ "ZariProduct": {
+  "reasoner": 19,
+  "pandas": 19,
+  "disagree": 0
+ },
+ "MetalProduct": {
+  "reasoner": 50,
+  "pandas": 50,
+  "disagree": 0
+ },
+ "SkilledLabourProduct": {
+  "reasoner": 103,
+  "pandas": 103,
+  "disagree": 0
+ }
+}

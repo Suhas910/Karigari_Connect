@@ -143,6 +143,23 @@ form carries real price information.
 `desc_repeat` measures how templated a description is. Highly repeated descriptions carry
 little product-specific information, which matters for the text features in S6 and S9.
 
+## S06 — Correction: the `bhil folk art` label (added 2026-10-04)
+
+The S04 merge of `​bhil folk art` into `bhil folk art` **didn't work**. The raw data contains the
+six literal characters `\u200b` as text, not an invisible character. The S04 audit had decoded
+them while parsing, and the S04 expression aimed at the real character, so it matched nothing.
+The pandas cross-check in S04 decoded the text the same way, which hid the miss.
+
+- **Fix:** 4 more OpenRefine operations (18 in total). The first pair aimed at the invisible
+  character again and changed nothing. The second pair replaced the literal text `\u200b` in
+  `artform` and `artform_all`.
+- **Result:** `bhil folk art` now has all 14 rows; 201 distinct labels (was 202).
+- **Effect:** `primary_artform` was unaffected (both spellings had already become `other`, being
+  under 20 rows). The split assignment was regenerated and verified identical.
+- **Snapshot:** `data/stages/S06_zwsp_fix.csv.gz` is now the final dataset; the replayable
+  recipe has 18 operations.
+- **Left as is:** 7 real invisible characters inside product descriptions (no effect on features).
+
 ## Deliberately not done yet
 
 | Step | Why it waits |

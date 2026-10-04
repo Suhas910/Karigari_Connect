@@ -266,5 +266,57 @@
     "newColumnName": "desc_repeat",
     "columnInsertIndex": 15,
     "description": "Create column desc_repeat at index 15 based on column product_description using expression grel:facetCount(value, 'value', 'product_description')"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "artform",
+    "expression": "grel:value.replace(\"\u200b\", \"\")",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column artform using expression grel:value.replace(\"\u200b\", \"\")"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "artform_all",
+    "expression": "grel:value.replace(\"\u200b\", \"\")",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column artform_all using expression grel:value.replace(\"\u200b\", \"\")"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "artform",
+    "expression": "grel:value.replace(\"\\\\u200b\", \"\")",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column artform using expression grel:value.replace(\"\\\\u200b\", \"\")"
+  },
+  {
+    "op": "core/text-transform",
+    "engineConfig": {
+      "facets": [],
+      "mode": "row-based"
+    },
+    "columnName": "artform_all",
+    "expression": "grel:value.replace(\"\\\\u200b\", \"\")",
+    "onError": "keep-original",
+    "repeat": false,
+    "repeatCount": 10,
+    "description": "Text transform on cells in column artform_all using expression grel:value.replace(\"\\\\u200b\", \"\")"
   }
 ]

@@ -37,25 +37,37 @@ S5b,+ title/description length and description-repeat count,29805,7452,5,Random 
 S5b,+ title/description length and description-repeat count,29805,7452,5,Logistic Regression (price band),,,,,0.5012
 S6a,+ all art-form labels as multi-hot features,29805,7452,6,Median baseline,-0.1457,1487.4,73.9,0.0,
 S6a,+ all art-form labels as multi-hot features,29805,7452,6,Median per art form,0.1556,1423.4,104.9,0.0,
-S6a,+ all art-form labels as multi-hot features,29805,7452,6,Linear Regression,0.3384,1255.0,85.4,0.1,
+S6a,+ all art-form labels as multi-hot features,29805,7452,6,Linear Regression,0.3388,1254.6,85.4,0.1,
 S6a,+ all art-form labels as multi-hot features,29805,7452,6,Ridge (alpha=1),0.3732,1241.8,83.4,0.1,
-S6a,+ all art-form labels as multi-hot features,29805,7452,6,Random Forest,0.0989,1530.3,130.0,10.1,
-S6a,+ all art-form labels as multi-hot features,29805,7452,6,Logistic Regression (price band),,,,,0.539
+S6a,+ all art-form labels as multi-hot features,29805,7452,6,Random Forest,0.1102,1519.9,128.8,9.7,
+S6a,+ all art-form labels as multi-hot features,29805,7452,6,Logistic Regression (price band),,,,,0.5509
 S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Median baseline,-0.1457,1487.4,73.9,0.0,
 S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Median per art form,0.1556,1423.4,104.9,0.0,
-S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Linear Regression,0.5175,923.1,52.9,3.5,
-S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Ridge (alpha=1),0.7065,730.2,42.0,2.3,
-S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Random Forest,0.6025,837.4,51.5,106.4,
-S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Logistic Regression (price band),,,,,0.7617
+S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Linear Regression,0.5154,925.3,53.0,3.5,
+S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Ridge (alpha=1),0.7065,730.1,41.9,2.3,
+S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Random Forest,0.6021,835.5,51.5,107.7,
+S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Logistic Regression (price band),,,,,0.7673
 S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Median baseline,-0.1457,1487.4,73.9,0.0,
 S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Median per art form,0.1556,1423.4,104.9,0.0,
-S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Linear Regression,0.508,926.6,52.3,3.5,
-S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Ridge (alpha=1),0.7046,731.1,41.9,2.3,
-S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Random Forest,0.5979,826.4,52.7,107.5,
-S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Logistic Regression (price band),,,,,0.7743
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Linear Regression,0.5058,927.1,52.3,3.5,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Ridge (alpha=1),0.7046,731.1,41.8,2.3,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Random Forest,0.5951,830.7,53.0,108.9,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Logistic Regression (price band),,,,,0.7484
 S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Median baseline,-0.1457,1487.4,73.9,0.0,
 S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Median per art form,0.1705,1364.1,97.1,0.0,
-S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Linear Regression,0.4998,935.0,53.6,3.4,
-S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Ridge (alpha=1),0.7003,735.2,41.3,2.3,
-S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Random Forest,0.5803,824.1,53.7,107.3,
-S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Logistic Regression (price band),,,,,0.7676
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Linear Regression,0.4924,939.0,53.7,3.4,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Ridge (alpha=1),0.6907,741.4,41.7,2.2,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Random Forest,0.5906,818.9,53.2,110.7,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Logistic Regression (price band),,,,,0.7784
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Median baseline,-0.1457,1487.4,73.9,0.0,
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Median per art form,0.1556,1423.4,104.9,0.0,
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Linear Regression,0.3209,1205.6,76.8,0.2,
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Ridge (alpha=1),0.4339,1174.7,73.9,0.1,
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Random Forest,0.5271,974.5,68.6,11.8,
+S7-only,"S6a + knowledge-graph features, no TF-IDF (isolates the KG gain)",29805,7452,43,Logistic Regression (price band),,,,,0.6118
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Median baseline,-0.1457,1487.4,73.9,0.0,
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Median per art form,0.1556,1423.4,104.9,0.0,
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Linear Regression,0.5404,906.6,51.4,3.8,
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Ridge (alpha=1),0.6976,749.0,41.7,2.3,
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Random Forest,0.5858,854.6,51.5,108.3,
+S7,"S6b + knowledge-graph features (technique groups, materials, rule flags R1-R5)",29805,7452,44,Logistic Regression (price band),,,,,0.7798
