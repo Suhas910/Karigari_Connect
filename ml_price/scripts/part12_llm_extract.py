@@ -113,3 +113,47 @@ if __name__ == "__main__" and sys.argv[1] == "gold":
     for k in raw:
         side[k] = [" ".join(sorted(set(raw[k].get(i, {}).get("materials", [])))) for i in g.gid]
     side.to_csv("reports/llm/part12_gold_side_by_side.csv", index=False)
+
+if __name__ == "__main__" and sys.argv[1] == "all":
+    # Every unique description (train + test). No prices are sent, so this is label-free feature
+    # extraction, like fitting a text vectoriser. Engineered prompt (v2), 40 products per request,
+    # progress appended to a JSONL after each request so an interrupted run resumes where it stopped.
+    import os
+    d = pd.read_csv("data/final/handicraft_clean.csv.gz", keep_default_na=False)
+    u = d.drop_duplicates("product_description")[["product_title", "product_description"]].reset_index(drop=True)
+    u.insert(0, "gid", range(len(u)))
+    out_path = pathlib.Path("reports/llm/llm_attributes_unique.jsonl")
+    done = set()
+    if out_path.exists():
+        done = {json.loads(l)["id"] for l in out_path.open()}
+    todo = u[~u.gid.isin(done)]
+    print(f"unique descriptions {len(u)} | already done {len(done)} | to do {len(todo)} | model {MODEL}", flush=True)
+    BATCH, RPM, last, fails = 40, 12, 0.0, 0
+    with out_path.open("a") as f:
+        for i in range(0, len(todo), BATCH):
+            chunk = todo.iloc[i:i + BATCH]
+            wait = 60 / RPM - (time.time() - last)
+            if wait > 0:
+                time.sleep(wait)
+            last = time.time()
+            for attempt in range(5):
+                try:
+                    res = call(PROMPT_V2, chunk); break
+                except Exception as e:
+                    msg = str(e)
+                    if "RESOURCE_EXHAUSTED" in msg and "per day" in msg.lower():
+                        print("DAILY QUOTA REACHED — stopping; rerun later to resume", flush=True); sys.exit(2)
+                    print(f"  request {i // BATCH}: {type(e).__name__}, retry in {20 * (attempt + 1)}s", flush=True)
+                    time.sleep(20 * (attempt + 1))
+            else:
+                fails += 1; print(f"  request {i // BATCH}: gave up after 5 tries (will be retried on rerun)", flush=True); continue
+            ids = set(chunk.gid)
+            for r in res:
+                if r.get("id") in ids:
+                    f.write(json.dumps(r) + "\n")
+            f.flush()
+            n = len(done) + i + len(chunk)
+            if (i // BATCH) % 10 == 0:
+                print(f"  {n}/{len(u)} done", flush=True)
+    u[["gid", "product_description"]].to_csv("reports/llm/llm_attributes_unique_index.csv", index=False)
+    print("finished; failed requests:", fails, flush=True)

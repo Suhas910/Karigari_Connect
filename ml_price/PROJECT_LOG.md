@@ -291,6 +291,18 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   "Connection error" was closed.
 - **Report:** [PART12_REPORT.md](reports/llm/PART12_REPORT.md)
 
+## 2026-10-04 — S10 full extraction blocked by API quota
+
+- Started the full run (12,884 unique descriptions, 40 per request, engineered prompt). After
+  160 descriptions it slowed sharply.
+- **Cause:** HTTP 429. The free tier allows **20 requests per day per model**
+  (`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, value 20) for `gemini-3.5-flash`, on top
+  of the per-minute limit. Retry delay given: about 14.8 h.
+- **Saved:** 160 extracted descriptions in `reports/llm/llm_attributes_unique.jsonl`; the script
+  resumes from there.
+- **Options put to the project owner:** Flash-Lite model (separate quota, re-validate on gold
+  first), bigger batches (~7 days), paid tier (owner's decision), or stop.
+
 ## Pending
 
 - S10 decision (LLM attributes for all unique descriptions); part 13 (image features) likely skipped; final report + viva sheet

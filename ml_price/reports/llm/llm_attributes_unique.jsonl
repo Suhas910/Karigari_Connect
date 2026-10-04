@@ -1,0 +1,160 @@
+{"id": 0, "materials": [], "item_type": "jhumar hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 1, "materials": ["Clay"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 2, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 3, "materials": ["Copper"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 4, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 5, "materials": ["Wood"], "item_type": "wall hanging", "set_size": null, "size_text": "5 in", "handloom": "unknown"}
+{"id": 6, "materials": ["Wood", "Cotton"], "item_type": "puppet", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 7, "materials": ["Silk"], "item_type": "door hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 8, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 9, "materials": ["Wood"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 10, "materials": ["Leather", "Wood"], "item_type": "puppet wall hanging", "set_size": null, "size_text": "21.5 in", "handloom": "unknown"}
+{"id": 11, "materials": ["Wood", "Stone"], "item_type": "plaque hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 12, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 13, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 14, "materials": ["Wool", "Cotton"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "yes"}
+{"id": 15, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 16, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 17, "materials": ["Copper"], "item_type": "wind chimes", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 18, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 19, "materials": ["Wood"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 20, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 21, "materials": ["Wood"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 22, "materials": ["Wood"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 23, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 24, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 25, "materials": ["Wood"], "item_type": "wind chimes", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 26, "materials": ["Wood"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 27, "materials": ["Wood"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 28, "materials": ["Wood"], "item_type": "wall hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 29, "materials": ["Cotton"], "item_type": "wall pouch", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 30, "materials": ["Cotton"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 31, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 32, "materials": ["Iron", "Glass"], "item_type": "lantern", "set_size": null, "size_text": "Medium", "handloom": "unknown"}
+{"id": 33, "materials": ["Bamboo"], "item_type": "tree hanging", "set_size": 6, "size_text": null, "handloom": "unknown"}
+{"id": 34, "materials": [], "item_type": "toran", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 35, "materials": [], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 36, "materials": ["Wood"], "item_type": "sculpture", "set_size": null, "size_text": "Small (5.5 in)", "handloom": "unknown"}
+{"id": 37, "materials": [], "item_type": "car hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 38, "materials": ["Paper"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 39, "materials": ["Wool"], "item_type": "wall hanging", "set_size": null, "size_text": "27 in x 11 in", "handloom": "no"}
+{"id": 40, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 41, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 42, "materials": ["Bamboo"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 43, "materials": ["Iron", "Glass"], "item_type": "lantern", "set_size": null, "size_text": "Small", "handloom": "no"}
+{"id": 44, "materials": ["Wool"], "item_type": "wall hanging", "set_size": null, "size_text": "27 in x 11 in", "handloom": "no"}
+{"id": 45, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 46, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 47, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 48, "materials": ["Wood", "Clay"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 49, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 50, "materials": ["Wood", "Clay"], "item_type": "hanging", "set_size": null, "size_text": "Small", "handloom": "no"}
+{"id": 51, "materials": [], "item_type": "toran", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 52, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 53, "materials": ["Paper"], "item_type": "hanging", "set_size": 3, "size_text": null, "handloom": "no"}
+{"id": 54, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 55, "materials": ["Paper"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 56, "materials": [], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 57, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 58, "materials": ["Stone"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 59, "materials": ["Paper", "Clay"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 60, "materials": ["Jute", "Wood"], "item_type": "car hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 61, "materials": ["Glass"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 62, "materials": ["Wood", "Clay"], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 63, "materials": ["Wood"], "item_type": "shubh labh", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 64, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 65, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 66, "materials": ["Clay"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 67, "materials": [], "item_type": "hanging set", "set_size": 4, "size_text": null, "handloom": "no"}
+{"id": 68, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 69, "materials": ["Wood"], "item_type": "wall hanging", "set_size": null, "size_text": "6 x 6 in", "handloom": "no"}
+{"id": 70, "materials": ["Wood"], "item_type": "wall hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 71, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 72, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 73, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 74, "materials": ["Wood", "Cotton"], "item_type": "puppet", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 75, "materials": ["Paper", "Clay"], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 76, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 77, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "no"}
+{"id": 78, "materials": [], "item_type": "christmas ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 79, "materials": ["Cotton", "Paper"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 80, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 81, "materials": [], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 82, "materials": ["Paper"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 83, "materials": ["Wood"], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 84, "materials": ["Wood"], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 85, "materials": ["Bamboo"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 86, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 87, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 88, "materials": ["Paper"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 89, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 90, "materials": ["Cotton"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 91, "materials": [], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 92, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": "12 in", "handloom": "no"}
+{"id": 93, "materials": ["Iron"], "item_type": "hanging", "set_size": 3, "size_text": null, "handloom": "no"}
+{"id": 94, "materials": ["Paper"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 95, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 96, "materials": ["Paper"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 97, "materials": ["Leather"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 98, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 99, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 100, "materials": ["Paper"], "item_type": "decor item", "set_size": 10, "size_text": null, "handloom": "no"}
+{"id": 101, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 102, "materials": [], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 103, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 104, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 105, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "no"}
+{"id": 106, "materials": ["Clay"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 107, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 108, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 109, "materials": ["Clay"], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 110, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 111, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 112, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "no"}
+{"id": 113, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 114, "materials": [], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 115, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 116, "materials": ["Wood", "Bamboo"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 117, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 118, "materials": ["Wood"], "item_type": "jhoomar", "set_size": null, "size_text": null, "handloom": "no"}
+{"id": 119, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 6, "size_text": null, "handloom": "no"}
+{"id": 120, "materials": ["Copper", "Leather"], "item_type": "hanging", "set_size": null, "size_text": "25", "handloom": "unknown"}
+{"id": 121, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 122, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 123, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 124, "materials": ["Iron"], "item_type": "lantern", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 125, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 6, "size_text": null, "handloom": "unknown"}
+{"id": 126, "materials": ["Wood"], "item_type": "wall hanging", "set_size": 2, "size_text": "34", "handloom": "unknown"}
+{"id": 127, "materials": [], "item_type": "ornament", "set_size": null, "size_text": "41", "handloom": "unknown"}
+{"id": 128, "materials": ["Clay", "Glass", "Wood"], "item_type": "wall hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 129, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 130, "materials": [], "item_type": "ornament", "set_size": null, "size_text": "21", "handloom": "unknown"}
+{"id": 131, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 3, "size_text": null, "handloom": "unknown"}
+{"id": 132, "materials": ["Wool"], "item_type": "wall hanging", "set_size": null, "size_text": "03", "handloom": "unknown"}
+{"id": 133, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": null, "handloom": "unknown"}
+{"id": 134, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 135, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 136, "materials": ["Paper"], "item_type": "hanging", "set_size": 3, "size_text": "02", "handloom": "unknown"}
+{"id": 137, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 138, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 6, "size_text": null, "handloom": "unknown"}
+{"id": 139, "materials": [], "item_type": "wall hanging", "set_size": 2, "size_text": "31", "handloom": "unknown"}
+{"id": 140, "materials": [], "item_type": "ornament", "set_size": null, "size_text": "01", "handloom": "unknown"}
+{"id": 141, "materials": ["Paper"], "item_type": "ornament", "set_size": null, "size_text": null, "handloom": "unknown"}
+{"id": 142, "materials": ["Wood"], "item_type": "hanging", "set_size": null, "size_text": "31", "handloom": "unknown"}
+{"id": 143, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "19", "handloom": "unknown"}
+{"id": 144, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "42", "handloom": "unknown"}
+{"id": 145, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "22", "handloom": "unknown"}
+{"id": 146, "materials": [], "item_type": "hanging", "set_size": null, "size_text": "01", "handloom": "unknown"}
+{"id": 147, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "23", "handloom": "unknown"}
+{"id": 148, "materials": ["Paper"], "item_type": "hanging", "set_size": null, "size_text": "01", "handloom": "unknown"}
+{"id": 149, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 150, "materials": ["Bamboo"], "item_type": "hanging", "set_size": 5, "size_text": null, "handloom": "unknown"}
+{"id": 151, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "14", "handloom": "unknown"}
+{"id": 152, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "39", "handloom": "unknown"}
+{"id": 153, "materials": [], "item_type": "ornament", "set_size": null, "size_text": "38", "handloom": "unknown"}
+{"id": 154, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": "36", "handloom": "unknown"}
+{"id": 155, "materials": ["Cotton"], "item_type": "ornament", "set_size": null, "size_text": "24", "handloom": "unknown"}
+{"id": 156, "materials": ["Wood"], "item_type": "ornament", "set_size": 3, "size_text": null, "handloom": "unknown"}
+{"id": 157, "materials": [], "item_type": "hanging", "set_size": 2, "size_text": "09", "handloom": "unknown"}
+{"id": 158, "materials": ["Paper"], "item_type": "hanging", "set_size": null, "size_text": "14", "handloom": "unknown"}
+{"id": 159, "materials": [], "item_type": "hanging", "set_size": null, "size_text": null, "handloom": "unknown"}
