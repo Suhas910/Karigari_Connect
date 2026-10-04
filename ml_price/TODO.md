@@ -24,7 +24,7 @@ Method details for every data step are in [PROCESSING_STEPS.md](PROCESSING_STEPS
 - [x] Check that schemas match across files (identical 5-column header)
 - [x] Check the encoding and the price format (UTF-8; price already a whole number)
 - [x] Report: `reports/cleaning/step_00_raw_audit.md`
-- [ ] Cross-check in OpenRefine + Orange ([guide 01](guides/01_raw_audit.md)), add screenshots
+- [x] Cross-check in OpenRefine + Orange ([guide 01](guides/01_raw_audit.md)): 5/5 match, screenshots in step_00 §8
 - [ ] Decide D1 (primary art form), D2 (design variants), D3 (blank art forms) — see step_00 §7
 
 ## 2 — Cleaning and processing

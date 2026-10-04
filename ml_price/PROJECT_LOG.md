@@ -130,7 +130,20 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Fix:** `ml_price/.gitattributes` marks `data/raw/**` as `-text` (no conversion) and the files
   were re-added. Verified: the SHA-256 of each stored file equals `SHA256SUMS.txt`.
 
+## 2026-10-04 — Guide 01 done: raw audit cross-checked in the tools
+
+- **Who:** Claude, driving the apps with the project owner's permission. OpenRefine was used in
+  the Claude browser pane (browsers are view-only for Claude), and Orange and Finder with full
+  screen control.
+- **OpenRefine:** project `handicraft_S00_raw` created through OpenRefine's import endpoint with
+  the guide's settings; then 5 facets. **All 5 match** the pandas audit. No edits were made.
+- **Orange:** workflow `tool_exports/orange/S00_price_distribution.ows`; raw vs log price
+  histograms saved to `figures/`.
+- **Notes:** Orange 3.40 names Feature Constructor "Formula". macOS blocked the save dialog from
+  saving straight into the repo, so the workflow was saved to Documents and copied in with
+  Finder.
+- **Report:** [step_00 §8](reports/cleaning/step_00_raw_audit.md#8-cross-check-in-the-tools-2026-10-04)
+
 ## Pending
 
-- Guide 01 cross-check in OpenRefine + Orange
 - Decisions D1–D3

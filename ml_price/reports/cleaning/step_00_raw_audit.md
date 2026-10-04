@@ -113,7 +113,39 @@ The text is already clean. Step 2.7 (text cleaning) will mostly be a confirmatio
 
 The audit doesn't decide these; each goes into the step report where it's applied.
 
-## 8. Comparison with the plan
+## 8. Cross-check in the tools (2026-10-04)
+
+Done by Claude, driving the apps, following [guide 01](../../guides/01_raw_audit.md). No edits:
+OpenRefine Undo/Redo stayed at 0.
+
+**OpenRefine 3.10.1** — project `handicraft_S00_raw`: 3 files, UTF-8, `File` column stored, no
+type guessing.
+
+| # | Check | Expected (pandas) | OpenRefine | Match | Evidence |
+|---|---|---|---|---|---|
+| 1 | Rows per file | 15,520 / 11,979 / 9,774 | 15,520 / 11,979 / 9,774 | ✅ | ![](../../figures/S00_or_rows_per_file.jpg) |
+| 2 | Blank `artform` | 16 | true 16 / false 37,257 | ✅ | ![](../../figures/S00_or_artform_blank.jpg) |
+| 3 | Distinct `artform` lists | 733 | 733 choices | ✅ | ![](../../figures/S00_or_artform_choices.jpg) |
+| 4 | Rows in a repeated-title group | 7,240 | true 7,240 / false 30,033 | ✅ | ![](../../figures/S00_or_title_duplicates.jpg) |
+| 5 | Price numeric, range 50–37,990 | all numeric | histogram over 0–38,000 bins; no non-numeric or blank boxes shown | ✅ | ![](../../figures/S00_or_price_histogram.jpg) |
+
+**Orange 3.40.0** — workflow
+[`S00_price_distribution.ows`](../../tool_exports/orange/S00_price_distribution.ows):
+File (`complete_venues_1.csv`, 15,520 rows) → Distributions, and File → Formula
+(`log_price := log(price)`) → Distributions. In this version of Orange, Feature Constructor is
+called **Formula**.
+
+| Raw price (bin ₹1,000) | log(price) (bin 0.25) |
+|---|---|
+| ![](../../figures/S00_orange_price_raw.jpg) | ![](../../figures/S00_orange_price_log.jpg) |
+
+The raw histogram is one tall bar with a long right tail. Under log it becomes a single hump
+centred near 6–7 (about ₹400–1,100), the visual counterpart of skewness falling from 3.61 to
+0.51.
+
+![Orange workflow](../../figures/S00_orange_workflow.jpg)
+
+## 9. Comparison with the plan
 
 | Planned step | Needed? | Why |
 |---|---|---|

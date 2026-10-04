@@ -47,10 +47,12 @@ in this project yet.**
      **meta**.
 2. Connect **File → Distributions**. Choose `price`. Save the image with the save icon at the
    bottom left → `figures/S00_orange_price_raw.png`.
-3. Connect **File → Feature Constructor → Distributions**. In Feature Constructor, add a
+3. Connect **File → Formula → Distributions** (Formula is what Orange 3.40 calls Feature Constructor). In Formula, add a
    numeric feature `log_price` with expression `log(price)`, then show `log_price` in the new
    Distributions → `figures/S00_orange_price_log.png`.
 4. **File → Save As** → `ml_price/tool_exports/orange/S00_price_distribution.ows`.
+
+**Note (2026-10-04):** screenshots are stored as `.jpg` (same names). Bin widths used: ₹1,000 for raw price, 0.25 for log price.
 
 ## D. Tell Claude
 
