@@ -49,12 +49,18 @@ STAGES = {
                 text=True, num=["artform_count", "title_len", "desc_len", "desc_repeat"], log=True,
                 change="+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)"),
 }
+S6B = STAGES["S6b"]
+STAGES["S6c-z"] = dict(S6B, drop="z", change="S6b, training rows flagged by z-score > 3 on log price removed")
+STAGES["S6c-iso"] = dict(S6B, drop="iso", change="S6b, training rows flagged by Isolation Forest (1%) removed")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
 for c in cfg["num"]:
     d[c] = pd.to_numeric(d[c])
 tr, te = d[d.split == "train"], d[d.split == "test"]
+if cfg.get("drop"):  # outlier handling: training rows only, the test set is never touched
+    flags = pd.read_csv("data/splits/train_outlier_flags.csv").set_index("image_file")[cfg["drop"]]
+    d = d[~(d.image_file.map(flags).fillna(False).astype(bool) & (d.split == "train"))]
 d["text"] = d.product_title + " " + d.product_description if cfg["text"] else ""
 tr, te = d[d.split == "train"], d[d.split == "test"]
 X = cfg["cat"] + cfg["num"] + cfg["multi"] + (["text"] if cfg["text"] else [])

@@ -48,6 +48,16 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 
 The median baseline (one price for everything) scores R² −0.19 and MAE ₹1,741 throughout.
 
+### Outlier handling (step 2.9, training rows only)
+
+| Stage | Change | Ridge R² | Ridge MAE (₹) | Band F1 |
+|---|---|---|---|---|
+| S6b | All training rows | **0.707** | **730** | 0.762 |
+| S6c-z | − 12 z-score rows | 0.705 | 731 | 0.774 |
+| S6c-iso | − 293 Isolation Forest rows | 0.700 | 735 | 0.768 |
+
+Decision: keep all rows ([step_09 report](reports/cleaning/step_09_outliers.md)).
+
 ## Classification — price band (low / mid / high, training-set tertiles)
 
 | Stage | Logistic Regression macro-F1 |

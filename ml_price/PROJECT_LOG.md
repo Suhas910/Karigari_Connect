@@ -191,7 +191,14 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   hurt Random Forest on unseen families.
 - **Details:** [EXPERIMENTS.md](EXPERIMENTS.md)
 
+## 2026-10-04 — Outliers (step 2.9) on training data
+
+- IQR on log price flagged 0 rows; z-score > 3 flagged 12; Isolation Forest (1%) flagged 293.
+- The extremes are genuine handspun silk Patola sarees (₹29,990–37,990), not errors.
+- Removing either set from training slightly worsened Ridge (R² 0.707 → 0.705 / 0.700).
+- **Decision:** keep all rows. The Isolation Forest flags are kept for part 7 (underpricing
+  detector). Report: [step_09_outliers.md](reports/cleaning/step_09_outliers.md)
+
 ## Pending
 
-- Outlier handling (2.9) on training data
 - Orange cross-check of one stage (Test and Score on the saved train/test files)

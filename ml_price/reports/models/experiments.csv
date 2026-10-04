@@ -47,3 +47,15 @@ S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",
 S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Ridge (alpha=1),0.7065,730.2,42.0,2.3,
 S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Random Forest,0.6025,837.4,51.5,106.4,
 S6b,"+ TF-IDF words of title + description (top 5,000 terms, 1-2 word phrases)",29805,7452,7,Logistic Regression (price band),,,,,0.7617
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Median baseline,-0.1457,1487.4,73.9,0.0,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Median per art form,0.1556,1423.4,104.9,0.0,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Linear Regression,0.508,926.6,52.3,3.5,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Ridge (alpha=1),0.7046,731.1,41.9,2.3,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Random Forest,0.5979,826.4,52.7,107.5,
+S6c-z,"S6b, training rows flagged by z-score > 3 on log price removed",29793,7452,7,Logistic Regression (price band),,,,,0.7743
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Median baseline,-0.1457,1487.4,73.9,0.0,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Median per art form,0.1705,1364.1,97.1,0.0,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Linear Regression,0.4998,935.0,53.6,3.4,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Ridge (alpha=1),0.7003,735.2,41.3,2.3,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Random Forest,0.5803,824.1,53.7,107.3,
+S6c-iso,"S6b, training rows flagged by Isolation Forest (1%) removed",29512,7452,7,Logistic Regression (price band),,,,,0.7676

@@ -39,7 +39,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] 2.6 Invalid values: none (min price 50)
 - [x] 2.7 Text: checked clean; nothing to change
 - [x] 2.8 Art forms: 3 spelling merges, `primary_artform`, 65 rare → `other` (S04)
-- [ ] 2.9 Outliers: compare IQR, z-score and Isolation Forest — **after the split, training data only**
+- [x] 2.9 Outliers: IQR 0 / z 12 / Isolation Forest 293 flagged on train; removal didn't help → all kept ([step_09](reports/cleaning/step_09_outliers.md))
 - [x] 2.10 Derived: log_price, title_len, desc_len, desc_repeat (S05). Materials / set size → later feature stages
 - [x] Final cleaned dataset → `data/final/handicraft_clean.csv.gz`
 - [x] Combined report: [CLEANING_REPORT](reports/cleaning/CLEANING_REPORT.md)
@@ -84,7 +84,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] S0 raw, price parsed only
 - [x] S1 duplicates removed
 - [x] S2 missing values handled
-- [ ] S3 outliers handled (training data only)
+- [x] S3 outliers handled (training data only) — run as S6c
 - [x] S4 art forms consolidated (scores fell; see EXPERIMENTS)
 - [x] S5 log(price) target
 - [x] `desc_repeat` checked: equals within-split count (no leak); its v2 "gain" was family memorisation
