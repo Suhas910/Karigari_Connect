@@ -46,12 +46,12 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 ## 3 — Exploratory analysis
 
-- [ ] Price distribution, skewness, kurtosis; raw vs log price
-- [ ] Price by art form (boxplots, medians)
-- [ ] ANOVA / Kruskal-Wallis test of art-form effect
-- [ ] Correlations (Pearson, Spearman)
-- [ ] Most frequent words per price band (TF-IDF)
-- [ ] Report: `reports/eda/EDA_REPORT.md`
+- [x] Price distribution, skewness, kurtosis; raw vs log price (skew 3.50 → 0.49; 61% of prices end in 90)
+- [x] Price by art form (boxplots, medians); Orange Box Plot cross-check
+- [x] Levene, ANOVA, Kruskal-Wallis, Mann-Whitney; repeated with one row per family (ε² 0.45 → 0.35)
+- [x] Correlations (Pearson, Spearman)
+- [x] Most typical words per price band (TF-IDF) + chi-square technique × band (Cramér's V 0.356)
+- [x] Report: [EDA_REPORT](reports/eda/EDA_REPORT.md)
 
 ## 4 — Second dataset (Amazon Handmade)
 
@@ -62,7 +62,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 ## 5 — Project parts (all 16 approved)
 
 - [x] 1 Data cleaning with audit trail (sections 1–2 above) ([CLEANING_REPORT](reports/cleaning/CLEANING_REPORT.md))
-- [ ] 2 Statistics and EDA (section 3 above)
+- [x] 2 Statistics and EDA: Kruskal-Wallis + family-level repeat, correlations, words per band ([EDA_REPORT](reports/eda/EDA_REPORT.md))
 - [x] 3 Craft knowledge graph: 68 classes, 201 art forms, `.owl` for Protégé ([KG_REPORT](reports/knowledge_graph/KG_REPORT.md))
 - [x] 4 Rule-based reasoning: 5 SWRL rules + HermiT, 0 disagreements with pandas; 4 SPARQL questions; features → S7
 - [x] 5 Market segmentation: K-Means k=17 (silhouette 0.164), Hierarchical, DBSCAN; PCA map ([report](reports/unsupervised/UNSUPERVISED_REPORT.md))

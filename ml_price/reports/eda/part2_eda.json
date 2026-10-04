@@ -1,0 +1,528 @@
+{
+ "rows": 29805,
+ "families": 2065,
+ "distribution": {
+  "price": {
+   "mean": 2069.348,
+   "median": 850.0,
+   "std": 2869.763,
+   "min": 50.0,
+   "q1": 450.0,
+   "q3": 2690.0,
+   "max": 37990.0,
+   "skewness": 3.501,
+   "excess_kurtosis": 18.563,
+   "dagostino_p": 0.0
+  },
+  "log_price": {
+   "mean": 7.017,
+   "median": 6.745,
+   "std": 1.066,
+   "min": 3.912,
+   "q1": 6.109,
+   "q3": 7.897,
+   "max": 10.545,
+   "skewness": 0.492,
+   "excess_kurtosis": -0.604,
+   "dagostino_p": 0.0
+  }
+ },
+ "price_endings": {
+  "ends_in_90_pct": 61.4,
+  "multiple_of_50_pct": 34.8,
+  "most_common": {
+   "390": 1680,
+   "450": 1502,
+   "690": 1491,
+   "350": 1310,
+   "590": 1163,
+   "490": 1054,
+   "250": 1053,
+   "790": 923
+  }
+ },
+ "top15_artforms": [
+  {
+   "primary_artform": "fabart",
+   "rows": 2475,
+   "median": 350.0,
+   "q1": 250.0,
+   "q3": 590.0,
+   "mean": 437.0
+  },
+  {
+   "primary_artform": "bead work",
+   "rows": 857,
+   "median": 490.0,
+   "q1": 390.0,
+   "q3": 620.0,
+   "mean": 595.0
+  },
+  {
+   "primary_artform": "handmade",
+   "rows": 1360,
+   "median": 490.0,
+   "q1": 350.0,
+   "q3": 790.0,
+   "mean": 652.0
+  },
+  {
+   "primary_artform": "oxidised metal craft",
+   "rows": 1465,
+   "median": 650.0,
+   "q1": 450.0,
+   "q3": 930.0,
+   "mean": 740.0
+  },
+  {
+   "primary_artform": "kalamkari block printing",
+   "rows": 867,
+   "median": 690.0,
+   "q1": 550.0,
+   "q3": 1690.0,
+   "mean": 1062.0
+  },
+  {
+   "primary_artform": "patchwork",
+   "rows": 587,
+   "median": 790.0,
+   "q1": 750.0,
+   "q3": 1050.0,
+   "mean": 1174.0
+  },
+  {
+   "primary_artform": "sanganeri block printing",
+   "rows": 1283,
+   "median": 790.0,
+   "q1": 450.0,
+   "q3": 2490.0,
+   "mean": 1599.0
+  },
+  {
+   "primary_artform": "batik block printing",
+   "rows": 702,
+   "median": 850.0,
+   "q1": 527.5,
+   "q3": 1950.0,
+   "mean": 1395.0
+  },
+  {
+   "primary_artform": "plain solid",
+   "rows": 949,
+   "median": 890.0,
+   "q1": 290.0,
+   "q3": 1850.0,
+   "mean": 1462.0
+  },
+  {
+   "primary_artform": "bagru block printing",
+   "rows": 758,
+   "median": 950.0,
+   "q1": 420.0,
+   "q3": 5190.0,
+   "mean": 2846.0
+  },
+  {
+   "primary_artform": "pochampally ikat weaving",
+   "rows": 957,
+   "median": 990.0,
+   "q1": 390.0,
+   "q3": 2990.0,
+   "mean": 2835.0
+  },
+  {
+   "primary_artform": "jacquard weaving",
+   "rows": 799,
+   "median": 2190.0,
+   "q1": 390.0,
+   "q3": 2590.0,
+   "mean": 1856.0
+  },
+  {
+   "primary_artform": "ajrakh block printing",
+   "rows": 1032,
+   "median": 2490.0,
+   "q1": 790.0,
+   "q3": 6290.0,
+   "mean": 3933.0
+  },
+  {
+   "primary_artform": "bandhani tie dye",
+   "rows": 1203,
+   "median": 3190.0,
+   "q1": 850.0,
+   "q3": 4290.0,
+   "mean": 3163.0
+  },
+  {
+   "primary_artform": "bagh block printing",
+   "rows": 597,
+   "median": 3990.0,
+   "q1": 1690.0,
+   "q3": 4990.0,
+   "mean": 4089.0
+  }
+ ],
+ "artform_tests": {
+  "all_rows (art forms with >= 30 rows)": {
+   "rows": 29410,
+   "groups": 107,
+   "levene_W": 76.22,
+   "levene_p": 0.0,
+   "anova_F": 236.41,
+   "anova_p": 0.0,
+   "eta_squared": 0.461,
+   "kruskal_H": 13303.7,
+   "kruskal_p": 0.0,
+   "epsilon_squared": 0.45
+  },
+  "one_row_per_family (art forms with >= 30 families)": {
+   "rows": 1110,
+   "groups": 18,
+   "levene_W": 10.54,
+   "levene_p": 1.0796489310857045e-26,
+   "anova_F": 35.54,
+   "anova_p": 4.355934080009393e-92,
+   "eta_squared": 0.356,
+   "kruskal_H": 396.6,
+   "kruskal_p": 9.343088070006029e-74,
+   "epsilon_squared": 0.348
+  }
+ },
+ "mann_whitney_top2": {
+  "a": "fabart",
+  "b": "oxidised metal craft",
+  "median_a": 350.0,
+  "median_b": 650.0,
+  "U": 850812.0,
+  "p": 5.3934807962793354e-173
+ },
+ "correlations": [
+  {
+   "feature": "title_len",
+   "pearson_price": 0.453,
+   "pearson_log_price": 0.546,
+   "spearman_price": 0.514
+  },
+  {
+   "feature": "desc_len",
+   "pearson_price": 0.338,
+   "pearson_log_price": 0.439,
+   "spearman_price": 0.465
+  },
+  {
+   "feature": "desc_repeat",
+   "pearson_price": -0.093,
+   "pearson_log_price": -0.121,
+   "spearman_price": -0.179
+  },
+  {
+   "feature": "artform_count",
+   "pearson_price": 0.15,
+   "pearson_log_price": 0.173,
+   "spearman_price": 0.166
+  },
+  {
+   "feature": "variant_group_size",
+   "pearson_price": -0.09,
+   "pearson_log_price": -0.127,
+   "spearman_price": -0.177
+  },
+  {
+   "feature": "kg_skilled",
+   "pearson_price": 0.358,
+   "pearson_log_price": 0.38,
+   "spearman_price": 0.35
+  }
+ ],
+ "band_cuts": [
+  590.0,
+  1850.0
+ ],
+ "words_per_band": {
+  "low": [
+   {
+    "word": "handmade",
+    "tfidf_in_band": 0.0564,
+    "tfidf_elsewhere": 0.0255
+   },
+   {
+    "word": "hair",
+    "tfidf_in_band": 0.0302,
+    "tfidf_elsewhere": 0.0019
+   },
+   {
+    "word": "keychain",
+    "tfidf_in_band": 0.021,
+    "tfidf_elsewhere": 0.0027
+   },
+   {
+    "word": "buttons",
+    "tfidf_in_band": 0.0182,
+    "tfidf_elsewhere": 0.0
+   },
+   {
+    "word": "fabart",
+    "tfidf_in_band": 0.0235,
+    "tfidf_elsewhere": 0.0056
+   },
+   {
+    "word": "band",
+    "tfidf_in_band": 0.0193,
+    "tfidf_elsewhere": 0.0015
+   },
+   {
+    "word": "fabric",
+    "tfidf_in_band": 0.0514,
+    "tfidf_elsewhere": 0.034
+   },
+   {
+    "word": "rubber",
+    "tfidf_in_band": 0.017,
+    "tfidf_elsewhere": 0.0016
+   },
+   {
+    "word": "scrunchie",
+    "tfidf_in_band": 0.0162,
+    "tfidf_elsewhere": 0.001
+   },
+   {
+    "word": "clip",
+    "tfidf_in_band": 0.0151,
+    "tfidf_elsewhere": 0.0003
+   },
+   {
+    "word": "add",
+    "tfidf_in_band": 0.0226,
+    "tfidf_elsewhere": 0.0078
+   },
+   {
+    "word": "button",
+    "tfidf_in_band": 0.0145,
+    "tfidf_elsewhere": 0.0002
+   },
+   {
+    "word": "projects",
+    "tfidf_in_band": 0.0142,
+    "tfidf_elsewhere": 0.0009
+   },
+   {
+    "word": "charm",
+    "tfidf_in_band": 0.0235,
+    "tfidf_elsewhere": 0.0104
+   },
+   {
+    "word": "sewing",
+    "tfidf_in_band": 0.013,
+    "tfidf_elsewhere": 0.0
+   }
+  ],
+  "mid": [
+   {
+    "word": "bag",
+    "tfidf_in_band": 0.0445,
+    "tfidf_elsewhere": 0.0071
+   },
+   {
+    "word": "quilted",
+    "tfidf_in_band": 0.0362,
+    "tfidf_elsewhere": 0.0008
+   },
+   {
+    "word": "handcrafted",
+    "tfidf_in_band": 0.0443,
+    "tfidf_elsewhere": 0.0218
+   },
+   {
+    "word": "sling",
+    "tfidf_in_band": 0.0231,
+    "tfidf_elsewhere": 0.0029
+   },
+   {
+    "word": "essentials",
+    "tfidf_in_band": 0.0249,
+    "tfidf_elsewhere": 0.0048
+   },
+   {
+    "word": "handbag",
+    "tfidf_in_band": 0.0197,
+    "tfidf_elsewhere": 0.0004
+   },
+   {
+    "word": "pockets",
+    "tfidf_in_band": 0.0183,
+    "tfidf_elsewhere": 0.0017
+   },
+   {
+    "word": "spacious",
+    "tfidf_in_band": 0.0169,
+    "tfidf_elsewhere": 0.0005
+   },
+   {
+    "word": "designed",
+    "tfidf_in_band": 0.0221,
+    "tfidf_elsewhere": 0.0061
+   },
+   {
+    "word": "protection",
+    "tfidf_in_band": 0.0157,
+    "tfidf_elsewhere": 0.0006
+   },
+   {
+    "word": "carry",
+    "tfidf_in_band": 0.0175,
+    "tfidf_elsewhere": 0.0035
+   },
+   {
+    "word": "durability",
+    "tfidf_in_band": 0.0183,
+    "tfidf_elsewhere": 0.0043
+   },
+   {
+    "word": "added",
+    "tfidf_in_band": 0.0146,
+    "tfidf_elsewhere": 0.0009
+   },
+   {
+    "word": "foam",
+    "tfidf_in_band": 0.0139,
+    "tfidf_elsewhere": 0.0003
+   },
+   {
+    "word": "fabrics",
+    "tfidf_in_band": 0.0176,
+    "tfidf_elsewhere": 0.0045
+   }
+  ],
+  "high": [
+   {
+    "word": "dress",
+    "tfidf_in_band": 0.0623,
+    "tfidf_elsewhere": 0.001
+   },
+   {
+    "word": "material",
+    "tfidf_in_band": 0.0631,
+    "tfidf_elsewhere": 0.0023
+   },
+   {
+    "word": "unstitched",
+    "tfidf_in_band": 0.0588,
+    "tfidf_elsewhere": 0.0008
+   },
+   {
+    "word": "kurta",
+    "tfidf_in_band": 0.0442,
+    "tfidf_elsewhere": 0.0017
+   },
+   {
+    "word": "saree",
+    "tfidf_in_band": 0.0423,
+    "tfidf_elsewhere": 0.0013
+   },
+   {
+    "word": "dupatta",
+    "tfidf_in_band": 0.0397,
+    "tfidf_elsewhere": 0.0018
+   },
+   {
+    "word": "wear",
+    "tfidf_in_band": 0.0457,
+    "tfidf_elsewhere": 0.0119
+   },
+   {
+    "word": "silk",
+    "tfidf_in_band": 0.0393,
+    "tfidf_elsewhere": 0.0086
+   },
+   {
+    "word": "looking",
+    "tfidf_in_band": 0.0387,
+    "tfidf_elsewhere": 0.0087
+   },
+   {
+    "word": "set",
+    "tfidf_in_band": 0.0542,
+    "tfidf_elsewhere": 0.0256
+   },
+   {
+    "word": "includes",
+    "tfidf_in_band": 0.0307,
+    "tfidf_elsewhere": 0.0023
+   },
+   {
+    "word": "suit",
+    "tfidf_in_band": 0.026,
+    "tfidf_elsewhere": 0.0004
+   },
+   {
+    "word": "wool",
+    "tfidf_in_band": 0.0278,
+    "tfidf_elsewhere": 0.003
+   },
+   {
+    "word": "hand",
+    "tfidf_in_band": 0.0507,
+    "tfidf_elsewhere": 0.0261
+   },
+   {
+    "word": "gatherings",
+    "tfidf_in_band": 0.0262,
+    "tfidf_elsewhere": 0.0022
+   }
+  ]
+ },
+ "chi_square_technique_vs_band": {
+  "table": {
+   "bead work": {
+    "low": 635,
+    "mid": 263,
+    "high": 14
+   },
+   "embroidery": {
+    "low": 665,
+    "mid": 617,
+    "high": 978
+   },
+   "metal": {
+    "low": 888,
+    "mid": 1219,
+    "high": 379
+   },
+   "other / none": {
+    "low": 4273,
+    "mid": 2561,
+    "high": 677
+   },
+   "painting": {
+    "low": 724,
+    "mid": 1032,
+    "high": 960
+   },
+   "printing": {
+    "low": 1574,
+    "mid": 2041,
+    "high": 1785
+   },
+   "tie-dye": {
+    "low": 276,
+    "mid": 381,
+    "high": 749
+   },
+   "weaving": {
+    "low": 999,
+    "mid": 1090,
+    "high": 4162
+   },
+   "wood": {
+    "low": 483,
+    "mid": 351,
+    "high": 29
+   }
+  },
+  "chi2": 7567.1,
+  "dof": 16,
+  "p": 0.0,
+  "cramers_v": 0.356
+ }
+}

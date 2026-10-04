@@ -312,6 +312,24 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **S10:** Ridge 0.768. **S10-swap** (LLM materials replace keyword materials): **R² 0.773,
   MAE ₹681, band F1 0.789**, the best so far.
 
+## 2026-10-04 — Part 2: statistics and EDA
+
+- Training split only (29,805 rows), so the test set stays unseen. Script `scripts/part2_eda.py`.
+- **Distribution:** price skew 3.50 / kurtosis 18.6; log price skew 0.49. 61.4% of prices end in
+  90 (price points such as ₹390, ₹590, ₹990), which explains the spiky histogram.
+- **Art form tests:** Levene shows unequal spreads, so Kruskal-Wallis is the main test (ANOVA
+  agrees). H = 13,304, ε² 0.45 on all rows; **ε² 0.35 with one row per family**, because variant
+  families inflate the evidence. Mann-Whitney example: fabart vs oxidised metal craft, p = 10⁻¹⁷³.
+- **Correlations:** strongest is title length (ρ 0.51); every link is stronger on log price than
+  on raw price.
+- **Words per band:** product types (hair accessories → bags → sarees and dress material) and
+  materials (silk, wool) in the high band. Chi-square technique × band: Cramér's V 0.356.
+- **Orange:** File → Box Plot (log price by art form) built by Claude with computer use; 2
+  screenshots in `figures/`. Same lowest and highest art forms as the script. The workflow was
+  saved as `~/Documents/P2_boxplot_artform.ows`: the save dialog couldn't navigate to the
+  project, and Claude's shell can't read Documents. Copy it to `tool_exports/orange/` by hand.
+- **Report:** [EDA_REPORT.md](reports/eda/EDA_REPORT.md)
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet
