@@ -58,6 +58,27 @@ The median baseline (one price for everything) scores R² −0.19 and MAE ₹1,7
 
 Decision: keep all rows ([step_09 report](reports/cleaning/step_09_outliers.md)).
 
+### Cross-check in Orange (stage S4)
+
+Orange 3.40 Test and Score, "Test on test data", using the same frozen train/test files
+(`data/splits/orange/S4_*.tab`). Workflow:
+[`S4_crosscheck_test_and_score.ows`](tool_exports/orange/S4_crosscheck_test_and_score.ows).
+
+| Model | Orange R² | Script R² | Orange MAE (₹) | Script MAE (₹) | Orange MAPE (%) | Script MAPE (%) |
+|---|---|---|---|---|---|---|
+| Linear Regression | 0.199 | 0.197 | 1,601.7 | 1,606.0 | 154.4 | 155.6 |
+| Random Forest | 0.281 | 0.288 | 1,475 | 1,476 | 141.4 | 143.2 |
+
+The two tools agree to within 0.01 R². The small gaps are expected:
+
+- **Linear Regression:** the 2 art forms that occur only in the test set are encoded differently
+  (scikit-learn ignores unseen categories; Orange maps them through its own encoder).
+- **Random Forest:** different defaults (Orange: 10 trees; script: 200 trees, minimum leaf 2).
+
+| Test and Score | Workflow |
+|---|---|
+| ![](figures/S4_orange_test_and_score.jpg) | ![](figures/S4_orange_workflow.jpg) |
+
 ## Classification — price band (low / mid / high, training-set tertiles)
 
 | Stage | Logistic Regression macro-F1 |

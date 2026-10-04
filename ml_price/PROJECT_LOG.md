@@ -199,6 +199,15 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Decision:** keep all rows. The Isolation Forest flags are kept for part 7 (underpricing
   detector). Report: [step_09_outliers.md](reports/cleaning/step_09_outliers.md)
 
+## 2026-10-04 — Orange cross-check of the scoring harness
+
+- Stage S4 rebuilt in Orange (File train + File test → Linear Regression, Random Forest → Test
+  and Score, "Test on test data"), driven by Claude with full screen control.
+- Linear Regression R² 0.199 vs script 0.197; Random Forest 0.281 vs 0.288. The two tools
+  agree, so the scripted harness can be trusted for the other stages.
+- Files: `tool_exports/orange/S4_crosscheck_test_and_score.ows`, `data/splits/orange/`, two
+  figures. Details in [EXPERIMENTS.md](EXPERIMENTS.md).
+
 ## Pending
 
-- Orange cross-check of one stage (Test and Score on the saved train/test files)
+- Parts 3–7: knowledge graph (Protégé), segmentation, Apriori, underpricing detector
