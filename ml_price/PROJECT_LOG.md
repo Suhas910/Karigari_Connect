@@ -252,6 +252,13 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 - **Shared code:** `scripts/features.py`. Report:
   [PARTS_9_11_REPORT.md](reports/models/PARTS_9_11_REPORT.md)
 
+## 2026-10-04 — Parallelism capped after high memory use
+
+- **Problem:** part 10 (grid search, `n_jobs=-1`) ran up to 8 worker processes at once, each
+  holding a copy of the training features. Memory use reached about 12 GB of 16 GB.
+- **Change:** every script now uses `n_jobs=4`. Results are unchanged (fixed random seeds); runs
+  take somewhat longer.
+
 ## Pending
 
 - Part 8 completion (Polynomial, Tree, GBM, kNN regressors); parts 12–16: LLM extraction, image features, SHAP, bias audit, advisor + demo
