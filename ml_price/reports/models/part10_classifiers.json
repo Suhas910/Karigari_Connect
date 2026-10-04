@@ -1,0 +1,227 @@
+{
+ "band_cut_points": [
+  590.0,
+  1850.0
+ ],
+ "test_band_counts": [
+  2152,
+  3389,
+  1911
+ ],
+ "results": [
+  {
+   "model": "Gradient Boosting",
+   "best_params": {
+    "learning_rate": 0.05,
+    "max_iter": 300
+   },
+   "cv_f1": 0.7785,
+   "test_accuracy": 0.8108,
+   "test_precision": 0.8191,
+   "test_recall": 0.8078,
+   "test_f1": 0.8104,
+   "test_roc_auc": 0.9253,
+   "seconds": 54.1
+  },
+  {
+   "model": "Random Forest",
+   "best_params": {
+    "min_samples_leaf": 5
+   },
+   "cv_f1": 0.7717,
+   "test_accuracy": 0.8043,
+   "test_precision": 0.8261,
+   "test_recall": 0.7966,
+   "test_f1": 0.8047,
+   "test_roc_auc": 0.9163,
+   "seconds": 70.8
+  },
+  {
+   "model": "Logistic Regression",
+   "best_params": {
+    "C": 10
+   },
+   "cv_f1": 0.7593,
+   "test_accuracy": 0.7725,
+   "test_precision": 0.7807,
+   "test_recall": 0.7739,
+   "test_f1": 0.7765,
+   "test_roc_auc": 0.9105,
+   "seconds": 30.7
+  },
+  {
+   "model": "Linear SVM",
+   "best_params": {
+    "estimator__C": 1
+   },
+   "cv_f1": 0.7289,
+   "test_accuracy": 0.7564,
+   "test_precision": 0.7672,
+   "test_recall": 0.7684,
+   "test_f1": 0.7669,
+   "test_roc_auc": 0.899,
+   "seconds": 102.9
+  },
+  {
+   "model": "KNN (cosine, text)",
+   "best_params": {
+    "n_neighbors": 5
+   },
+   "cv_f1": 0.7331,
+   "test_accuracy": 0.7122,
+   "test_precision": 0.7174,
+   "test_recall": 0.7287,
+   "test_f1": 0.7212,
+   "test_roc_auc": 0.8403,
+   "seconds": 78.1
+  },
+  {
+   "model": "Naive Bayes (multinomial)",
+   "best_params": {
+    "alpha": 0.1
+   },
+   "cv_f1": 0.7197,
+   "test_accuracy": 0.7107,
+   "test_precision": 0.7284,
+   "test_recall": 0.7134,
+   "test_f1": 0.7028,
+   "test_roc_auc": 0.8645,
+   "seconds": 0.3
+  },
+  {
+   "model": "Decision Tree",
+   "best_params": {
+    "max_depth": 8,
+    "min_samples_leaf": 5
+   },
+   "cv_f1": 0.6586,
+   "test_accuracy": 0.6653,
+   "test_precision": 0.6671,
+   "test_recall": 0.6721,
+   "test_f1": 0.6694,
+   "test_roc_auc": 0.8062,
+   "seconds": 8.5
+  }
+ ],
+ "confusion_matrices": {
+  "Logistic Regression": [
+   [
+    1389,
+    755,
+    8
+   ],
+   [
+    500,
+    2671,
+    218
+   ],
+   [
+    55,
+    159,
+    1697
+   ]
+  ],
+  "Linear SVM": [
+   [
+    1547,
+    604,
+    1
+   ],
+   [
+    777,
+    2427,
+    185
+   ],
+   [
+    77,
+    171,
+    1663
+   ]
+  ],
+  "Naive Bayes (multinomial)": [
+   [
+    1195,
+    498,
+    459
+   ],
+   [
+    233,
+    2459,
+    697
+   ],
+   [
+    2,
+    267,
+    1642
+   ]
+  ],
+  "KNN (cosine, text)": [
+   [
+    1472,
+    596,
+    84
+   ],
+   [
+    904,
+    2211,
+    274
+   ],
+   [
+    86,
+    201,
+    1624
+   ]
+  ],
+  "Decision Tree": [
+   [
+    1303,
+    722,
+    127
+   ],
+   [
+    768,
+    2199,
+    422
+   ],
+   [
+    53,
+    402,
+    1456
+   ]
+  ],
+  "Random Forest": [
+   [
+    1364,
+    785,
+    3
+   ],
+   [
+    236,
+    2922,
+    231
+   ],
+   [
+    3,
+    200,
+    1708
+   ]
+  ],
+  "Gradient Boosting": [
+   [
+    1436,
+    653,
+    63
+   ],
+   [
+    310,
+    2866,
+    213
+   ],
+   [
+    19,
+    152,
+    1740
+   ]
+  ]
+ }
+}

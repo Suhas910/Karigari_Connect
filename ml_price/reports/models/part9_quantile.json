@@ -1,0 +1,96 @@
+{
+ "quantile_gbm": {
+  "coverage_80": 0.583,
+  "median_width_inr": 1019.0,
+  "median_relative_width": 1.003,
+  "below_range": 0.201,
+  "above_range": 0.216,
+  "point_r2": 0.6023,
+  "point_mae": 794.4
+ },
+ "quantile_gbm_conformal": {
+  "coverage_80": 0.832,
+  "median_width_inr": 1552.0,
+  "median_relative_width": 1.542,
+  "below_range": 0.077,
+  "above_range": 0.091,
+  "point_r2": 0.6023,
+  "point_mae": 794.4
+ },
+ "conformal_widening_log": 0.2348,
+ "ridge_plus_fixed_band": {
+  "coverage_80": 0.772,
+  "median_width_inr": 961.0,
+  "median_relative_width": 1.147,
+  "below_range": 0.099,
+  "above_range": 0.129,
+  "point_r2": 0.7515,
+  "point_mae": 690.9
+ },
+ "pinball_loss_log_scale": {
+  "0.1": 0.1028,
+  "0.5": 0.1942,
+  "0.9": 0.1054
+ },
+ "coverage_by_band": {
+  "quantile_gbm": {
+   "low": 0.449,
+   "mid": 0.717,
+   "high": 0.549
+  },
+  "quantile_gbm_conformal": {
+   "low": 0.781,
+   "mid": 0.899,
+   "high": 0.796
+  },
+  "ridge_plus_fixed_band": {
+   "low": 0.785,
+   "mid": 0.783,
+   "high": 0.74
+  }
+ },
+ "examples": [
+  {
+   "product_title": "Blue - Ceramic Hand Glazed Plates (Set of 4)",
+   "price": 2190,
+   "lo": 280.0,
+   "mid": 670.0,
+   "hi": 2050.0
+  },
+  {
+   "product_title": "Green - Kumaun Hand Knitted Acrylic Woolen Socks - Kids",
+   "price": 890,
+   "lo": 700.0,
+   "mid": 1500.0,
+   "hi": 2680.0
+  },
+  {
+   "product_title": "Green - Kutch Bandhani Handwoven Merino Wool Shawl with Zari Patta 10",
+   "price": 4990,
+   "lo": 2080.0,
+   "mid": 7130.0,
+   "hi": 15390.0
+  },
+  {
+   "product_title": "Surajmukhi - Hand Embroidered Thread & Bead Work Rakhi 22",
+   "price": 490,
+   "lo": 350.0,
+   "mid": 520.0,
+   "hi": 1090.0
+  },
+  {
+   "product_title": "Grey - Jhiri Pure Handloom Cotton Fabric 05",
+   "price": 520,
+   "lo": 360.0,
+   "mid": 450.0,
+   "hi": 1420.0
+  },
+  {
+   "product_title": "Red - German Silver Jute Necklace Set 80",
+   "price": 950,
+   "lo": 490.0,
+   "mid": 700.0,
+   "hi": 970.0
+  }
+ ]
+}

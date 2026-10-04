@@ -1,0 +1,145 @@
+{
+ "index": "faiss.IndexFlatIP (exact search)",
+ "vectors": 29805,
+ "dims": 100,
+ "knn_price_estimate": {
+  "1": {
+   "r2": 0.5174,
+   "mae": 848.3,
+   "iqr_coverage": null
+  },
+  "5": {
+   "r2": 0.5955,
+   "mae": 838.7,
+   "iqr_coverage": 0.332
+  },
+  "10": {
+   "r2": 0.6128,
+   "mae": 826.9,
+   "iqr_coverage": 0.374
+  },
+  "25": {
+   "r2": 0.5777,
+   "mae": 839.6,
+   "iqr_coverage": 0.488
+  }
+ },
+ "mean_similarity_top10": {
+  "median": 0.889,
+  "p10": 0.745,
+  "p90": 0.968
+ },
+ "relative_error_by_similarity_quartile": {
+  "lowest": 0.4,
+  "low": 0.26,
+  "high": 0.231,
+  "highest": 0.266
+ },
+ "examples": [
+  {
+   "product": "Black - Handcrafted Fabric Jhola Bag 02",
+   "price": 1590,
+   "neighbours": [
+    {
+     "title": "Black - North-East India's Iconic Symbols Cotton Canvas Tote Bag",
+     "price": 1190,
+     "similarity": 0.845
+    },
+    {
+     "title": "Black - Jhiri Pure Handloom Cotton Jhola Bag 02",
+     "price": 450,
+     "similarity": 0.838
+    },
+    {
+     "title": "Black - Handcrafted Cotton Small Hand Bag 09",
+     "price": 540,
+     "similarity": 0.833
+    },
+    {
+     "title": "Black - Handcrafted Cotton Small Hand Bag 22",
+     "price": 540,
+     "similarity": 0.832
+    },
+    {
+     "title": "Black - Handcrafted Cotton Small Hand Bag 13",
+     "price": 540,
+     "similarity": 0.83
+    }
+   ],
+   "range_p25_p75": [
+    540.0,
+    1590.0
+   ]
+  },
+  {
+   "product": "Multicolor - Zoya Wooden Beads Earrings with German Silver Birds",
+   "price": 390,
+   "neighbours": [
+    {
+     "title": "Multicolor - German Silver Wooden Beads Necklace Set 86",
+     "price": 550,
+     "similarity": 0.843
+    },
+    {
+     "title": "Orange - Rasha German Silver Jhumki Earrings with Wooden Elephant",
+     "price": 490,
+     "similarity": 0.825
+    },
+    {
+     "title": "Orange - Naaz German Silver Jhumki Earrings with Wooden Elephant",
+     "price": 490,
+     "similarity": 0.825
+    },
+    {
+     "title": "Multicolor - Handmade Wooden Bird Beaded Necklace Set 02",
+     "price": 550,
+     "similarity": 0.813
+    },
+    {
+     "title": "Multicolor - Handmade Wooden Bird Beaded Necklace Set 06",
+     "price": 550,
+     "similarity": 0.813
+    }
+   ],
+   "range_p25_p75": [
+    340.0,
+    535.0
+   ]
+  },
+  {
+   "product": "Anant Raksha Thread Work Lumba Rakhi with Soof Hand Embroidered Potli 38",
+   "price": 990,
+   "neighbours": [
+    {
+     "title": "Bhabhi - Hand Embroidered Thread Work Rakhi 02",
+     "price": 450,
+     "similarity": 0.916
+    },
+    {
+     "title": "Bhaiya - Hand Embroidered Thread Work Rakhi 05",
+     "price": 450,
+     "similarity": 0.916
+    },
+    {
+     "title": "Hexagonal - Hand Embroidered Thread Work Rakhi 15",
+     "price": 450,
+     "similarity": 0.913
+    },
+    {
+     "title": "Hamsa - Hand Embroidered Thread Work Rakhi 07",
+     "price": 450,
+     "similarity": 0.912
+    },
+    {
+     "title": "Bro - Hand Embroidered Thread Work Rakhi 17",
+     "price": 450,
+     "similarity": 0.912
+    }
+   ],
+   "range_p25_p75": [
+    450.0,
+    450.0
+   ]
+  }
+ ]
+}

@@ -83,3 +83,9 @@ S8,"S7 + K-Means segment id (17 text segments, fitted on train)",29805,7452,45,L
 S8,"S7 + K-Means segment id (17 text segments, fitted on train)",29805,7452,45,Ridge (alpha=1),0.7136,734.6,40.9,2.4,
 S8,"S7 + K-Means segment id (17 text segments, fitted on train)",29805,7452,45,Random Forest,0.5876,850.5,51.3,110.7,
 S8,"S7 + K-Means segment id (17 text segments, fitted on train)",29805,7452,45,Logistic Regression (price band),,,,,0.7857
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Median baseline,-0.1457,1487.4,73.9,0.0,
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Median per art form,0.1556,1423.4,104.9,0.0,
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Linear Regression,-747101468.7972,1475176.5,362160.1,58.9,
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Ridge (alpha=1),0.7515,690.9,37.3,3.9,
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Random Forest,0.5883,849.9,51.0,128.4,
+S9,"S8 + numeric features standardised (mean 0, sd 1) before the models",29805,7452,45,Logistic Regression (price band),,,,,0.7702

@@ -239,6 +239,19 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   Symmetric, so mostly model error; framed as a review queue, not a verdict.
 - **Report:** [UNSUPERVISED_REPORT.md](reports/unsupervised/UNSUPERVISED_REPORT.md)
 
+## 2026-10-04 — Parts 9–11 and stage S9
+
+- **S9 (feature scaling):** Ridge R² **0.752**, MAE ₹691, MAPE 37.3% (best). Unregularised
+  Linear Regression collapses on the duplicated KG columns: a regularisation example.
+- **Part 9:** raw quantile GBM covers only 58% for an 80% target (overconfident on new
+  families); conformal calibration → 83%; Ridge + out-of-fold band → 77%, narrower.
+- **Part 10:** 7 classifiers tuned with grouped 5-fold CV. Gradient Boosting F1 **0.810**,
+  ROC-AUC 0.925; Random Forest 0.805; Decision Tree 0.669; Naive Bayes over-predicts "high".
+- **Part 11:** FAISS exact index of 29,805 vectors; 10-neighbour median R² 0.613; weak matches
+  mean about 1.5× higher error (useful as a caution signal).
+- **Shared code:** `scripts/features.py`. Report:
+  [PARTS_9_11_REPORT.md](reports/models/PARTS_9_11_REPORT.md)
+
 ## Pending
 
-- Parts 9–16: quantile range, classifier comparison, similar-items search, LLM extraction, image features, SHAP, bias audit, advisor + demo
+- Part 8 completion (Polynomial, Tree, GBM, kNN regressors); parts 12–16: LLM extraction, image features, SHAP, bias audit, advisor + demo

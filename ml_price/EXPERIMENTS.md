@@ -48,7 +48,14 @@ v1 and v2 scores are discarded and appear here only to explain the change.
 | S7-only | S6a + 37 knowledge-graph features (no TF-IDF) | 43 | 0.156 | 0.321 | 0.434 | **0.527** | 975 (RF) | 68.6 |
 | S7 | S6b + 37 knowledge-graph features | 44 | 0.156 | 0.540 | **0.698** | 0.586 | 749 (Ridge) | 41.7 |
 | S8-only | S7-only + K-Means segment id | 44 | 0.156 | 0.334 | 0.463 | **0.522** | 964 (RF) | 64.0 |
-| **S8** | S7 + K-Means segment id | 45 | 0.156 | 0.561 | **0.714** | 0.588 | **735 (Ridge)** | **40.9** |
+| S8 | S7 + K-Means segment id | 45 | 0.156 | 0.561 | 0.714 | 0.588 | 735 (Ridge) | 40.9 |
+| **S9** | S8 + numeric features standardised | 45 | 0.156 | **−7.5 × 10⁸** ‡ | **0.752** | 0.588 | **691 (Ridge)** | **37.3** |
+
+‡ Plain Linear Regression collapses at S9. Several knowledge-graph columns are exact duplicates
+(`kg_zari` = `kg_mat_Zari`, `kg_tech_Jewellery` overlaps a label column), so the unregularised
+least-squares fit is ill-conditioned. It produces huge opposite-sign weights, which explode once
+the log prediction is converted back to rupees. Ridge's penalty prevents this. It is the clearest
+example in this project of why regularisation matters.
 
 The median baseline (one price for everything) scores R² −0.15 and MAE ₹1,487 on split v3.
 
@@ -100,6 +107,7 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 | S7 | 0.780 |
 | S8-only | 0.673 |
 | **S8** | **0.786** |
+| S9 | 0.770 |
 
 ## Progress chart
 
@@ -128,6 +136,9 @@ The two tools agree to within 0.01 R². The small gaps are expected:
 8. **S8, segment feature:** the K-Means segment (17 text segments, part 5) gives the best result so
    far: Ridge R² **0.714**, MAE ₹735, MAPE 40.9%, band F1 0.786.
    [UNSUPERVISED_REPORT.md](reports/unsupervised/UNSUPERVISED_REPORT.md).
+9. **S9, feature scaling:** standardising the numeric columns lets Ridge's single penalty treat them
+   evenly with the TF-IDF columns. **Best regression result: Ridge R² 0.752, MAE ₹691,
+   MAPE 37.3%.** Found while building part 9, where the shared feature code already scaled.
 
 ## Stages that made scores worse
 

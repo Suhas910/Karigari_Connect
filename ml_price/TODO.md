@@ -68,10 +68,10 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] 5 Market segmentation: K-Means k=17 (silhouette 0.164), Hierarchical, DBSCAN; PCA map ([report](reports/unsupervised/UNSUPERVISED_REPORT.md))
 - [x] 6 Apriori: 1,083 rules; high/low price-band rules; exposed tool-word material errors
 - [x] 7 Underpricing detector: out-of-fold expected price, 6.5% flagged, cross-checked with Isolation Forest
-- [ ] 8 Price regression: baselines → Linear, Polynomial, Tree, RF, Gradient Boosting, kNN
-- [ ] 9 Price range: quantile models (small code)
-- [ ] 10 Price class classifier: Logistic, SVM, Naive Bayes, kNN; confusion matrix, ROC
-- [ ] 11 Similar-items search: embeddings + nearest neighbours
+- [ ] 8 Price regression: baselines, Linear, Ridge, RF done per stage — Polynomial, Tree, Gradient Boosting, kNN regression still to add
+- [x] 9 Price range: quantile GBM 58% → conformal 83% coverage; Ridge band 77% [report](reports/models/PARTS_9_11_REPORT.md)
+- [x] 10 Classifiers: 7 models, grouped-CV tuning; Gradient Boosting F1 0.810, AUC 0.925 [report](reports/models/PARTS_9_11_REPORT.md)
+- [x] 11 Similar-items: FAISS index; 10-NN median R² 0.613; similarity flags uncertainty [report](reports/models/PARTS_9_11_REPORT.md)
 - [ ] 12 LLM attribute extraction: prompt + accuracy on a hand-labelled sample
 - [ ] 13 Image features (stretch goal): CNN embeddings
 - [ ] 14 Explainability: SHAP, overall and per prediction
@@ -97,7 +97,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [ ] S10 LLM-extracted attributes
 - [ ] S11 image features
 - [ ] S12 hyperparameter tuning
-- [ ] S13 quantile bands
+- [x] S13 quantile bands (part 9)
 - [ ] Ablation: remove one feature group at a time
 - [x] Progress chart → `figures/experiments_progress.png` (updated each stage)
 

@@ -1,0 +1,8 @@
+model,best_params,cv_f1,test_accuracy,test_precision,test_recall,test_f1,test_roc_auc,seconds
+Gradient Boosting,"{'learning_rate': 0.05, 'max_iter': 300}",0.7785,0.8108,0.8191,0.8078,0.8104,0.9253,54.1
+Random Forest,{'min_samples_leaf': 5},0.7717,0.8043,0.8261,0.7966,0.8047,0.9163,70.8
+Logistic Regression,{'C': 10},0.7593,0.7725,0.7807,0.7739,0.7765,0.9105,30.7
+Linear SVM,{'estimator__C': 1},0.7289,0.7564,0.7672,0.7684,0.7669,0.899,102.9
+"KNN (cosine, text)",{'n_neighbors': 5},0.7331,0.7122,0.7174,0.7287,0.7212,0.8403,78.1
+Naive Bayes (multinomial),{'alpha': 0.1},0.7197,0.7107,0.7284,0.7134,0.7028,0.8645,0.3
+Decision Tree,"{'max_depth': 8, 'min_samples_leaf': 5}",0.6586,0.6653,0.6671,0.6721,0.6694,0.8062,8.5

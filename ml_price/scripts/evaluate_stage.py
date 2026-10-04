@@ -56,6 +56,7 @@ STAGES["S6c-z"] = dict(S6B, drop="z", change="S6b, training rows flagged by z-sc
 STAGES["S6c-iso"] = dict(S6B, drop="iso", change="S6b, training rows flagged by Isolation Forest (1%) removed")
 STAGES["S8"] = dict(STAGES["S7"], seg=True, change="S7 + K-Means segment id (17 text segments, fitted on train)")
 STAGES["S8-only"] = dict(STAGES["S7-only"], seg=True, change="S7-only + K-Means segment id (no TF-IDF)")
+STAGES["S9"] = dict(STAGES["S8"], scale=True, change="S8 + numeric features standardised (mean 0, sd 1) before the models")
 cfg = STAGES[STAGE]
 cfg.setdefault("multi", []); cfg.setdefault("text", False)
 d = pd.concat([load(p) for p in cfg["data"]]) if isinstance(cfg["data"], list) else load(cfg["data"])
@@ -88,6 +89,9 @@ for c in cfg["multi"]:  # one 0/1 column per art-form label, learned from traini
 if cfg["text"]:         # vocabulary and IDF weights learned from training rows only
     parts.append(("text", TfidfVectorizer(max_features=5000, ngram_range=(1, 2), min_df=5,
                                           sublinear_tf=True, stop_words="english"), "text"))
+if cfg.get("scale"):  # standardise numeric columns so Ridge's penalty treats them evenly with the text features
+    from sklearn.preprocessing import StandardScaler
+    parts.append(("num", StandardScaler(), cfg["num"]))
 pre = ColumnTransformer(parts, remainder="passthrough")
 models = {
     "Median baseline": DummyRegressor(strategy="median"),
