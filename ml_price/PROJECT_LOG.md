@@ -360,6 +360,16 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   downloaded, and this part is the project's only CNN (Unit V).
 - **Report:** [PART13_IMAGES.md](reports/models/PART13_IMAGES.md)
 
+## 2026-10-04 — Final report and viva cheat-sheet
+
+- [FINAL_REPORT.md](reports/final/FINAL_REPORT.md): every part in one document, built from the
+  committed part reports; includes the stage table, syllabus coverage, the "problems found and
+  corrected" list, limitations and the demo walkthrough.
+- [VIVA_CHEATSHEET.md](reports/final/VIVA_CHEATSHEET.md): pitch, key numbers, likely questions.
+- Syllabus units follow PLAN.md. The stored copy of the pasted syllabus is cut off after Unit I,
+  so the project owner should check the unit mapping against the official syllabus.
+- EDA unit label aligned to PLAN.md (Unit III).
+
 ## Pending
 
 - Part 13 (image features) likely skipped; final report + viva sheet

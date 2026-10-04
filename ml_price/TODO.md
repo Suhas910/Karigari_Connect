@@ -103,7 +103,7 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 
 ## 7 — Final report
 
-- [ ] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations
-- [ ] Syllabus coverage table (Units I–V)
-- [ ] Demo walkthrough
+- [x] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations ([FINAL_REPORT](reports/final/FINAL_REPORT.md))
+- [x] Syllabus coverage table (Units I–V) (FINAL_REPORT §12)
+- [x] Demo walkthrough (FINAL_REPORT §15) + [VIVA_CHEATSHEET](reports/final/VIVA_CHEATSHEET.md)
 - [ ] Convert to Word — only if asked at the very end

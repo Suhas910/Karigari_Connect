@@ -1,6 +1,6 @@
 # Part 2 — Statistics and Exploratory Data Analysis
 
-**Syllabus:** Unit II (descriptive statistics, distributions, hypothesis testing, correlation).
+**Syllabus:** Unit III, as mapped in PLAN.md (descriptive statistics, distributions, hypothesis testing, correlation).
 
 | | |
 |---|---|

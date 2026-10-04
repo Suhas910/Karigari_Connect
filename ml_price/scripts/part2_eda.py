@@ -1,4 +1,4 @@
-"""Part 2 — statistics and exploratory analysis (Unit II: descriptive statistics, distributions,
+"""Part 2 — statistics and exploratory analysis (Unit III: descriptive statistics, distributions,
 hypothesis tests, correlation).
 
 Training split only (29,805 rows): the frozen test set stays unseen, so nothing learned here can leak
