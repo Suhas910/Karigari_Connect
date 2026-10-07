@@ -118,4 +118,4 @@ See [PROCESSING_STEPS.md §2](PROCESSING_STEPS.md#2--cleaning-steps) for methods
 - [x] Data card → cleaning → EDA → knowledge graph → models → explainability and ethics → limitations ([FINAL_REPORT](reports/final/FINAL_REPORT.md))
 - [x] Syllabus coverage table (Units I–V), checked against the official syllabus text (FINAL_REPORT §12)
 - [x] Demo walkthrough (FINAL_REPORT §15) + [VIVA_CHEATSHEET](reports/final/VIVA_CHEATSHEET.md)
-- [ ] Convert to Word — only if asked at the very end
+- [x] Convert to Word: [FINAL_REPORT.docx](reports/final/FINAL_REPORT.docx) (2026-10-07)

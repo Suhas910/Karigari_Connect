@@ -427,4 +427,11 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
 
 ## Pending
 
-- Part 13 (image features) likely skipped; final report + viva sheet
+- Amazon Handmade dataset (section 4); optional Bayesian network; related-work section
+
+## 2026-10-07 — Final report in Word; research papers
+
+- `reports/final/FINAL_REPORT.docx` generated from `FINAL_REPORT.md` with pandoc 3.9 (via
+  `pypandoc_binary` in `.venv`): table of contents, all tables, both figures embedded. The
+  Markdown file stays the source; re-run the conversion after any edit.
+- `research_papers/`: 6 free related-work PDFs downloaded locally (git-ignored), index in its README.
