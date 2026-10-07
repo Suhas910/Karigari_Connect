@@ -48,6 +48,9 @@ training**:
    Kutch embroidery look undervalued. Auditing per family removed that artefact, just as grouping
    by family fixed the test split.
 
+
+**Research backing.** The approach is compared with 10 published papers in §17 (six read in full),
+from LLM pricing at Alibaba and Amazon to a field study of Karnataka artisans.
 ---
 
 ## 1. Problem and data
@@ -459,3 +462,75 @@ To reproduce any stage score: `PYTHONPATH=scripts .venv/bin/python scripts/evalu
 | Tool exports | `tool_exports/openrefine/`, `tool_exports/orange/`, `tool_exports/protege/` |
 | Viva preparation | [VIVA_CHEATSHEET](VIVA_CHEATSHEET.md) |
 | Python environment | [requirements.txt](../../requirements.txt) (pinned versions) |
+
+## 17. Related work
+
+Six papers were read in full; the PDFs are kept locally in `ml_price/research_papers/` (index in
+its [README](../../research_papers/README.md)). Four more are listed from their abstracts only, and
+are marked as such.
+
+### 17.1 How this project relates to each paper
+
+| # | Paper | What they did | Same as this project | Where this project differs |
+|---|---|---|---|---|
+| [1] | Wang et al., **LLP: LLM-Based Product Pricing in E-commerce** (Alibaba Xianyu, arXiv 2025) | Retrieve comparable listings, then an LLM (fine-tuned with SFT + GRPO) writes a price with reasoning; low-confidence answers filtered out. Deployed; seller adoption of suggestions 40% → 72% | **Part 18 RAG** uses the same retrieve-then-generate design; Part 11 FAISS retrieval | No fine-tuning, so the LLM is only prompted. Measured against a trained regressor on unseen families: RAG R² 0.73 vs Ridge 0.85, so here RAG explains prices and does not set them |
+| [2] | Sartipi et al., **A Modular LLM Framework for Explainable Price Outlier Detection** (Amazon, ICLR 2026 workshop) | Find comparable products, compare on price-relevant attributes, LLM decides if a price is an outlier, with reasons. > 75% agreement with human auditors; beats zero-shot and plain-retrieval LLMs | **Part 7** underpricing detector; **Part 16** advisor cautions; both stress explainable flags. They also list Isolation Forest as a classical baseline, used in step 2.9 | Ours is a model-residual detector (flag if actual < 50% of expected) treated as a review queue. Their staged LLM comparison is a possible upgrade |
+| [3] | Singh, **A Multimodal, Multitask System for Generating E-Commerce Text Listings from Images** (arXiv 2025) | One vision encoder trained jointly on attributes and price for 14.2k clothing listings; multitask gives +3.6% R² over price alone | **Part 13**: photos carry price signal (photos alone R² 0.375; +0.016 test R² on top of text) | We use a frozen pretrained CNN (SqueezeNet, transfer learning), no fine-tuning, and combine it with text, KG and LLM features |
+| [4] | Thejaswini, Priyadarshini & Hareesh, **A Smart E-Commerce Platform for Handmade Crafts with AI-Based Price Recommendation for Sellers** (IJERT, Vol. 14, Issue 01) | Linear regression + TF-IDF and cosine similarity on handmade product descriptions, served to a seller dashboard; reports "about 80% accuracy" | Closest in **goal and method**: handmade products, TF-IDF text, a linear model, a seller-facing advisor (Parts 8, 11, 16) | Their dataset **simulates** handmade products; ours is 37,257 real listings. Their metric is a single "accuracy"; ours is R², MAE, MAPE and band F1 on a family-grouped test set, plus a fair-wage floor |
+| [5] | Ranganathan, **The Artisan and His Audience: Identification with Work and Price-Setting in a Handicraft Cluster in Southern India** (Stanford King Center WP 560, 2015) | Field audit of 77 sellers (52 artisans, 25 traders) in Channapatna, Karnataka, 455 visits: artisans who identify with their work give discerning buyers discounts | **Motivation and ethics (Part 15)**: artisans' prices are not purely economic, so market data can carry under-pricing | We treat this as the reason the model may never set a floor: the advisor applies the app's fair-wage floor above the market estimate |
+| [6] | Jiang, **Effective e-commerce price prediction with machine learning technologies** (ASENS 2024, ACM) | 8 ML models on two small Kaggle datasets (1,199 and 1,465 rows), random 70/30 split, Bayesian optimisation; Random Forest best; sentiment features did not help | **Part 8** also compares 8 regressors with tuning | They split randomly; this project found a random-style split inflates R² (0.86 vs honest v3) because of near-copy listings. Our winner is Ridge, because our main features are thousands of sparse words |
+
+### 17.2 Also relevant (abstract only, not read in full)
+
+- [7] **Optimizing Handloom Price Prediction: Leveraging Diverse Features for Superior Accuracy
+  Using Machine Learning** (Springer chapter, DOI 10.1007/978-3-032-06198-0_7; paywalled). Decision
+  Tree regression on handloom features (fabric, size, colour, design). Closest *domain* match; in
+  this project a single Decision Tree scored R² 0.413 against Ridge 0.748 (Part 8).
+- [8] **A multimodal deep learning framework for integrating visual, textual and categorical
+  features in retail price estimation**, *Array*, 2025 (DOI 10.1016/j.array.2025.100565; open
+  access). EfficientNet images + BiLSTM text + categorical embeddings, late fusion. Same input mix
+  as stage S12-img.
+- [9] Ait Si Ali, Seker, Farnie & Elliott, **Extensive Data Exploration for Automatic Price
+  Suggestion Using Item Description: Case Study for the Kaggle Mercari Challenge**, ICAAI 2018.
+  Price from listing text; the challenge scores RMSLE, i.e. error on log price, as our target does.
+- [10] **The Role of Social Media and Product Differentiation in Etsy Micro-Manufacturing Shops**,
+  SAIS 2017. 1,386 Etsy sellers: handmade / customised differentiation goes with higher prices.
+
+### 17.3 What this project adds
+
+1. **Honest evaluation on unseen product families.** None of the papers read in full checks for
+   near-duplicate listings across train and test; [6] uses a random split. Here, grouping by
+   family changed the conclusion (R² 0.86 → realistic scores).
+2. **A craft knowledge graph with rule reasoning** (OWL + SWRL + HermiT) as a feature source and as
+   the advisor's knowledge layer. No pricing paper found uses an ontology of crafts.
+3. **A fair-wage floor that overrides the model**, motivated by [5] and by the family-level bias
+   audit. The other pricing systems ([1], [4], [6]) optimise toward market prices only.
+4. **Real data at scale for Indian handicrafts**: 37,257 real listings, compared with [4]'s simulated
+   dataset.
+
+### 17.4 References
+
+1. H. Wang, S. You, Q. Zhang, X. Xie, S. Han, Y. Wu, F. Huang, J. Chen. *LLP: LLM-Based Product
+   Pricing in E-commerce.* arXiv:2510.09347, 2025. https://arxiv.org/abs/2510.09347
+2. S. Sartipi, J. Wu, S. Ghotbi, N. Vedula, S. Malmasi. *A Modular LLM Framework for Explainable
+   Price Outlier Detection.* ICLR 2026 Workshop on Advances in Financial AI. arXiv:2603.20636.
+   https://arxiv.org/abs/2603.20636
+3. N. K. Singh. *A Multimodal, Multitask System for Generating E-Commerce Text Listings from
+   Images.* arXiv:2510.21835, 2025. https://arxiv.org/abs/2510.21835
+4. Thejaswini, P. Priyadarshini, B. Hareesh. *A Smart E-Commerce Platform for Handmade Crafts with
+   AI-Based Price Recommendation for Sellers.* International Journal of Engineering Research &
+   Technology (IJERT), Vol. 14, Issue 01 (IJERTCONV14IS010006).
+   https://www.ijert.org/research/IJERTCONV14IS010006.pdf
+5. A. Ranganathan. *The Artisan and His Audience: Identification with Work and Price-Setting in a
+   Handicraft Cluster in Southern India.* Stanford King Center on Global Development, Working
+   Paper No. 560, November 2015.
+6. K. Jiang. *Effective e-commerce price prediction with machine learning technologies.* ASENS
+   2024, ACM. https://doi.org/10.1145/3677182.3677290
+7. *Optimizing Handloom Price Prediction: Leveraging Diverse Features for Superior Accuracy Using
+   Machine Learning.* Springer. https://doi.org/10.1007/978-3-032-06198-0_7
+8. *A multimodal deep learning framework for integrating visual, textual and categorical features
+   in retail price estimation.* Array, 2025. https://doi.org/10.1016/j.array.2025.100565
+9. A. Ait Si Ali, H. Seker, S. Farnie, J. Elliott. *Extensive Data Exploration for Automatic Price
+   Suggestion Using Item Description: Case Study for the Kaggle Mercari Challenge.* ICAAI 2018.
+10. *The Role of Social Media and Product Differentiation in Etsy Micro-Manufacturing Shops.*
+    SAIS 2017 Proceedings. https://aisel.aisnet.org/sais2017/27

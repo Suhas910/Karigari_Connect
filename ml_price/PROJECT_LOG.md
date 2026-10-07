@@ -435,3 +435,12 @@ Newest entries at the bottom. Each entry: what was done, the tool, why, and the 
   `pypandoc_binary` in `.venv`): table of contents, all tables, both figures embedded. The
   Markdown file stays the source; re-run the conversion after any edit.
 - `research_papers/`: 6 free related-work PDFs downloaded locally (git-ignored), index in its README.
+
+## 2026-10-07 — Related work (FINAL_REPORT §17)
+
+- Read the 6 downloaded papers in full (text extracted locally with pypdf) and wrote §17: a
+  comparison table (what they did / same as us / where we differ), 4 more papers from abstracts
+  only (marked), "what this project adds", and 10 references. One line added to the Summary.
+- Notable contrasts: the IJERT handmade-crafts paper uses a simulated dataset; the ACM paper uses a
+  random 70/30 split, the leakage this project's family split avoids.
+- `FINAL_REPORT.docx` rebuilt.
